@@ -43,6 +43,11 @@ public:
         q_.pop();
         return true;
     }
+
+    size_t Size()
+    {
+        return q_.size();
+    }
 };
 
 #endif

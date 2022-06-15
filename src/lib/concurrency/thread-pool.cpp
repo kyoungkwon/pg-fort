@@ -20,7 +20,7 @@ void ThreadPool::Start()
 {
     for (uint32_t i = 0; i < num_threads_; i++)
     {
-        // threads_[i] = std::thread(Work);
+        threads_[i] = std::thread(&ThreadPool::Work, this);
     }
 }
 

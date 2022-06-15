@@ -4,10 +4,10 @@ project(postgresql-proxy VERSION 0.1.0)
 
 # compiler settings
 include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag("-std=c++11" COMPILER_SUPPORTS_CXX11)
+check_cxx_compiler_flag("-std=c++20" COMPILER_SUPPORTS_CXX20)
 
-if(NOT COMPILER_SUPPORTS_CXX11)
-	message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+if(NOT COMPILER_SUPPORTS_CXX20)
+	message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++20 support. Please use a different C++ compiler.")
 endif()
 
 set(CMAKE_C_STANDARD 99)
