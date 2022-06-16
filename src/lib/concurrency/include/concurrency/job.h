@@ -6,8 +6,11 @@
 class Job
 {
 private:
+    std::string name_;  // TODO: remove
+
 public:
-    std::string name_;
+    std::string GetName();
+    int         Execute();
 };
 
 #endif

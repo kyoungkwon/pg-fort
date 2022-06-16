@@ -26,12 +26,33 @@ void ThreadPool::Start()
 
 void ThreadPool::Stop()
 {
+    stopped_ = true;
+    for (auto& t : threads_)
+    {
+        t.join();
+    }
+}
+
+void ThreadPool::Submit(Job& job)
+{
+    job_queue_.Push(job);
 }
 
 void ThreadPool::Work()
 {
     while (!stopped_)
     {
-        // auto job = job_queue_.Pop();
+        Job job;
+        if (!job_queue_.Pop(job, 1000))
+        {
+            continue;  // queue empty
+        }
+        job.Execute();
+
+        // execute job
+
+        // determine next job
+
+        // push next job
     }
 }

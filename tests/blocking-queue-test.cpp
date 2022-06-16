@@ -7,8 +7,6 @@
 #include <string>
 #include <thread>
 
-#include "concurrency/job.h"
-
 namespace testing
 {
 namespace gmock_matchers_test
@@ -18,7 +16,7 @@ TEST(BlockingQueueTest, MultiThreadedPushAndPop)
 {
     std::cout << "starting blocking-queue-test" << std::endl;
 
-    BlockingQueue<Job> jq;
+    BlockingQueue<std::string> q;
 
     uint32_t num_push = 10;
     uint32_t num_pop  = 7;
@@ -28,20 +26,18 @@ TEST(BlockingQueueTest, MultiThreadedPushAndPop)
     std::vector<std::future<uint32_t>> pops(num_pop);
 
     // populate lambda
-    auto populate = [](BlockingQueue<Job>& jq, int id, int batch)
+    auto populate = [](BlockingQueue<std::string>& q, int id, int batch)
     {
         for (uint32_t i = 0; i < batch; i++)
         {
-            Job j;
-            j.name_ = "hello" + std::to_string(id * batch + i);
-            jq.Push(j);
+            q.Push("hello" + std::to_string(id * batch + i));
         }
     };
 
-    // each thread will populate a batch of jobs
+    // each thread will populate a batch of strings
     for (uint32_t id = 0; id < num_push; id++)
     {
-        pushes[id] = std::async(std::launch::async, populate, std::ref(jq), id, batch);
+        pushes[id] = std::async(std::launch::async, populate, std::ref(q), id, batch);
     }
 
     // wait for all threads
@@ -51,25 +47,25 @@ TEST(BlockingQueueTest, MultiThreadedPushAndPop)
     }
 
     // check jobs count
-    ASSERT_EQ(num_push * batch, jq.Size());
+    ASSERT_EQ(num_push * batch, q.Size());
 
     // drain lambda
-    auto drain = [](BlockingQueue<Job>& jq)
+    auto drain = [](BlockingQueue<std::string>& q)
     {
-        uint32_t cnt = 0;
-        Job j;
-        while (jq.Pop(j))
+        uint32_t    cnt = 0;
+        std::string s;
+        while (q.Pop(s))
         {
             cnt++;
         }
-        std::cout << "popped " << cnt << " jobs" << std::endl;
+        std::cout << "popped " << cnt << " strings" << std::endl;
         return cnt;
     };
 
     // threads will drain job queue
     for (uint32_t id = 0; id < num_pop; id++)
     {
-        pops[id] = std::async(std::launch::async, drain, std::ref(jq));
+        pops[id] = std::async(std::launch::async, drain, std::ref(q));
     }
 
     // wait for all threads and count total

@@ -24,6 +24,7 @@ public:
 
     void Start();
     void Stop();
+    void Submit(Job& job);
 };
 
 #endif
