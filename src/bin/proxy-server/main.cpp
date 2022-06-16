@@ -1,5 +1,4 @@
-#include "common/macros.h"
-#include "conn/dbconn.h"
+#include "conn/db-conn.h"
 #include "proxy-server/proxy-server.h"
 
 static void show_usage(std::string name)
@@ -9,37 +8,24 @@ static void show_usage(std::string name)
 
 int main(int argc, char const *argv[])
 {
-    int            retval    = 0;
-    int            proxyPort = 0;
-    int            dbPort    = 0;
-    ProxyServer   *proxy     = NULL;
-    DbConnFactory *factory   = NULL;
+    int retval    = 0;
+    int proxyPort = 0;
+    int dbPort    = 0;
 
     if (argc != 3)
     {
         show_usage(argv[0]);
-        BAIL_WITH_ERROR(retval, 1);  // TODO: proper error code
+        exit(1);  // TODO: proper error code
     }
 
-    dbPort  = atoi(argv[2]);
-    factory = new DbConnFactory(dbPort);
+    dbPort = atoi(argv[2]);
+    DbConnFactory factory(dbPort);
 
     proxyPort = atoi(argv[1]);
-    proxy     = new ProxyServer(proxyPort, factory);
+    ProxyServer proxy(proxyPort, factory);
+    proxy.Start();
 
-    retval = proxy->Initialize();
-    BAIL_ON_ERROR(retval);
+    std::cout << "exiting main.." << std::endl;
 
-    proxy->Start();
-
-    // TODO: better termination handling
-    std::cout << "exiting.." << std::endl;
-
-cleanup:
-    delete proxy;
-    delete factory;
     return retval;
-
-error:
-    goto cleanup;
 }

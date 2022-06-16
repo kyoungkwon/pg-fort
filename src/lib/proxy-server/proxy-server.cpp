@@ -1,47 +1,61 @@
 #include "proxy-server/proxy-server.h"
 
-ProxyServer::ProxyServer(int port, DbConnFactory *factory)
+ProxyServer::ProxyServer(int port, DbConnFactory &factory)
     : ip_("localhost"),
       port_(port),
       factory_(factory),
       flag_(true)
 {
-    // TODO: pass in a condition or something to handle shutdown
-    pool_ = new SessionPool();
-}
+    int res = 0;
 
-ProxyServer::~ProxyServer()
-{
-    // TODO: close and/or delete?
-}
+    socket_ = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (socket_ < 0)
+    {
+        // TODO: throw exception
+        std::cerr << "ProxyServer() socket failed: " << socket_ << " (errno=" << errno << ")"
+                  << std::endl;
+    }
 
-int ProxyServer::Initialize()
-{
-    int retval = 0;
-
-    socket_                    = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);  // TODO: exception?
     sock_len_                  = sizeof(sock_addr_);
     sock_addr_.sin_family      = PF_INET;
     sock_addr_.sin_addr.s_addr = htonl(INADDR_ANY);
     sock_addr_.sin_port        = htons(port_);
 
-    retval = setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR, &flag_, sizeof(flag_));
-    BAIL_ON_ERROR(retval);
+    res = setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR, &flag_, sizeof(flag_));
+    if (res < 0)
+    {
+        // TODO: throw exception
+        std::cerr << "DbConn() setsockopt failed: " << socket_ << " (errno=" << errno << ")"
+                  << std::endl;
+    }
 
-    retval = bind(socket_, (const sockaddr *)&sock_addr_, sock_len_);
-    BAIL_ON_ERROR(retval);
+    res = bind(socket_, (const sockaddr *)&sock_addr_, sock_len_);
+    if (res < 0)
+    {
+        // TODO: throw exception
+        std::cerr << "DbConn() bind failed: " << socket_ << " (errno=" << errno << ")" << std::endl;
+    }
 
-    retval = fcntl(socket_, F_SETFL, O_NONBLOCK);
-    BAIL_ON_ERROR(retval);
+    res = fcntl(socket_, F_SETFL, O_NONBLOCK);
+    if (res < 0)
+    {
+        // TODO: throw exception
+        std::cerr << "DbConn() fcntl failed: " << socket_ << " (errno=" << errno << ")"
+                  << std::endl;
+    }
 
-    retval = listen(socket_, 2048);
-    BAIL_ON_ERROR(retval);
+    res = listen(socket_, 2048);
+    if (res < 0)
+    {
+        // TODO: throw exception
+        std::cerr << "DbConn() listen failed: " << socket_ << " (errno=" << errno << ")"
+                  << std::endl;
+    }
+}
 
-cleanup:
-    return retval;
-
-error:
-    goto cleanup;
+ProxyServer::~ProxyServer()
+{
+    pool_.Stop();
 }
 
 void ProxyServer::Start()
@@ -57,12 +71,8 @@ void ProxyServer::Start()
     timeout.tv_sec  = 3;
     timeout.tv_usec = 0;
 
-    static int loop = 0;
-
     while (true)
     {
-        std::cout << "main loop (" << loop << ") starts" << std::endl;
-
         FD_ZERO(&fds);
         FD_SET(socket_, &fds);
         retval = select(socket_ + 1, &fds, NULL, NULL, &timeout);
@@ -89,29 +99,11 @@ void ProxyServer::Start()
         }
 
         // create a db connection
-        db_conn = factory_->CreateDbConn();
+        db_conn = factory_.CreateDbConn();
 
-        std::cout << "dbconn initialize.." << std::endl;
-
-        retval  = db_conn->Initialize();
-        if (retval)
-        {
-            // TODO: better errno handling
-            std::cerr << "dbconn initialize failed with retval = " << retval << std::endl;
-            continue;
-        }
-
-        // create a session
+        // create a session and submit to the pool
         // session = new Session(newsocket, db_conn);
         Session session;
-
-        // submit the session to the pool
-        pool_->Submit(session);
-
-        std::cout << "main loop (" << loop << ") ends" << std::endl;
-
-        loop++;
+        pool_.Submit(session);
     }
-
-    std::cerr << "exiting proxy serve loop" << std::endl;
 }

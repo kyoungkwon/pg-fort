@@ -7,15 +7,8 @@
 #include <string>
 #include <thread>
 
-namespace testing
-{
-namespace gmock_matchers_test
-{
-
 TEST(BlockingQueueTest, MultiThreadedPushAndPop)
 {
-    std::cout << "starting blocking-queue-test" << std::endl;
-
     BlockingQueue<std::string> q;
 
     uint32_t num_push = 10;
@@ -78,5 +71,3 @@ TEST(BlockingQueueTest, MultiThreadedPushAndPop)
     // check jobs count
     ASSERT_EQ(num_push * batch, total_cnt);
 }
-}  // namespace gmock_matchers_test
-}  // namespace testing

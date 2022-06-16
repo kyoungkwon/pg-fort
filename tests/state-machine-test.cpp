@@ -70,8 +70,6 @@ public:
 
 TEST(StateMachineTest, DesignReviewProcess)
 {
-    std::cout << "starting state machine test" << std::endl;
-
     Design d;
 
     // DRAFT(score=0)

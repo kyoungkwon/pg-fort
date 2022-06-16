@@ -7,9 +7,9 @@
 #include <iostream>
 #include <string>
 
-#include "common/macros.h"
+#include "conn/conn.h"
 
-class DbConn
+class DbConn : public Conn
 {
 private:
     std::string host_;
@@ -21,7 +21,6 @@ public:
     DbConn(std::string host, int port);
     ~DbConn();
 
-    int Initialize();
     int GetSocket();
 };
 

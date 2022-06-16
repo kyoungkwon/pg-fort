@@ -17,14 +17,15 @@ void Session::operator()()
 
 State* Session::ReceiveRequest()
 {
-    //   - loop:
-    //     - select with 3 seconds timeout
-    //       - if error (<0) -> ConnectionLost
-    //       - elif timeout (=0) -> ReceiveRequest
-    //     - recv
-    //       - if error (<0) -> ConnectionLost
-    //       - elif done (=0) -> ForwardRequest
-    //     - check and resize buffer -> ReceiveRequest
+    // loop:
+    //     select with 3 seconds timeout
+    //         if error (<0) -> error_
+    //         elif timeout (=0) -> waiting_request_
+    //     recv
+    //         if error (<0) -> error_
+    //         elif done (=0) -> request_ready_
+    //     check and resize buffer -> waiting_request_
+    
     return &request_ready_;
 }
 

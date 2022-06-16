@@ -1,4 +1,4 @@
-add_library(libconn dbconn.cpp)
+add_library(libconn db-conn.cpp)
 
 target_include_directories(libconn
     PUBLIC

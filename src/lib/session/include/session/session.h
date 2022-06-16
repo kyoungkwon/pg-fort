@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "concurrency/thread-pool.h"
-#include "conn/dbconn.h"
+#include "conn/db-conn.h"
 #include "state-machine/state-machine.h"
 
 class Session : public StateMachine, public Job
