@@ -20,7 +20,11 @@ void ThreadPool::Start()
 {
     for (uint32_t i = 0; i < num_threads_; i++)
     {
-        threads_[i] = std::thread(&ThreadPool::Work, this);
+        threads_[i] = std::thread(
+            [&]()
+            {
+                while (!stopped_) Work();
+            });
     }
 }
 
@@ -40,19 +44,9 @@ void ThreadPool::Submit(Job& job)
 
 void ThreadPool::Work()
 {
-    while (!stopped_)
+    Job job;
+    if (!job_queue_.Pop(job, 1000))
     {
-        Job job;
-        if (!job_queue_.Pop(job, 1000))
-        {
-            continue;  // queue empty
-        }
-        job.Execute();
-
-        // execute job
-
-        // determine next job
-
-        // push next job
+        job();
     }
 }

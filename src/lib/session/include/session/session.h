@@ -10,41 +10,38 @@
 #include <thread>
 #include <vector>
 
-#include "common/macros.h"
+#include "concurrency/thread-pool.h"
 #include "conn/dbconn.h"
+#include "state-machine/state-machine.h"
 
-class Session
+class Session : public StateMachine, public Job
 {
 private:
-    int     socket_;
-    DbConn* dbConn_;
+    // here we keep things such as:
+    //   - clConn
+    //   - dbConn
 
-    // client
-    // db
+    // declare states and actions
+    State  waiting_request_;
+    State* ReceiveRequest();
+
+    State  request_ready_;
+    State* ForwardRequest();
+
+    State  waiting_response_;
+    State* ReceiveResponse();
+
+    State  response_ready_;
+    State* ForwardResponse();
+
+    State  error_;
+    State* CloseConnection();
 
 public:
-    Session(int socket, DbConn* db_conn);
-    ~Session();
+    Session();
 
-    int     GetSocket();
-    DbConn* GetDbConn();
-    void    Serve();
-    void    Serve2();
-
-private:
-    void Transmit2(int from_socket, int to_socket);
-    void Transmit3(int from_socket, int to_socket);
-};
-
-// TODO: use threadpool as base class
-class SessionPool
-{
-public:
-    // TODO: pass in a condition or something to handle shutdown
-    SessionPool();
-    ~SessionPool();
-
-    int Submit(Session* session);
+    // session functor takes a state machine action
+    void operator()();
 };
 
 #endif

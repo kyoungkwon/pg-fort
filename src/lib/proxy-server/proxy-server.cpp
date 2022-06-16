@@ -102,17 +102,11 @@ void ProxyServer::Start()
         }
 
         // create a session
-        session = new Session(newsocket, db_conn);
+        // session = new Session(newsocket, db_conn);
+        Session session;
 
         // submit the session to the pool
-        // the ownership is now in the pool
-        retval = pool_->Submit(session);
-        if (retval)
-        {
-            // TODO: capacity issue or something?
-            std::cerr << "session submission to pool failed with retval = " << retval << std::endl;
-            continue;
-        }
+        pool_->Submit(session);
 
         std::cout << "main loop (" << loop << ") ends" << std::endl;
 

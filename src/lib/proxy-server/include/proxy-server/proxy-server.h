@@ -13,6 +13,7 @@
 
 #include "common/macros.h"
 #include "conn/dbconn.h"
+#include "session/session-pool.h"
 #include "session/session.h"
 
 class ProxyServer

@@ -17,3 +17,9 @@ add_executable(concurrency-test blocking-queue-test.cpp)
 target_link_libraries(concurrency-test ${GTEST_LDFLAGS} libconcurrency)
 target_compile_options(concurrency-test PUBLIC ${GTEST_CFLAGS})
 gtest_discover_tests(concurrency-test)
+
+
+add_executable(state-machine-test state-machine-test.cpp)
+target_link_libraries(state-machine-test ${GTEST_LDFLAGS} libstatemachine)
+target_compile_options(state-machine-test PUBLIC ${GTEST_CFLAGS})
+gtest_discover_tests(state-machine-test)
