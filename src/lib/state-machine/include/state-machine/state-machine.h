@@ -40,6 +40,8 @@ private:
     bool   terminated_ = false;
 
 public:
+    virtual ~StateMachine(){};
+
     void SetInitialState(State& state)
     {
         current_state_ = &state;

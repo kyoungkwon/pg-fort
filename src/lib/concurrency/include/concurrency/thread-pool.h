@@ -21,6 +21,8 @@ public:
     {
     }
 
+    virtual ~Job(){};
+
     virtual void operator()()
     {
         f_();
@@ -41,7 +43,7 @@ protected:
 
 public:
     ThreadPool(unsigned int num_threads = 0);
-    ~ThreadPool();
+    virtual ~ThreadPool();
 
     void Start();
     void Stop();

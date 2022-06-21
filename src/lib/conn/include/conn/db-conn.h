@@ -8,32 +8,35 @@
 #include <string>
 
 #include "conn/conn.h"
+#include "conn/request.h"
+#include "conn/response.h"
 
 class DbConn : public Conn
 {
 private:
     std::string host_;
     int         port_;
-    int         socket_;
     sockaddr_in sock_addr_;
 
 public:
     DbConn(std::string host, int port);
     ~DbConn();
 
-    int GetSocket();
+    std::size_t ForwardRequest(Request& request);
+    std::size_t ReceiveResponse(Response& response);
 };
 
 class DbConnFactory
 {
 private:
-    int port_;
+    std::string host_;
+    int         port_;
 
 public:
-    DbConnFactory(int port);
+    DbConnFactory(std::string host, int port);
     ~DbConnFactory();
 
-    DbConn *CreateDbConn();
+    DbConn* CreateDbConn();
 };
 
 #endif

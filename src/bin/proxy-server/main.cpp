@@ -19,7 +19,7 @@ int main(int argc, char const *argv[])
     }
 
     dbPort = atoi(argv[2]);
-    DbConnFactory factory(dbPort);
+    DbConnFactory factory("127.0.0.1", dbPort);
 
     proxyPort = atoi(argv[1]);
     ProxyServer proxy(proxyPort, factory);

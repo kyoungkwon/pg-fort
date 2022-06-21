@@ -7,10 +7,10 @@ include(GoogleTest)
 enable_testing()
 
 
-add_executable(vector-test vector-test.cpp)
-target_link_libraries(vector-test ${GTEST_LDFLAGS})
-target_compile_options(vector-test PUBLIC ${GTEST_CFLAGS})
-gtest_discover_tests(vector-test)
+add_executable(hello-test hello-test.cpp)
+target_link_libraries(hello-test ${GTEST_LDFLAGS})
+target_compile_options(hello-test PUBLIC ${GTEST_CFLAGS})
+gtest_discover_tests(hello-test)
 
 
 add_executable(concurrency-test blocking-queue-test.cpp)

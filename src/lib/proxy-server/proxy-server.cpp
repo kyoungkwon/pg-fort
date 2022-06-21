@@ -60,37 +60,33 @@ ProxyServer::~ProxyServer()
 
 void ProxyServer::Start()
 {
-    int            retval = 0;
-    fd_set         fds;
-    struct timeval timeout = {0};
-    int            newsocket;
-    DbConn        *db_conn = NULL;
-    Session       *session = NULL;
+    fd_set fds;
 
     // set select timeout to 3 sec
-    timeout.tv_sec  = 3;
-    timeout.tv_usec = 0;
+    struct timeval timeout = {0};
+    timeout.tv_sec         = 3;
+    timeout.tv_usec        = 0;
 
     while (true)
     {
         FD_ZERO(&fds);
         FD_SET(socket_, &fds);
-        retval = select(socket_ + 1, &fds, NULL, NULL, &timeout);
-        if (retval == 0)
+        int res = select(socket_ + 1, &fds, NULL, NULL, &timeout);
+        if (res == 0)
         {
             // timed out
             continue;
         }
-        else if (retval < 0)
+        else if (res < 0)
         {
             // TODO: better error logging
-            std::cerr << "select failed with retval = " << retval << std::endl;
+            std::cerr << "select failed with res = " << res << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(1));
             continue;
         }
 
         // accept and create session
-        newsocket = accept(socket_, 0, 0);
+        int newsocket = accept(socket_, 0, 0);
         if (newsocket < 0)
         {
             // TODO: better errno handling
@@ -98,12 +94,15 @@ void ProxyServer::Start()
             continue;
         }
 
+        // create a client connection
+        auto cl_conn = new ClientConn(newsocket);
+
         // create a db connection
-        db_conn = factory_.CreateDbConn();
+        auto db_conn = factory_.CreateDbConn();
 
         // create a session and submit to the pool
         // session = new Session(newsocket, db_conn);
-        Session session;
+        Session session(cl_conn, db_conn);
         pool_.Submit(session);
     }
 }

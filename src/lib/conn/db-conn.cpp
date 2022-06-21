@@ -1,12 +1,10 @@
 #include "conn/db-conn.h"
 
 DbConn::DbConn(std::string host, int port)
-    : host_(host),
+    : Conn(socket(PF_INET, SOCK_STREAM, 0)),
+      host_(host),
       port_(port)
 {
-    int res = 0;
-
-    socket_ = socket(PF_INET, SOCK_STREAM, 0);
     if (socket_ < 0)
     {
         // TODO: throw exception
@@ -17,7 +15,7 @@ DbConn::DbConn(std::string host, int port)
     sock_addr_.sin_family = PF_INET;
     sock_addr_.sin_port   = htons(port_);
 
-    res = inet_pton(AF_INET, host_.c_str(), &sock_addr_.sin_addr);
+    int res = inet_pton(AF_INET, host_.c_str(), &sock_addr_.sin_addr);
     if (res != 1)
     {
         // TODO: throw exception
@@ -26,26 +24,30 @@ DbConn::DbConn(std::string host, int port)
     }
 
     res = connect(socket_, (struct sockaddr*)&sock_addr_, sizeof(sock_addr_));
-    if (res)
+    if (res < 0)
     {
         // TODO: throw exception
-        std::cerr << "DbConn() connect failed: " << res << " (errno=" << errno << ")"
-                  << std::endl;
+        std::cerr << "DbConn() connect failed: " << res << " (errno=" << errno << ")" << std::endl;
     }
 }
 
 DbConn::~DbConn()
 {
-    // TODO: close?
 }
 
-int DbConn::GetSocket()
+std::size_t DbConn::ForwardRequest(Request& request)
 {
-    return socket_;
+    return request.SendTo(socket_);
 }
 
-DbConnFactory::DbConnFactory(int port)
-    : port_(port)
+std::size_t DbConn::ReceiveResponse(Response& response)
+{
+    return response.RecvFrom(socket_);
+}
+
+DbConnFactory::DbConnFactory(std::string host, int port)
+    : host_(host),
+      port_(port)
 {
 }
 
@@ -55,5 +57,5 @@ DbConnFactory::~DbConnFactory()
 
 DbConn* DbConnFactory::CreateDbConn()
 {
-    return new DbConn("127.0.0.1", port_);
+    return new DbConn(host_, port_);
 }

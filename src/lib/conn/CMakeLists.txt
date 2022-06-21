@@ -1,4 +1,4 @@
-add_library(libconn db-conn.cpp)
+add_library(libconn buffer.cpp client-conn.cpp db-conn.cpp)
 
 target_include_directories(libconn
     PUBLIC

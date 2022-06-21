@@ -3,15 +3,29 @@
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <unistd.h>
 
 #include <iostream>
 #include <string>
+#include <vector>
+
+#include "conn/buffer.h"
 
 class Conn
 {
+protected:
+    int socket_;
+
 public:
-    Conn()
+    Conn(int socket)
+        : socket_(socket)
     {
+    }
+
+    virtual ~Conn()
+    {
+        shutdown(socket_, SHUT_RDWR);
+        close(socket_);
     }
 };
 
