@@ -2,6 +2,7 @@
 #define __POSTGRESQL_PROXY_DBCONN_H__
 
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 
 #include <iostream>
@@ -22,8 +23,8 @@ public:
     DbConn(std::string host, int port);
     ~DbConn();
 
-    std::size_t ForwardRequest(Request& request);
-    std::size_t ReceiveResponse(Response& response);
+    int ForwardRequest(Request& request);
+    int ReceiveResponse(Response& response);
 };
 
 class DbConnFactory

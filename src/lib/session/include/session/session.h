@@ -17,7 +17,7 @@
 #include "conn/response.h"
 #include "state-machine/state-machine.h"
 
-class Session : public StateMachine, public Job
+class Session : public StateMachine
 {
 private:
     ClientConn* cl_conn_;
@@ -43,13 +43,11 @@ private:
     State  response_ready_;
     State* ForwardResponse();
 
-    State  reset_;
-    State* ResetContext();
-
-    State  error_;
+    State  done_;
     State* CloseSession();
 
 public:
+    Session();
     Session(ClientConn* cl_conn, DbConn* db_conn);
 
     // session functor takes a state machine action

@@ -1,10 +1,10 @@
 #include "conn/buffer.h"
 
-#define DEFAULT_SIZE 1024
+#define DEFAULT_SIZE 4
 
 Buffer::Buffer()
-    : buf_(2 * DEFAULT_SIZE),
-      buf_size_(DEFAULT_SIZE),
+    : buf_(),
+      buf_size_(0),
       data_size_(0)
 {
 }
@@ -32,30 +32,29 @@ void Buffer::Reset()
     data_size_ = 0;
 }
 
-std::size_t Buffer::RecvFrom(int socket)
+int Buffer::RecvFrom(int socket)
 {
-    std::size_t retval;
-    fd_set      fds;
-
     // set select timeout to 3 sec
     struct timeval timeout = {0};
     timeout.tv_sec         = 3;
     timeout.tv_usec        = 0;
 
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(socket, &fds);
+
+    int retval = select(socket + 1, &fds, NULL, NULL, &timeout);
+    if (retval <= 0)
+    {
+        return retval;  // TODO: better handling
+    }
+
     while (true)
     {
-        FD_ZERO(&fds);
-        FD_SET(socket, &fds);
-        retval = select(socket + 1, &fds, NULL, NULL, &timeout);
-        if (retval <= 0)
-        {
-            return retval;  // TODO: better handling
-        }
-
         retval = recv(socket, buf_.data() + data_size_, buf_size_, 0);
         if (retval < 0)
         {
-            return retval;  // TODO: better handling
+            return errno == EAGAIN ? data_size_ : retval;  // TODO: better handling
         }
         else if (retval == 0)
         {
@@ -72,9 +71,9 @@ std::size_t Buffer::RecvFrom(int socket)
     }
 }
 
-std::size_t Buffer::SendTo(int socket)
+int Buffer::SendTo(int socket)
 {
-    std::size_t retval;
+    int retval;
     fd_set      fds;
 
     // set select timeout to 3 sec

@@ -10,10 +10,11 @@
 #include <chrono>
 #include <iostream>
 #include <string>
+#include <thread>
 
+#include "conn/client-conn.h"
 #include "conn/db-conn.h"
 #include "session/session-pool.h"
-#include "session/session.h"
 
 class ProxyServer
 {

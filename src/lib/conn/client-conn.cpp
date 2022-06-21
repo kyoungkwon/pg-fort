@@ -15,12 +15,12 @@ ClientConn::~ClientConn()
 {
 }
 
-std::size_t ClientConn::ReceiveRequest(Request& request)
+int ClientConn::ReceiveRequest(Request& request)
 {
     return request.RecvFrom(socket_);
 }
 
-std::size_t ClientConn::ForwardResponse(Response& response)
+int ClientConn::ForwardResponse(Response& response)
 {
     return response.SendTo(socket_);
 }

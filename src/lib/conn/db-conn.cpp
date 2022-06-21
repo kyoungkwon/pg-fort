@@ -12,10 +12,18 @@ DbConn::DbConn(std::string host, int port)
                   << std::endl;
     }
 
+    int res = fcntl(socket_, F_SETFL, O_NONBLOCK);
+    if (res < 0)
+    {
+        // TODO: throw exception
+        std::cerr << "DbConn() fcntl failed: " << socket_ << " (errno=" << errno << ")"
+                  << std::endl;
+    }
+
     sock_addr_.sin_family = PF_INET;
     sock_addr_.sin_port   = htons(port_);
 
-    int res = inet_pton(AF_INET, host_.c_str(), &sock_addr_.sin_addr);
+    res = inet_pton(AF_INET, host_.c_str(), &sock_addr_.sin_addr);
     if (res != 1)
     {
         // TODO: throw exception
@@ -35,12 +43,12 @@ DbConn::~DbConn()
 {
 }
 
-std::size_t DbConn::ForwardRequest(Request& request)
+int DbConn::ForwardRequest(Request& request)
 {
     return request.SendTo(socket_);
 }
 
-std::size_t DbConn::ReceiveResponse(Response& response)
+int DbConn::ReceiveResponse(Response& response)
 {
     return response.RecvFrom(socket_);
 }

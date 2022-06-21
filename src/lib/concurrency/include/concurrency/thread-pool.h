@@ -7,28 +7,7 @@
 
 #include "concurrency/blocking-queue.h"
 
-class Job
-{
-private:
-    std::string           name_;
-    std::function<void()> f_;
-
-public:
-    Job(){};
-    Job(std::string name, std::function<void()> f)
-        : name_(name),
-          f_(f)
-    {
-    }
-
-    virtual ~Job(){};
-
-    virtual void operator()()
-    {
-        f_();
-    };
-};
-
+template <typename J>
 class ThreadPool
 {
 private:
@@ -37,17 +16,59 @@ private:
     bool                     stopped_;
 
 protected:
-    BlockingQueue<Job> job_queue_;
+    BlockingQueue<J> job_queue_;
 
-    virtual void Work();
+    virtual void Work()
+    {
+        J j;
+        if (!job_queue_.Pop(j, 1000))
+        {
+            j();
+        }
+    }
 
 public:
-    ThreadPool(unsigned int num_threads = 0);
-    virtual ~ThreadPool();
+    ThreadPool(unsigned int num_threads = 0)
+        : num_threads_(num_threads),
+          stopped_(false)
+    {
+        unsigned int max = std::thread::hardware_concurrency();
+        if (num_threads_ == 0 || num_threads_ > max)
+        {
+            num_threads_ = max;
+        }
+        threads_.resize(num_threads_);
+    }
 
-    void Start();
-    void Stop();
-    void Submit(Job& job);
+    virtual ~ThreadPool()
+    {
+    }
+
+    void Start()
+    {
+        for (uint32_t i = 0; i < num_threads_; i++)
+        {
+            threads_[i] = std::thread(
+                [&]()
+                {
+                    while (!stopped_) Work();
+                });
+        }
+    }
+
+    void Stop()
+    {
+        stopped_ = true;
+        for (auto& t : threads_)
+        {
+            t.join();
+        }
+    }
+
+    void Submit(J& j)
+    {
+        job_queue_.Push(j);
+    }
 };
 
 #endif

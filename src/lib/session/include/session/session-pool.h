@@ -4,7 +4,7 @@
 #include "concurrency/thread-pool.h"
 #include "session/session.h"
 
-class SessionPool : public ThreadPool
+class SessionPool : public ThreadPool<Session>
 {
 public:
     SessionPool();

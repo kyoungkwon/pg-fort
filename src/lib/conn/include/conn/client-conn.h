@@ -13,8 +13,8 @@ public:
     ClientConn(int socket);
     ~ClientConn();
 
-    std::size_t ReceiveRequest(Request& request);
-    std::size_t ForwardResponse(Response& response);
+    int ReceiveRequest(Request& request);
+    int ForwardResponse(Response& response);
 };
 
 #endif

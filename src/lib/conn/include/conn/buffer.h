@@ -22,8 +22,8 @@ public:
     std::size_t    Size();
     void           Reset();
 
-    std::size_t RecvFrom(int socket);
-    std::size_t SendTo(int socket);
+    int RecvFrom(int socket);
+    int SendTo(int socket);
 };
 
 #endif

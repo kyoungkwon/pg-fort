@@ -33,7 +33,8 @@ ProxyServer::ProxyServer(int port, DbConnFactory &factory)
     if (res < 0)
     {
         // TODO: throw exception
-        std::cerr << "ProxyServer() bind failed: " << socket_ << " (errno=" << errno << ")" << std::endl;
+        std::cerr << "ProxyServer() bind failed: " << socket_ << " (errno=" << errno << ")"
+                  << std::endl;
     }
 
     res = fcntl(socket_, F_SETFL, O_NONBLOCK);
@@ -103,13 +104,8 @@ void ProxyServer::Start()
         // create a db connection
         auto db_conn = factory_.CreateDbConn();
 
-        std::cout << "creating session..." << std::endl;
-
         // create a session and submit to the pool
         Session session(cl_conn, db_conn);
-
-        std::cout << "pushed session id: " << session.id << std::endl;
-
         pool_.Submit(session);
     }
 }
