@@ -1,5 +1,8 @@
 #include "session/session.h"
 
+#include <sstream>
+#include <string>
+
 Session::Session()
     : Session(nullptr, nullptr)
 {
@@ -25,7 +28,11 @@ void Session::operator()()
 
 State* Session::ReceiveRequest()
 {
-    std::cout << "[" << id << "] ReceiveRequest: ";
+    std::ostringstream address;
+    address << (void const*)this;
+    std::cout << address.str() << " ";
+
+    std::cout << "[" << id << "] 1:ReceiveRequest: ";
 
     context_.request_.Reset();
     auto res = cl_conn_->ReceiveRequest(context_.request_);
@@ -42,7 +49,11 @@ State* Session::ReceiveRequest()
 
 State* Session::ForwardRequest()
 {
-    std::cout << "[" << id << "] ForwardRequest: ";
+    std::ostringstream address;
+    address << (void const*)this;
+    std::cout << address.str() << " ";
+
+    std::cout << "[" << id << "] 2:ForwardRequest: ";
 
     auto res = db_conn_->ForwardRequest(context_.request_);
 
@@ -58,7 +69,11 @@ State* Session::ForwardRequest()
 
 State* Session::ReceiveResponse()
 {
-    std::cout << "[" << id << "] ReceiveResponse: ";
+    std::ostringstream address;
+    address << (void const*)this;
+    std::cout << address.str() << " ";
+
+    std::cout << "[" << id << "] 3:ReceiveResponse: ";
 
     context_.response_.Reset();
     auto res = db_conn_->ReceiveResponse(context_.response_);
@@ -75,7 +90,11 @@ State* Session::ReceiveResponse()
 
 State* Session::ForwardResponse()
 {
-    std::cout << "[" << id << "] ForwardResponse: ";
+    std::ostringstream address;
+    address << (void const*)this;
+    std::cout << address.str() << " ";
+
+    std::cout << "[" << id << "] 4:ForwardResponse: ";
 
     auto res = cl_conn_->ForwardResponse(context_.response_);
 
@@ -91,7 +110,11 @@ State* Session::ForwardResponse()
 
 State* Session::CloseSession()
 {
-    std::cout << "[" << id << "] CloseSession" << std::endl;
+    std::ostringstream address;
+    address << (void const*)this;
+    std::cout << address.str() << " ";
+
+    std::cout << "[" << id << "] 5:CloseSession" << std::endl;
 
     // TODO: log error + return error to client
     delete cl_conn_;

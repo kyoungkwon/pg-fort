@@ -12,18 +12,10 @@ DbConn::DbConn(std::string host, int port)
                   << std::endl;
     }
 
-    int res = fcntl(socket_, F_SETFL, O_NONBLOCK);
-    if (res < 0)
-    {
-        // TODO: throw exception
-        std::cerr << "DbConn() fcntl failed: " << socket_ << " (errno=" << errno << ")"
-                  << std::endl;
-    }
-
     sock_addr_.sin_family = PF_INET;
     sock_addr_.sin_port   = htons(port_);
 
-    res = inet_pton(AF_INET, host_.c_str(), &sock_addr_.sin_addr);
+    int res = inet_pton(AF_INET, host_.c_str(), &sock_addr_.sin_addr);
     if (res != 1)
     {
         // TODO: throw exception
@@ -36,6 +28,14 @@ DbConn::DbConn(std::string host, int port)
     {
         // TODO: throw exception
         std::cerr << "DbConn() connect failed: " << res << " (errno=" << errno << ")" << std::endl;
+    }
+
+    res = fcntl(socket_, F_SETFL, O_NONBLOCK);
+    if (res < 0)
+    {
+        // TODO: throw exception
+        std::cerr << "DbConn() fcntl failed: " << socket_ << " (errno=" << errno << ")"
+                  << std::endl;
     }
 }
 

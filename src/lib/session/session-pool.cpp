@@ -2,17 +2,14 @@
 
 #include "session/session.h"
 
-SessionPool::SessionPool()
-{
-}
-
-SessionPool::~SessionPool()
+SessionPool::SessionPool(unsigned int num_threads)
+    : ThreadPool(num_threads)
 {
 }
 
 void SessionPool::Work()
 {
-    Session session(nullptr, nullptr);
+    Session session;
     if (job_queue_.Pop(session, 1000) && !session.IsTerminated())
     {
         // invoke action based on current state and transition to next state

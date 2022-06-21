@@ -1,6 +1,6 @@
 #include "conn/buffer.h"
 
-#define DEFAULT_SIZE 4
+#define DEFAULT_SIZE 1024
 
 Buffer::Buffer()
     : buf_(),

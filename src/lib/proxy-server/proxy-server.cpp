@@ -4,7 +4,8 @@ ProxyServer::ProxyServer(int port, DbConnFactory &factory)
     : ip_("localhost"),
       port_(port),
       factory_(factory),
-      flag_(true)
+      flag_(true),
+      pool_(1)
 {
     int res = 0;
 

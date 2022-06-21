@@ -7,9 +7,7 @@
 class SessionPool : public ThreadPool<Session>
 {
 public:
-    SessionPool();
-    ~SessionPool();
-
+    SessionPool(unsigned int num_threads = 0);
     void Work();
 };
 
