@@ -15,6 +15,8 @@ void SessionPool::Work()
     Session session(nullptr, nullptr);
     if (job_queue_.Pop(session, 1000) && !session.IsTerminated())
     {
+        std::cout << "popped session id: " << session.id << std::endl;
+
         // invoke action based on current state and transition to next state
         session();
 

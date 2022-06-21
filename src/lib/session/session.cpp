@@ -10,6 +10,7 @@ Session::Session(ClientConn* cl_conn, DbConn* db_conn)
       reset_("RESET", std::bind(&Session::ResetContext, this)),
       error_("ERROR", std::bind(&Session::CloseSession, this))
 {
+    id = std::rand();
     SetInitialState(waiting_request_);
 }
 
@@ -20,6 +21,8 @@ void Session::operator()()
 
 State* Session::ReceiveRequest()
 {
+    std::cout << "ReceiveRequest" << std::endl;
+
     auto res = cl_conn_->ReceiveRequest(context_.request_);
     if (res <= 0)
     {
@@ -31,6 +34,8 @@ State* Session::ReceiveRequest()
 
 State* Session::ForwardRequest()
 {
+    std::cout << "ForwardRequest" << std::endl;
+
     auto res = db_conn_->ForwardRequest(context_.request_);
     if (res <= 0)
     {
@@ -42,6 +47,8 @@ State* Session::ForwardRequest()
 
 State* Session::ReceiveResponse()
 {
+    std::cout << "ReceiveResponse" << std::endl;
+
     auto res = db_conn_->ReceiveResponse(context_.response_);
     if (res <= 0)
     {
@@ -53,6 +60,8 @@ State* Session::ReceiveResponse()
 
 State* Session::ForwardResponse()
 {
+    std::cout << "ForwardResponse" << std::endl;
+
     auto res = cl_conn_->ForwardResponse(context_.response_);
     if (res <= 0)
     {
@@ -64,6 +73,8 @@ State* Session::ForwardResponse()
 
 State* Session::ResetContext()
 {
+    std::cout << "ResetContext" << std::endl;
+    
     context_.request_.Reset();
     context_.response_.Reset();
     context_.errno_ = 0;
@@ -72,6 +83,8 @@ State* Session::ResetContext()
 
 State* Session::CloseSession()
 {
+    std::cout << "CloseSession" << std::endl;
+
     // TODO: log error + return error to client
     delete cl_conn_;
     delete db_conn_;

@@ -39,6 +39,7 @@ public:
             }
         }
 
+        auto test = q_.front();
         item = q_.front();
         q_.pop();
         return true;

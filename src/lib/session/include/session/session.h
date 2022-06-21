@@ -54,6 +54,8 @@ public:
 
     // session functor takes a state machine action
     void operator()();
+
+    int id;
 };
 
 #endif

@@ -10,7 +10,7 @@
 			"request": "launch",
 			"program": "${command:cmake.launchTargetPath}",
 			"args": [
-				"8888",
+				"8889",
 				"5432"
 			],
 			"stopAtEntry": false,
