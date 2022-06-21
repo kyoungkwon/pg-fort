@@ -93,23 +93,23 @@ public:
 
     void Work()
     {
-        Design design;
-        if (job_queue_.Pop(design, 1000))
+        Design* d = nullptr;
+        if (job_queue_.Pop(d, 1000))
         {
-            if (design.IsTerminated())
+            if (d->IsTerminated())
             {
                 std::cout << "terminated" << std::endl;
+                delete d;
                 return;
             }
 
-            std::cout << design.GetCurrentState()->GetName() << ": " << design.GetScore()
-                      << std::endl;
+            std::cout << d->GetCurrentState()->GetName() << ": " << d->GetScore() << std::endl;
 
             // invoke action based on current state and transition to next state
-            design();
+            (*d)();
 
             // add the session back to the queue
-            job_queue_.Push(design);
+            job_queue_.Push(d);
         }
         else
         {
@@ -118,16 +118,12 @@ public:
     }
 };
 
-void setup(DesignPool& p)
-{
-    Design d;
-    p.Submit(d);
-}
-
 TEST(AdvancedTest, StateMachinePoolTest)
 {
     DesignPool p;
-    setup(p);
+
+    auto d = new Design;
+    p.Submit(d);
 
     p.Work();
     p.Work();

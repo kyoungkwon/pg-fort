@@ -16,14 +16,15 @@ private:
     bool                     stopped_;
 
 protected:
-    BlockingQueue<J> job_queue_;
+    BlockingQueue<J*> job_queue_;
 
     virtual void Work()
     {
-        J j;
+        J* j = nullptr;
         if (!job_queue_.Pop(j, 1000))
         {
-            j();
+            (*j)();
+            delete j;
         }
     }
 
@@ -65,7 +66,7 @@ public:
         }
     }
 
-    void Submit(J& j)
+    void Submit(J* j)
     {
         job_queue_.Push(j);
     }

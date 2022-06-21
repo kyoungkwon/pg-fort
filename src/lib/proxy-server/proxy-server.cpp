@@ -5,7 +5,7 @@ ProxyServer::ProxyServer(int port, DbConnFactory &factory)
       port_(port),
       factory_(factory),
       flag_(true),
-      pool_(1)
+      pool_(4)
 {
     int res = 0;
 
@@ -106,7 +106,7 @@ void ProxyServer::Start()
         auto db_conn = factory_.CreateDbConn();
 
         // create a session and submit to the pool
-        Session session(cl_conn, db_conn);
+        auto session = new Session(cl_conn, db_conn);
         pool_.Submit(session);
     }
 }
