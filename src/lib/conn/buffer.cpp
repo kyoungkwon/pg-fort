@@ -1,5 +1,7 @@
 #include "conn/buffer.h"
 
+#include <iostream>
+
 #define DEFAULT_SIZE 1024
 
 Buffer::Buffer()
@@ -34,34 +36,19 @@ void Buffer::Reset()
 
 int Buffer::RecvFrom(int socket)
 {
-    // set select timeout to 3 sec
-    struct timeval timeout = {0};
-    timeout.tv_sec         = 3;
-    timeout.tv_usec        = 0;
-
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(socket, &fds);
-
-    int retval = select(socket + 1, &fds, NULL, NULL, &timeout);
-    if (retval <= 0)
-    {
-        return retval;  // TODO: better handling
-    }
-
     while (true)
     {
-        retval = recv(socket, buf_.data() + data_size_, buf_size_, 0);
-        if (retval < 0)
+        int res = recv(socket, buf_.data() + data_size_, buf_size_, 0);
+        if (res < 0)
         {
-            return errno == EAGAIN ? data_size_ : retval;  // TODO: better handling
+            return errno == EAGAIN ? data_size_ : res;  // TODO: better handling
         }
-        else if (retval == 0)
+        else if (res == 0)
         {
             return data_size_;  // complete
         }
 
-        data_size_ += retval;
+        data_size_ += res;
         if (data_size_ > buf_size_)
         {
             // double buffer size when half-full
@@ -73,22 +60,8 @@ int Buffer::RecvFrom(int socket)
 
 int Buffer::SendTo(int socket)
 {
-    int retval;
-    fd_set      fds;
-
-    // set select timeout to 3 sec
-    struct timeval timeout = {0};
-    timeout.tv_sec         = 3;
-    timeout.tv_usec        = 0;
-
-    FD_ZERO(&fds);
-    FD_SET(socket, &fds);
-    retval = select(socket + 1, NULL, &fds, NULL, &timeout);
-    if (retval <= 0)
-    {
-        return retval;  // TODO: better handling
-    }
-
-    retval = send(socket, buf_.data(), data_size_, 0);
-    return retval;
+    // TODO: add a loop - until retval += send(...) == data_size <-- just short-expr, not going to
+    // work with retval < 0
+    int res = send(socket, buf_.data(), data_size_, 0);
+    return res;
 }

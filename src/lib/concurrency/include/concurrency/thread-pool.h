@@ -45,7 +45,7 @@ public:
     {
     }
 
-    void Start()
+    virtual void Start()
     {
         for (uint32_t i = 0; i < num_threads_; i++)
         {
@@ -57,13 +57,18 @@ public:
         }
     }
 
-    void Stop()
+    virtual void Stop()
     {
         stopped_ = true;
         for (auto& t : threads_)
         {
             t.join();
         }
+    }
+
+    bool IsStopped()
+    {
+        return stopped_;
     }
 
     void Submit(J* j)

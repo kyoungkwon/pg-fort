@@ -27,6 +27,11 @@ public:
         shutdown(socket_, SHUT_RDWR);
         close(socket_);
     }
+
+    int GetSocket()
+    {
+        return socket_;
+    }
 };
 
 #endif

@@ -79,8 +79,7 @@ void ProxyServer::Start()
         int res = select(socket_ + 1, &fds, NULL, NULL, &timeout);
         if (res == 0)
         {
-            // timed out
-            continue;
+            continue;  // timeout
         }
         else if (res < 0)
         {

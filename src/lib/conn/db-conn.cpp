@@ -29,14 +29,6 @@ DbConn::DbConn(std::string host, int port)
         // TODO: throw exception
         std::cerr << "DbConn() connect failed: " << res << " (errno=" << errno << ")" << std::endl;
     }
-
-    res = fcntl(socket_, F_SETFL, O_NONBLOCK);
-    if (res < 0)
-    {
-        // TODO: throw exception
-        std::cerr << "DbConn() fcntl failed: " << socket_ << " (errno=" << errno << ")"
-                  << std::endl;
-    }
 }
 
 DbConn::~DbConn()
