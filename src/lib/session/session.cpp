@@ -18,6 +18,7 @@ Session::Session(ClientConn* cl_conn, DbConn* db_conn)
 
 Session::~Session()
 {
+    std::cout << "Deleting session [" << id << "]" << std::endl;
     delete cl_conn_;
     delete db_conn_;
 }
@@ -39,6 +40,8 @@ struct pollfd Session::GetPollFd()
 
 State* Session::PrepRecvReq()
 {
+    std::cout << "[" << id << "] 1:PrepRecvReq" << std::endl;
+
     context_.pollfd_.fd     = cl_conn_->GetSocket();
     context_.pollfd_.events = POLLIN;
     context_.waiting_       = true;
@@ -48,9 +51,15 @@ State* Session::PrepRecvReq()
 
 State* Session::RecvReq()
 {
+    std::cout << "[" << id << "] 2:RecvReq";
+
     auto res = cl_conn_->ReceiveRequest(context_.request_);
+
+    std::cout << "\t" << res << std::endl;
+
     if (res <= 0)
     {
+        context_.errno_ = errno;
         return nullptr;
     }
     context_.waiting_ = false;
@@ -59,6 +68,8 @@ State* Session::RecvReq()
 
 State* Session::PrepFwdReq()
 {
+    std::cout << "[" << id << "] 3:PrepFwdReq" << std::endl;
+
     context_.pollfd_.fd     = db_conn_->GetSocket();
     context_.pollfd_.events = POLLOUT;
     context_.waiting_       = true;
@@ -67,9 +78,15 @@ State* Session::PrepFwdReq()
 
 State* Session::FwdReq()
 {
+    std::cout << "[" << id << "] 4:FwdReq";
+
     auto res = db_conn_->ForwardRequest(context_.request_);
+
+    std::cout << "\t" << res << std::endl;
+
     if (res <= 0)
     {
+        context_.errno_ = errno;
         return nullptr;
     }
     context_.waiting_ = false;
@@ -78,6 +95,8 @@ State* Session::FwdReq()
 
 State* Session::PrepRecvResp()
 {
+    std::cout << "[" << id << "] 5:PrepRecvResp" << std::endl;
+
     context_.pollfd_.fd     = db_conn_->GetSocket();
     context_.pollfd_.events = POLLIN;
     context_.waiting_       = true;
@@ -87,9 +106,15 @@ State* Session::PrepRecvResp()
 
 State* Session::RecvResp()
 {
+    std::cout << "[" << id << "] 6:RecvResp";
+
     auto res = db_conn_->ReceiveResponse(context_.response_);
+
+    std::cout << "\t" << res << std::endl;
+
     if (res <= 0)
     {
+        context_.errno_ = errno;
         return nullptr;
     }
     context_.waiting_ = false;
@@ -98,6 +123,8 @@ State* Session::RecvResp()
 
 State* Session::PrepFwdResp()
 {
+    std::cout << "[" << id << "] 7:PrepFwdResp" << std::endl;
+
     context_.pollfd_.fd     = cl_conn_->GetSocket();
     context_.pollfd_.events = POLLOUT;
     context_.waiting_       = true;
@@ -106,9 +133,15 @@ State* Session::PrepFwdResp()
 
 State* Session::FwdResp()
 {
+    std::cout << "[" << id << "] 8:FwdResp";
+
     auto res = cl_conn_->ForwardResponse(context_.response_);
+
+    std::cout << "\t" << res << std::endl;
+
     if (res <= 0)
     {
+        context_.errno_ = errno;
         return nullptr;
     }
     context_.waiting_ = false;

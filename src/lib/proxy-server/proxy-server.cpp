@@ -5,7 +5,7 @@ ProxyServer::ProxyServer(int port, DbConnFactory &factory)
       port_(port),
       factory_(factory),
       flag_(true),
-      pool_(4)
+      pool_(5)
 {
     int res = 0;
 
@@ -106,6 +106,9 @@ void ProxyServer::Start()
 
         // create a session and submit to the pool
         auto session = new Session(cl_conn, db_conn);
+
+        std::cout << "New session [" << session->id << "]" << std::endl;
+
         pool_.Submit(session);
     }
 }

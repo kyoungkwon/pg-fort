@@ -24,38 +24,48 @@ void SessionPool::Work()
     {
         if (session->IsTerminated())
         {
-            // delete terminated sessions
-            delete session;
+            delete session;  // delete terminated sessions
+            return;
         }
 
-        // carry out session task
-        (*session)();
+        (*session)();  // carry out session task
 
         if (session->IsWaiting())
         {
-            // add to watch
-            AddToWatch(session);
+            AddToWatch(session);  // add to watch
         }
         else
         {
-            // add back to the queue
-            job_queue_.Push(session);
+            job_queue_.Push(session);  // add back to the queue
         }
     }
 }
 
 void SessionPool::Watch()
 {
-    int timeout = 1 * 1000;  // 1 seconds
-
     while (!IsStopped())
     {
-        // drain queue
+        std::cout << "start: " << watch_vector_.size() << std::endl;
+
+        // check if there's any session to watch
         Session* session = nullptr;
+        if (watch_vector_.empty())
+        {
+            if (!watch_queue_.Pop(session, 1000))
+            {
+                std::cout << "nothing to watch" << std::endl;
+                continue;
+            }
+            std::cout << "something to watch" << std::endl;
+            watch_vector_.emplace_back(session);
+        }
+
+        // drain queue
         while (watch_queue_.Pop(session, 0))
         {
             watch_vector_.emplace_back(session);
         }
+        std::cout << "total: " << watch_vector_.size() << std::endl;
 
         int nfds = watch_vector_.size();
 
@@ -66,7 +76,7 @@ void SessionPool::Watch()
         }
 
         // TODO: maybe need a global poller to avoid long waits
-        int res = poll(fds, nfds, timeout);
+        int res = poll(fds, nfds, 1000);
         if (res < 0)
         {
             // TODO: handle errno better - also proper shutdown
@@ -76,6 +86,7 @@ void SessionPool::Watch()
         }
         else if (res == 0)
         {
+            std::cout << "poll timeout" << std::endl;
             continue;  // timeout
         }
 
