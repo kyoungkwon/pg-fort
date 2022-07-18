@@ -15,6 +15,7 @@ private:
     std::thread             watcher_;
     BlockingQueue<Session*> watch_queue_;
     std::vector<Session*>   watch_vector_;
+    int                     wake_fd_[2];
 
     void Watch();
     void AddToWatch(Session* session);

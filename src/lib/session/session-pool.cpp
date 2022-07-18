@@ -3,6 +3,14 @@
 SessionPool::SessionPool(unsigned int num_threads)
     : ThreadPool(num_threads)
 {
+    if (pipe(wake_fd_) < 0)
+    {
+        std::cerr << "pipe(wake_fd_) failed with errno = " << errno << std::endl;
+        exit(1);
+    }
+
+    // HACK
+    watch_vector_.emplace_back(new Session(nullptr, nullptr));
 }
 
 void SessionPool::Start()
@@ -45,37 +53,24 @@ void SessionPool::Watch()
 {
     while (!IsStopped())
     {
-        std::cout << "start: " << watch_vector_.size() << std::endl;
-
-        // check if there's any session to watch
-        Session* session = nullptr;
-        if (watch_vector_.empty())
-        {
-            if (!watch_queue_.Pop(session, 1000))
-            {
-                std::cout << "nothing to watch" << std::endl;
-                continue;
-            }
-            std::cout << "something to watch" << std::endl;
-            watch_vector_.emplace_back(session);
-        }
-
         // drain queue
+        Session* session = nullptr;
         while (watch_queue_.Pop(session, 0))
         {
             watch_vector_.emplace_back(session);
         }
-        std::cout << "total: " << watch_vector_.size() << std::endl;
 
         int nfds = watch_vector_.size();
 
+        // set wake_fd_ as fds[0]
         struct pollfd fds[nfds];
-        for (int i = 0; i < nfds; i++)
+        fds[0].fd     = wake_fd_[0];
+        fds[0].events = POLLIN;
+        for (int i = 1; i < nfds; i++)
         {
             fds[i] = watch_vector_[i]->GetPollFd();
         }
 
-        // TODO: maybe need a global poller to avoid long waits
         int res = poll(fds, nfds, 1000);
         if (res < 0)
         {
@@ -86,11 +81,17 @@ void SessionPool::Watch()
         }
         else if (res == 0)
         {
-            std::cout << "poll timeout" << std::endl;
             continue;  // timeout
         }
 
-        for (int i = 0; i < nfds; i++)
+        if (fds[0].revents)
+        {
+            char buf;
+            read(wake_fd_[0], &buf, 1);
+        }
+
+        // ignore i = 0 (it's wake fd)
+        for (int i = 1; i < nfds; i++)
         {
             if (fds[i].revents)
             {
@@ -106,4 +107,5 @@ void SessionPool::Watch()
 void SessionPool::AddToWatch(Session* session)
 {
     watch_queue_.Push(session);
+    write(wake_fd_[1], "a", 1);
 }
