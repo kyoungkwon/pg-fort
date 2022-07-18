@@ -88,6 +88,7 @@ void SessionPool::Watch()
         {
             char buf;
             read(wake_fd_[0], &buf, 1);
+            continue;
         }
 
         // ignore i = 0 (it's wake fd)
