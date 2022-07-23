@@ -9,7 +9,8 @@ SessionPool::SessionPool(unsigned int num_threads)
         exit(1);
     }
 
-    // HACK
+    // HACK: place a dummy session to reserve a spot for wake_fd_
+    //       this could be replaced with epoll if I can get this run on linux container
     watch_vector_.emplace_back(new Session(nullptr, nullptr));
 }
 
@@ -37,6 +38,8 @@ void SessionPool::Work()
         }
 
         (*session)();  // carry out session task
+
+        std::cout << "------------------------------------------------------------" << std::endl;
 
         if (session->IsWaiting())
         {

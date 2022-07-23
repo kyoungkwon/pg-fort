@@ -62,6 +62,19 @@ State* Session::RecvReq()
         context_.errno_ = errno;
         return nullptr;
     }
+
+    std::cout << context_.request_.Data() << std::endl;
+
+    // std::cout << context_.request_.Data() + 1 << std::endl;
+    // std::cout << context_.request_.Data() + 2 << std::endl;
+    // std::cout << context_.request_.Data() + 3 << std::endl;
+    // std::cout << context_.request_.Data() + 4 << std::endl;
+    // std::cout << context_.request_.Data() + 5 << std::endl;
+    // std::cout << context_.request_.Data() + 6 << std::endl;
+    // std::cout << context_.request_.Data() + 7 << std::endl;
+    // std::cout << context_.request_.Data() + 8 << std::endl;
+    // std::cout << context_.request_.Data() + 9 << std::endl;
+
     context_.waiting_ = false;
     return &prep_fwd_req;
 }

@@ -1,6 +1,7 @@
 #ifndef __POSTGRESQL_PROXY_STATEMACHINE_H__
 #define __POSTGRESQL_PROXY_STATEMACHINE_H__
 
+#include <functional>
 #include <iostream>
 #include <set>
 #include <string>

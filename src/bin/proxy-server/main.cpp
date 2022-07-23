@@ -1,4 +1,3 @@
-#include "conn/db-conn.h"
 #include "proxy-server/proxy-server.h"
 
 static void show_usage(std::string name)
@@ -8,24 +7,21 @@ static void show_usage(std::string name)
 
 int main(int argc, char const *argv[])
 {
-    int retval    = 0;
-    int proxyPort = 0;
-    int dbPort    = 0;
-
-    if (argc != 3)
+    if (argc != 4)
     {
         show_usage(argv[0]);
         exit(1);  // TODO: proper error code
     }
 
-    dbPort = atoi(argv[2]);
-    DbConnFactory factory("127.0.0.1", dbPort);
+    auto          db_host = std::string(argv[2]);
+    auto          db_port = atoi(argv[3]);
+    DbConnFactory factory(db_host, db_port);
 
-    proxyPort = atoi(argv[1]);
-    ProxyServer proxy(proxyPort, factory);
-    proxy.Start();
+    auto        proxy_port = atoi(argv[1]);
+    ProxyServer proxy(proxy_port, factory);
+    proxy.Run();
 
     std::cout << "exiting main.." << std::endl;
 
-    return retval;
+    return 0;
 }

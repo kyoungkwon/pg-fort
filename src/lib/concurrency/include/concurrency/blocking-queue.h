@@ -1,6 +1,7 @@
 #ifndef __POSTGRESQL_PROXY_BLOCKINGQUEUE_H__
 #define __POSTGRESQL_PROXY_BLOCKINGQUEUE_H__
 
+#include <condition_variable>
 #include <mutex>
 #include <queue>
 

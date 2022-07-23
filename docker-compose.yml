@@ -1,0 +1,25 @@
+version: '3.4'
+
+services:
+  postgresql-proxy:
+    image: postgresql-proxy
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 8890:8890
+    working_dir: /usr/local/postgresql-proxy
+    command: 8890 postgresql 5432
+
+  postgresql:
+    image: postgres
+    volumes:
+      - test-postgres-db:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: myusername
+      POSTGRES_PASSWORD: mypassword
+
+volumes:
+  test-postgres-db:

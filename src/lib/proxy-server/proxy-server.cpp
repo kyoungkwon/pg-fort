@@ -60,7 +60,7 @@ ProxyServer::~ProxyServer()
     pool_.Stop();
 }
 
-void ProxyServer::Start()
+void ProxyServer::Run()
 {
     fd_set fds;
 

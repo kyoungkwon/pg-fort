@@ -32,7 +32,7 @@ public:
     ProxyServer(int port, DbConnFactory &factory);
     ~ProxyServer();
 
-    void Start();
+    void Run();
 };
 
 #endif
