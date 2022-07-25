@@ -1,6 +1,8 @@
 #include "conn/db-conn.h"
 
-DbConn::DbConn(std::string host, int port)
+#include <cstring>
+
+DbConn::DbConn(const char* host, const char* port)
     : Conn(socket(PF_INET, SOCK_STREAM, 0)),
       host_(host),
       port_(port)
@@ -12,30 +14,44 @@ DbConn::DbConn(std::string host, int port)
                   << std::endl;
     }
 
-    sock_addr_.sin_family = PF_INET;
-    sock_addr_.sin_port   = htons(port_);
+    struct addrinfo  hints;
+    struct addrinfo *addrs, *addr;
 
-    int res = inet_pton(AF_INET, host_.c_str(), &sock_addr_.sin_addr);
-    if (res != 1)
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family   = PF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    int res = getaddrinfo(host, port, &hints, &addrs);
+    if (res != 0)
     {
         // TODO: throw exception
-        std::cerr << "DbConn() inet_pton failed: " << res << " (errno=" << errno << ")"
+        std::cerr << "DbConn() getaddrinfo failed: " << res << " (errno=" << errno << ")"
                   << std::endl;
     }
 
-    res = connect(socket_, (struct sockaddr*)&sock_addr_, sizeof(sock_addr_));
-    if (res < 0)
+    for (addr = addrs; addr != NULL; addr = addr->ai_next)
+    {
+        if ((res = connect(socket_, addr->ai_addr, addr->ai_addrlen)) == 0)
+        {
+            break;  // success
+        }
+    }
+    freeaddrinfo(addrs);
+
+    if (res != 0)
     {
         // TODO: throw exception
         std::cerr << "DbConn() connect failed: " << res << " (errno=" << errno << ")" << std::endl;
     }
-
-    res = fcntl(socket_, F_SETFL, O_NONBLOCK);
-    if (res < 0)
+    else
     {
-        // TODO: throw exception
-        std::cerr << "DbConn() fcntl failed: " << socket_ << " (errno=" << errno << ")"
-                  << std::endl;
+        res = fcntl(socket_, F_SETFL, O_NONBLOCK);
+        if (res < 0)
+        {
+            // TODO: throw exception
+            std::cerr << "DbConn() fcntl failed: " << socket_ << " (errno=" << errno << ")"
+                      << std::endl;
+        }
     }
 }
 
@@ -53,7 +69,7 @@ int DbConn::ReceiveResponse(Response& response)
     return response.RecvFrom(socket_);
 }
 
-DbConnFactory::DbConnFactory(std::string host, int port)
+DbConnFactory::DbConnFactory(const char* host, const char* port)
     : host_(host),
       port_(port)
 {

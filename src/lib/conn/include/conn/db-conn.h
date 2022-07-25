@@ -3,7 +3,10 @@
 
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <netdb.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #include <iostream>
 #include <string>
@@ -15,12 +18,12 @@
 class DbConn : public Conn
 {
 private:
-    std::string host_;
-    int         port_;
+    const char* host_;
+    const char* port_;
     sockaddr_in sock_addr_;
 
 public:
-    DbConn(std::string host, int port);
+    DbConn(const char* host, const char* port);
     ~DbConn();
 
     int ForwardRequest(Request& request);
@@ -30,11 +33,11 @@ public:
 class DbConnFactory
 {
 private:
-    std::string host_;
-    int         port_;
+    const char* host_;
+    const char* port_;
 
 public:
-    DbConnFactory(std::string host, int port);
+    DbConnFactory(const char* host, const char* port);
     ~DbConnFactory();
 
     DbConn* CreateDbConn();

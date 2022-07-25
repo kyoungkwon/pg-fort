@@ -2,7 +2,7 @@
 
 static void show_usage(std::string name)
 {
-    std::cerr << "Usage: " << name << " <proxy-port> <db-port>" << std::endl;
+    std::cerr << "Usage: " << name << " <proxy-port> <db-host> <db-port>" << std::endl;
 }
 
 int main(int argc, char const *argv[])
@@ -13,11 +13,10 @@ int main(int argc, char const *argv[])
         exit(1);  // TODO: proper error code
     }
 
-    auto          db_host = std::string(argv[2]);
-    auto          db_port = atoi(argv[3]);
-    DbConnFactory factory(db_host, db_port);
+    auto proxy_port = atoi(argv[1]);
 
-    auto        proxy_port = atoi(argv[1]);
+    DbConnFactory factory(argv[2], argv[3]);
+
     ProxyServer proxy(proxy_port, factory);
     proxy.Run();
 
