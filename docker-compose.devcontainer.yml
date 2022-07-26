@@ -6,12 +6,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: build-deps
     ports:
       - 8890:8890
     depends_on:
       - postgresql
-    working_dir: /usr/local/postgresql-proxy
-    command: 8890 postgresql 5432
 
   postgresql:
     image: postgres

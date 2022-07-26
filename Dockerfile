@@ -1,16 +1,19 @@
-FROM ubuntu:latest as build
+FROM ubuntu:latest as build-deps
 
 SHELL ["/bin/bash", "-c"]
 
 # TODO: merge into single RUN
-RUN apt-get update
-RUN apt-get -y install build-essential
-RUN apt-get -y install clang
-RUN apt-get -y install cmake
-RUN apt-get -y install gdb
-RUN apt-get -y install libgtest-dev
-RUN apt-get -y install pkg-config
-RUN apt-get -y install libgmock-dev
+RUN apt update
+RUN apt -y install build-essential
+RUN apt -y install cmake
+RUN apt -y install gdb
+RUN apt -y install git
+RUN apt -y install libgmock-dev
+RUN apt -y install libgtest-dev
+RUN apt -y install pkg-config
+
+
+FROM build-deps as build
 
 COPY . /src
 WORKDIR /src

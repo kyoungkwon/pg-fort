@@ -5,12 +5,13 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "(lldb) Launch",
+			"name": "(gdb) Launch",
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${command:cmake.launchTargetPath}",
 			"args": [
 				"8890",
+				"postgresql",
 				"5432"
 			],
 			"stopAtEntry": false,
@@ -24,7 +25,7 @@
                 },
 			],
 			"externalConsole": false,
-			"MIMode": "lldb"
+			"MIMode": "gdb"
 		}
 	]
 }
