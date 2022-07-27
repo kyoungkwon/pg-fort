@@ -2,7 +2,7 @@
 #define __POSTGRESQL_PROXY_SESSION_H__
 
 #include <fcntl.h>
-#include <sys/poll.h>
+#include <sys/epoll.h>
 #include <sys/socket.h>
 
 #include <future>
@@ -25,11 +25,11 @@ private:
 
     struct
     {
-        struct pollfd pollfd_;
-        bool          waiting_;
-        Request       request_;
-        Response      response_;
-        int           errno_;
+        struct epoll_event ev_;
+        bool               waiting_;
+        Request            request_;
+        Response           response_;
+        int                errno_;
     } context_;
 
     // declare states and actions
@@ -64,8 +64,8 @@ public:
     // session functor takes a state machine action
     void operator()();
 
-    bool          IsWaiting();
-    struct pollfd GetPollFd();
+    bool               IsWaiting();
+    struct epoll_event GetEpollEvent();
 
     // TODO: improve this
     int id;

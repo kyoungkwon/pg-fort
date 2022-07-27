@@ -1,17 +1,16 @@
 #include "session/session-pool.h"
 
+#define MAX_EVENTS 100
+
 SessionPool::SessionPool(unsigned int num_threads)
     : ThreadPool(num_threads)
 {
-    if (pipe(wake_fd_) < 0)
+    epollfd_ = epoll_create1(0);
+    if (epollfd_ == -1)
     {
-        std::cerr << "pipe(wake_fd_) failed with errno = " << errno << std::endl;
-        exit(1);
+        perror("epoll_create1");
+        exit(EXIT_FAILURE);
     }
-
-    // HACK: place a dummy session to reserve a spot for wake_fd_
-    //       this could be replaced with epoll if I can get this run on linux container
-    watch_vector_.emplace_back(new Session(nullptr, nullptr));
 }
 
 void SessionPool::Start()
@@ -47,69 +46,55 @@ void SessionPool::Work()
         }
         else
         {
-            job_queue_.Push(session);  // add back to the queue
+            Submit(session);  // back to the queue
         }
     }
 }
 
 void SessionPool::Watch()
 {
+    struct epoll_event events[MAX_EVENTS];
+    int                nfds;
+
     while (!IsStopped())
     {
-        // drain queue
-        Session* session = nullptr;
-        while (watch_queue_.Pop(session, 0))
+        nfds = epoll_wait(epollfd_, events, MAX_EVENTS, 1000);
+        if (nfds == -1)
         {
-            watch_vector_.emplace_back(session);
+            perror("epoll_wait");
+            exit(EXIT_FAILURE);
         }
 
-        int nfds = watch_vector_.size();
+        for (int i = 0; i < nfds; i++)
+        {
+            auto s  = (Session*)events[i].data.ptr;
+            auto fd = s->GetEpollEvent().data.fd;
 
-        // set wake_fd_ as fds[0]
-        struct pollfd fds[nfds];
-        fds[0].fd     = wake_fd_[0];
-        fds[0].events = POLLIN;
-        for (int i = 1; i < nfds; i++)
-        {
-            fds[i] = watch_vector_[i]->GetPollFd();
-        }
-
-        int res = poll(fds, nfds, 1000);
-        if (res < 0)
-        {
-            // TODO: handle errno better - also proper shutdown
-            std::cerr << "poll failed with res = " << res << std::endl;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            continue;
-        }
-        else if (res == 0)
-        {
-            continue;  // timeout
-        }
-
-        if (fds[0].revents)
-        {
-            char buf;
-            read(wake_fd_[0], &buf, 1);
-            continue;
-        }
-
-        // ignore i = 0 (it's wake fd)
-        for (int i = 1; i < nfds; i++)
-        {
-            if (fds[i].revents)
+            // session is ready to proceed, remove from epoll
+            if (epoll_ctl(epollfd_, EPOLL_CTL_DEL, fd, nullptr) == -1)
             {
-                job_queue_.Push(watch_vector_[i]);
-                watch_vector_.erase(watch_vector_.begin() + i);
-                i--;
-                nfds--;
+                perror("epoll_ctl: del");
+                exit(EXIT_FAILURE);
             }
+
+            // back to the queue
+            Submit(s);
         }
     }
 }
 
 void SessionPool::AddToWatch(Session* session)
 {
-    watch_queue_.Push(session);
-    write(wake_fd_[1], "a", 1);
+    auto ev = session->GetEpollEvent();
+    auto fd = ev.data.fd;
+
+    // retreive session from epoll_wait
+    ev.data.ptr = session;
+
+    // add to epoll
+    if (epoll_ctl(epollfd_, EPOLL_CTL_ADD, fd, &ev) == -1)
+    {
+        perror("epoll_ctl: add");
+        exit(EXIT_FAILURE);
+    }
 }

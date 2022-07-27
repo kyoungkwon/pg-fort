@@ -33,18 +33,18 @@ bool Session::IsWaiting()
     return context_.waiting_;
 }
 
-struct pollfd Session::GetPollFd()
+struct epoll_event Session::GetEpollEvent()
 {
-    return context_.pollfd_;
+    return context_.ev_;
 }
 
 State* Session::PrepRecvReq()
 {
     std::cout << "[" << id << "] 1:PrepRecvReq" << std::endl;
 
-    context_.pollfd_.fd     = cl_conn_->GetSocket();
-    context_.pollfd_.events = POLLIN;
-    context_.waiting_       = true;
+    context_.ev_.data.fd = cl_conn_->GetSocket();
+    context_.ev_.events  = EPOLLIN;
+    context_.waiting_    = true;
     context_.request_.Reset();
     return &recv_req;
 }
@@ -63,17 +63,14 @@ State* Session::RecvReq()
         return nullptr;
     }
 
-    std::cout << context_.request_.Data() << std::endl;
+    auto data = context_.request_.Data();
+    auto type = data[0];
+    std::cout << "type = " << type;
 
-    // std::cout << context_.request_.Data() + 1 << std::endl;
-    // std::cout << context_.request_.Data() + 2 << std::endl;
-    // std::cout << context_.request_.Data() + 3 << std::endl;
-    // std::cout << context_.request_.Data() + 4 << std::endl;
-    // std::cout << context_.request_.Data() + 5 << std::endl;
-    // std::cout << context_.request_.Data() + 6 << std::endl;
-    // std::cout << context_.request_.Data() + 7 << std::endl;
-    // std::cout << context_.request_.Data() + 8 << std::endl;
-    // std::cout << context_.request_.Data() + 9 << std::endl;
+    // auto size = int32_t(data + 1);
+    // std::cout << ", size = " << size;
+
+    std::cout << std::endl;
 
     context_.waiting_ = false;
     return &prep_fwd_req;
@@ -83,9 +80,9 @@ State* Session::PrepFwdReq()
 {
     std::cout << "[" << id << "] 3:PrepFwdReq" << std::endl;
 
-    context_.pollfd_.fd     = db_conn_->GetSocket();
-    context_.pollfd_.events = POLLOUT;
-    context_.waiting_       = true;
+    context_.ev_.data.fd = db_conn_->GetSocket();
+    context_.ev_.events  = EPOLLOUT;
+    context_.waiting_    = true;
     return &fwd_req;
 }
 
@@ -110,9 +107,9 @@ State* Session::PrepRecvResp()
 {
     std::cout << "[" << id << "] 5:PrepRecvResp" << std::endl;
 
-    context_.pollfd_.fd     = db_conn_->GetSocket();
-    context_.pollfd_.events = POLLIN;
-    context_.waiting_       = true;
+    context_.ev_.data.fd = db_conn_->GetSocket();
+    context_.ev_.events  = EPOLLIN;
+    context_.waiting_    = true;
     context_.response_.Reset();
     return &recv_resp;
 }
@@ -138,9 +135,9 @@ State* Session::PrepFwdResp()
 {
     std::cout << "[" << id << "] 7:PrepFwdResp" << std::endl;
 
-    context_.pollfd_.fd     = cl_conn_->GetSocket();
-    context_.pollfd_.events = POLLOUT;
-    context_.waiting_       = true;
+    context_.ev_.data.fd = cl_conn_->GetSocket();
+    context_.ev_.events  = EPOLLOUT;
+    context_.waiting_    = true;
     return &fwd_resp;
 }
 
