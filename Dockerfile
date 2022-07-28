@@ -10,6 +10,7 @@ RUN apt -y install gdb
 RUN apt -y install git
 RUN apt -y install libgmock-dev
 RUN apt -y install libgtest-dev
+RUN apt -y install libpg-query-dev
 RUN apt -y install pkg-config
 
 

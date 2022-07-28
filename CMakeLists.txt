@@ -14,6 +14,10 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 20)
 
 
+# dependencies
+find_library(LIBPG_QUERY pg_query PATHS /usr/lib/x86_64-linux-gnu)
+
+
 # executable
 add_executable(${PROJECT_NAME} src/bin/proxy-server/main.cpp)
 
