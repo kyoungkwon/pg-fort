@@ -104,7 +104,7 @@ void ProxyServer::Run()
         // create a db connection
         auto db_conn = factory_.CreateDbConn();
 
-        // create a session and submit to the pool
+        // create a session and submit to the operator
         auto session = new Session(cl_conn, db_conn);
 
         std::cout << "New session [" << session->id << "]" << std::endl;
