@@ -1,5 +1,5 @@
-#ifndef __POSTGRESQL_PROXY_SESSIONPOOL_H__
-#define __POSTGRESQL_PROXY_SESSIONPOOL_H__
+#ifndef __POSTGRESQL_PROXY_SESSIONOPERATOR_H__
+#define __POSTGRESQL_PROXY_SESSIONOPERATOR_H__
 
 #include <sys/epoll.h>
 
@@ -9,7 +9,7 @@
 #include "concurrency/thread-pool.h"
 #include "session/session.h"
 
-class SessionPool : public ThreadPool<Session>
+class SessionOperator : public ThreadPool<Session>
 {
 private:
     int         epollfd_;
@@ -19,7 +19,7 @@ private:
     void AddToWatch(Session* session);
 
 public:
-    SessionPool(unsigned int num_threads = 0);
+    SessionOperator(unsigned int num_threads = 0);
 
     void Start();
     void Stop();

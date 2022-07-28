@@ -5,7 +5,7 @@ ProxyServer::ProxyServer(int port, DbConnFactory &factory)
       port_(port),
       factory_(factory),
       flag_(true),
-      pool_(5)
+      operator_(4)
 {
     int res = 0;
 
@@ -57,7 +57,7 @@ ProxyServer::ProxyServer(int port, DbConnFactory &factory)
 
 ProxyServer::~ProxyServer()
 {
-    pool_.Stop();
+    operator_.Stop();
 }
 
 void ProxyServer::Run()
@@ -69,8 +69,8 @@ void ProxyServer::Run()
     timeout.tv_sec         = 3;
     timeout.tv_usec        = 0;
 
-    // start session pool
-    pool_.Start();
+    // start session operator
+    operator_.Start();
 
     while (true)
     {
@@ -109,6 +109,6 @@ void ProxyServer::Run()
 
         std::cout << "New session [" << session->id << "]" << std::endl;
 
-        pool_.Submit(session);
+        operator_.Submit(session);
     }
 }

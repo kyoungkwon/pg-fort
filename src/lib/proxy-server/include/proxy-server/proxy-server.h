@@ -14,19 +14,19 @@
 
 #include "conn/client-conn.h"
 #include "conn/db-conn.h"
-#include "session/session-pool.h"
+#include "session/session-operator.h"
 
 class ProxyServer
 {
 private:
-    std::string    ip_;
-    int            port_;
-    int            socket_;
-    sockaddr_in    sock_addr_;
-    socklen_t      sock_len_;
-    int            flag_;
-    DbConnFactory &factory_;
-    SessionPool    pool_;
+    std::string     ip_;
+    int             port_;
+    int             socket_;
+    sockaddr_in     sock_addr_;
+    socklen_t       sock_len_;
+    int             flag_;
+    DbConnFactory  &factory_;
+    SessionOperator operator_;
 
 public:
     ProxyServer(int port, DbConnFactory &factory);

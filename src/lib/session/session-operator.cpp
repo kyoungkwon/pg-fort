@@ -1,8 +1,8 @@
-#include "session/session-pool.h"
+#include "session/session-operator.h"
 
 #define MAX_EVENTS 100
 
-SessionPool::SessionPool(unsigned int num_threads)
+SessionOperator::SessionOperator(unsigned int num_threads)
     : ThreadPool(num_threads)
 {
     epollfd_ = epoll_create1(0);
@@ -13,19 +13,19 @@ SessionPool::SessionPool(unsigned int num_threads)
     }
 }
 
-void SessionPool::Start()
+void SessionOperator::Start()
 {
     ThreadPool::Start();
     watcher_ = std::thread([&]() { Watch(); });
 }
 
-void SessionPool::Stop()
+void SessionOperator::Stop()
 {
     ThreadPool::Stop();
     watcher_.join();
 }
 
-void SessionPool::Work()
+void SessionOperator::Work()
 {
     Session* session = nullptr;
     if (job_queue_.Pop(session, 1000))
@@ -51,7 +51,7 @@ void SessionPool::Work()
     }
 }
 
-void SessionPool::Watch()
+void SessionOperator::Watch()
 {
     struct epoll_event events[MAX_EVENTS];
     int                nfds;
@@ -83,7 +83,7 @@ void SessionPool::Watch()
     }
 }
 
-void SessionPool::AddToWatch(Session* session)
+void SessionOperator::AddToWatch(Session* session)
 {
     auto ev = session->GetEpollEvent();
     auto fd = ev.data.fd;
