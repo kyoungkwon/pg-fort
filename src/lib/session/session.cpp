@@ -65,10 +65,25 @@ State* Session::RecvReq()
 
     auto data = context_.request_.Data();
     auto type = data[0];
-    std::cout << "type = " << type;
+    std::cout << "type = " << type << std::endl;
 
-    // auto size = int32_t(data + 1);
-    // std::cout << ", size = " << size;
+    if (type == 'Q')
+    {
+        std::cout << "\t\"Query\"" << std::endl;
+
+        int32_t len = (uint32_t(data[1]) << 24) + (uint32_t(data[2]) << 16) +
+                      (uint32_t(data[3]) << 8) + uint32_t(data[4]) - 4;
+
+        std::cout << "\tlen = " << len << std::endl;
+
+        auto query = (unsigned char*)malloc(len + 1);
+        memcpy(query, data + 5, len);
+        query[len] = '\0';
+
+        std::cout << "\tquery = " << query << std::endl;
+
+        free(query);
+    }
 
     std::cout << std::endl;
 

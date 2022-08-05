@@ -1,0 +1,196 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "SelectStmt": {
+                    "fromClause": [
+                        {
+                            "RangeVar": {
+                                "alias": {
+                                    "aliasname": "d"
+                                },
+                                "inh": true,
+                                "location": 56,
+                                "relname": "distributors",
+                                "relpersistence": "p"
+                            }
+                        },
+                        {
+                            "RangeVar": {
+                                "alias": {
+                                    "aliasname": "f"
+                                },
+                                "inh": true,
+                                "location": 72,
+                                "relname": "films",
+                                "relpersistence": "p"
+                            }
+                        }
+                    ],
+                    "limitOption": "LIMIT_OPTION_DEFAULT",
+                    "op": "SETOP_NONE",
+                    "targetList": [
+                        {
+                            "ResTarget": {
+                                "location": 7,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "f"
+                                                }
+                                            },
+                                            {
+                                                "String": {
+                                                    "str": "title"
+                                                }
+                                            }
+                                        ],
+                                        "location": 7
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "ResTarget": {
+                                "location": 16,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "f"
+                                                }
+                                            },
+                                            {
+                                                "String": {
+                                                    "str": "did"
+                                                }
+                                            }
+                                        ],
+                                        "location": 16
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "ResTarget": {
+                                "location": 23,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "d"
+                                                }
+                                            },
+                                            {
+                                                "String": {
+                                                    "str": "name"
+                                                }
+                                            }
+                                        ],
+                                        "location": 23
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "ResTarget": {
+                                "location": 31,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "f"
+                                                }
+                                            },
+                                            {
+                                                "String": {
+                                                    "str": "date_prod"
+                                                }
+                                            }
+                                        ],
+                                        "location": 31
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "ResTarget": {
+                                "location": 44,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "f"
+                                                }
+                                            },
+                                            {
+                                                "String": {
+                                                    "str": "kind"
+                                                }
+                                            }
+                                        ],
+                                        "location": 44
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "whereClause": {
+                        "A_Expr": {
+                            "kind": "AEXPR_OP",
+                            "lexpr": {
+                                "ColumnRef": {
+                                    "fields": [
+                                        {
+                                            "String": {
+                                                "str": "f"
+                                            }
+                                        },
+                                        {
+                                            "String": {
+                                                "str": "did"
+                                            }
+                                        }
+                                    ],
+                                    "location": 86
+                                }
+                            },
+                            "location": 92,
+                            "name": [
+                                {
+                                    "String": {
+                                        "str": "="
+                                    }
+                                }
+                            ],
+                            "rexpr": {
+                                "ColumnRef": {
+                                    "fields": [
+                                        {
+                                            "String": {
+                                                "str": "d"
+                                            }
+                                        },
+                                        {
+                                            "String": {
+                                                "str": "did"
+                                            }
+                                        }
+                                    ],
+                                    "location": 94
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "version": 130003
+}

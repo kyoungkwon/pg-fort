@@ -1,0 +1,162 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "SelectStmt": {
+                    "all": true,
+                    "larg": {
+                        "fromClause": [
+                            {
+                                "RangeVar": {
+                                    "inh": true,
+                                    "location": 74,
+                                    "relname": "t",
+                                    "relpersistence": "p"
+                                }
+                            }
+                        ],
+                        "limitOption": "LIMIT_OPTION_DEFAULT",
+                        "op": "SETOP_NONE",
+                        "targetList": [
+                            {
+                                "ResTarget": {
+                                    "location": 67,
+                                    "val": {
+                                        "ColumnRef": {
+                                            "fields": [
+                                                {
+                                                    "A_Star": {}
+                                                }
+                                            ],
+                                            "location": 67
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "limitOption": "LIMIT_OPTION_DEFAULT",
+                    "op": "SETOP_UNION",
+                    "rarg": {
+                        "fromClause": [
+                            {
+                                "RangeVar": {
+                                    "inh": true,
+                                    "location": 100,
+                                    "relname": "t",
+                                    "relpersistence": "p"
+                                }
+                            }
+                        ],
+                        "limitOption": "LIMIT_OPTION_DEFAULT",
+                        "op": "SETOP_NONE",
+                        "targetList": [
+                            {
+                                "ResTarget": {
+                                    "location": 93,
+                                    "val": {
+                                        "ColumnRef": {
+                                            "fields": [
+                                                {
+                                                    "A_Star": {}
+                                                }
+                                            ],
+                                            "location": 93
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "withClause": {
+                        "ctes": [
+                            {
+                                "CommonTableExpr": {
+                                    "ctematerialized": "CTEMaterializeDefault",
+                                    "ctename": "t",
+                                    "ctequery": {
+                                        "SelectStmt": {
+                                            "fromClause": [
+                                                {
+                                                    "RangeFunction": {
+                                                        "functions": [
+                                                            {
+                                                                "List": {
+                                                                    "items": [
+                                                                        {
+                                                                            "FuncCall": {
+                                                                                "args": [
+                                                                                    {
+                                                                                        "A_Const": {
+                                                                                            "location": 53,
+                                                                                            "val": {
+                                                                                                "Integer": {
+                                                                                                    "ival": 1
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    },
+                                                                                    {
+                                                                                        "A_Const": {
+                                                                                            "location": 56,
+                                                                                            "val": {
+                                                                                                "Integer": {
+                                                                                                    "ival": 3
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                ],
+                                                                                "funcname": [
+                                                                                    {
+                                                                                        "String": {
+                                                                                            "str": "generate_series"
+                                                                                        }
+                                                                                    }
+                                                                                ],
+                                                                                "location": 37
+                                                                            }
+                                                                        },
+                                                                        {}
+                                                                    ]
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ],
+                                            "limitOption": "LIMIT_OPTION_DEFAULT",
+                                            "op": "SETOP_NONE",
+                                            "targetList": [
+                                                {
+                                                    "ResTarget": {
+                                                        "location": 18,
+                                                        "name": "x",
+                                                        "val": {
+                                                            "FuncCall": {
+                                                                "funcname": [
+                                                                    {
+                                                                        "String": {
+                                                                            "str": "random"
+                                                                        }
+                                                                    }
+                                                                ],
+                                                                "location": 18
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "location": 5
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    ],
+    "version": 130003
+}

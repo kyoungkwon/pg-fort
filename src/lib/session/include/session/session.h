@@ -5,8 +5,10 @@
 #include <sys/epoll.h>
 #include <sys/socket.h>
 
+#include <cstring>
 #include <future>
 #include <iostream>
+#include <string>
 #include <thread>
 #include <vector>
 

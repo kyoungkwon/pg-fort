@@ -1,0 +1,89 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "SelectStmt": {
+                    "fromClause": [
+                        {
+                            "RangeVar": {
+                                "inh": true,
+                                "location": 36,
+                                "relname": "films",
+                                "relpersistence": "p"
+                            }
+                        }
+                    ],
+                    "groupClause": [
+                        {
+                            "ColumnRef": {
+                                "fields": [
+                                    {
+                                        "String": {
+                                            "str": "kind"
+                                        }
+                                    }
+                                ],
+                                "location": 51
+                            }
+                        }
+                    ],
+                    "limitOption": "LIMIT_OPTION_DEFAULT",
+                    "op": "SETOP_NONE",
+                    "targetList": [
+                        {
+                            "ResTarget": {
+                                "location": 7,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "kind"
+                                                }
+                                            }
+                                        ],
+                                        "location": 7
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "ResTarget": {
+                                "location": 13,
+                                "name": "total",
+                                "val": {
+                                    "FuncCall": {
+                                        "args": [
+                                            {
+                                                "ColumnRef": {
+                                                    "fields": [
+                                                        {
+                                                            "String": {
+                                                                "str": "len"
+                                                            }
+                                                        }
+                                                    ],
+                                                    "location": 17
+                                                }
+                                            }
+                                        ],
+                                        "funcname": [
+                                            {
+                                                "String": {
+                                                    "str": "sum"
+                                                }
+                                            }
+                                        ],
+                                        "location": 13
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "stmt_len": 55
+        }
+    ],
+    "version": 130003
+}

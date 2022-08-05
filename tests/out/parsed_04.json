@@ -1,0 +1,116 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "SelectStmt": {
+                    "fromClause": [
+                        {
+                            "RangeSubselect": {
+                                "alias": {
+                                    "aliasname": "ss"
+                                },
+                                "subquery": {
+                                    "SelectStmt": {
+                                        "fromClause": [
+                                            {
+                                                "RangeVar": {
+                                                    "inh": true,
+                                                    "location": 29,
+                                                    "relname": "mytable",
+                                                    "relpersistence": "p"
+                                                }
+                                            }
+                                        ],
+                                        "limitOption": "LIMIT_OPTION_DEFAULT",
+                                        "lockingClause": [
+                                            {
+                                                "LockingClause": {
+                                                    "strength": "LCS_FORUPDATE",
+                                                    "waitPolicy": "LockWaitBlock"
+                                                }
+                                            }
+                                        ],
+                                        "op": "SETOP_NONE",
+                                        "targetList": [
+                                            {
+                                                "ResTarget": {
+                                                    "location": 22,
+                                                    "val": {
+                                                        "ColumnRef": {
+                                                            "fields": [
+                                                                {
+                                                                    "A_Star": {}
+                                                                }
+                                                            ],
+                                                            "location": 22
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "limitOption": "LIMIT_OPTION_DEFAULT",
+                    "op": "SETOP_NONE",
+                    "targetList": [
+                        {
+                            "ResTarget": {
+                                "location": 7,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "A_Star": {}
+                                            }
+                                        ],
+                                        "location": 7
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "whereClause": {
+                        "A_Expr": {
+                            "kind": "AEXPR_OP",
+                            "lexpr": {
+                                "ColumnRef": {
+                                    "fields": [
+                                        {
+                                            "String": {
+                                                "str": "col1"
+                                            }
+                                        }
+                                    ],
+                                    "location": 58
+                                }
+                            },
+                            "location": 63,
+                            "name": [
+                                {
+                                    "String": {
+                                        "str": "="
+                                    }
+                                }
+                            ],
+                            "rexpr": {
+                                "A_Const": {
+                                    "location": 65,
+                                    "val": {
+                                        "Integer": {
+                                            "ival": 5
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "stmt_len": 66
+        }
+    ],
+    "version": 130003
+}
