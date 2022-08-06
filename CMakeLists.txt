@@ -16,6 +16,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 # dependencies
 find_library(LIBPG_QUERY pg_query PATHS /usr/lib/x86_64-linux-gnu)
+find_package(Protobuf REQUIRED)
+include_directories(${Protobuf_INCLUDE_DIRS})
 
 
 # executable
@@ -29,6 +31,7 @@ add_subdirectory(src/lib/conn)
 add_subdirectory(src/lib/session)
 add_subdirectory(src/lib/state-machine)
 add_subdirectory(src/lib/proxy-server)
+add_subdirectory(src/lib/query)
 
 
 # tests

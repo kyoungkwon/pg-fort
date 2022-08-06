@@ -1,6 +1,8 @@
+#include <google/protobuf/util/json_util.h>
 #include <gtest/gtest.h>
 #include <pg_query.h>
 #include <pg_query/pg_query.pb-c.h>
+#include <pg_query.pb.h>
 
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -150,49 +152,42 @@ TEST(PgQueryTest, ParseUnpackEditDeparse)
         // raw query string
         std::cout << " before: " << test_cases[i] << std::endl;
 
-        // parse query (cstring)
-        auto cstr_result = pg_query_parse(test_cases[i]);
-        EXPECT_EQ(cstr_result.error, nullptr);
+        // parse query
+        auto parse_result = pg_query_parse(test_cases[i]);
+        EXPECT_EQ(parse_result.error, nullptr);
 
-        // json pretty printing
-        auto j = json::parse(cstr_result.parse_tree);
+        // json
+        auto j = json::parse(parse_result.parse_tree);
+
+        // pretty printing
         o << j.dump(4) << std::endl;
 
-        // parse query (protobuf-c)
-        PgQueryProtobufParseResult result = pg_query_parse_protobuf(test_cases[i]);
-        EXPECT_EQ(result.error, nullptr);
+        // TODO: mod query - by recursion?
 
-        // unpack parse result (protobuf-c)
-        PgQueryProtobuf       pbuf = result.parse_tree;
-        PgQuery__ParseResult* parse_result =
-            pg_query__parse_result__unpack(NULL, pbuf.len, (const uint8_t*)pbuf.data);
+        // mod result
+        pg_query::ParseResult mod_result;
+        google::protobuf::util::JsonStringToMessage(j.dump(), &mod_result);
 
-        // TODO: edit query - by recursion?
+        // serialize mod result
+        std::string output;
+        mod_result.SerializeToString(&output);
 
-        // clang-format off
-        /*
-        parse_result->stmts[0]->stmt->select_stmt->target_list[0]->res_target->location = 22;
-        parse_result->stmts[0]->stmt->select_stmt->from_clause[0]->range_var->location = 100;
-        parse_result->stmts[0]->stmt->select_stmt->where_clause->a_expr->location = 1;
-        parse_result->stmts[0]->stmt->select_stmt->where_clause->a_expr->lexpr->column_ref->location = 14;
-        parse_result->stmts[0]->stmt->select_stmt->where_clause->a_expr->rexpr->a_const->location = 12;
-        */
-        // clang-format on
+        // copy to pbuf
+        PgQueryProtobuf pbuf;
+        pbuf.data = (char*)calloc(output.size(), sizeof(char));  // TODO: free
+        memcpy(pbuf.data, output.data(), output.size());
+        pbuf.len = output.size();
 
-        // TODO: pack modifed parse result (protobuf-c)
-        pg_query__parse_result__pack(parse_result, (uint8_t*)pbuf.data);
-
-        // deparse query into string
+        // deparse into query string
         PgQueryDeparseResult deparse_result = pg_query_deparse_protobuf(pbuf);
         EXPECT_EQ(deparse_result.error, nullptr);
 
-        // modified query string
+        // modded query string
         std::cout << " after:  " << deparse_result.query << std::endl;
         std::cout << "-----------------------------------------------------" << std::endl;
 
         pg_query_free_deparse_result(deparse_result);
-        pg_query__parse_result__free_unpacked(parse_result, NULL);
-        pg_query_free_protobuf_parse_result(result);
+        pg_query_free_parse_result(parse_result);
         o.close();
     }
 }
