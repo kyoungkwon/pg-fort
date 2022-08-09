@@ -5,159 +5,14 @@
                 "SelectStmt": {
                     "fromClause": [
                         {
-                            "JoinExpr": {
-                                "jointype": "JOIN_INNER",
-                                "larg": {
-                                    "RangeVar": {
-                                        "inh": true,
-                                        "location": 16,
-                                        "relname": "x",
-                                        "relpersistence": "p"
-                                    }
+                            "RangeVar": {
+                                "alias": {
+                                    "aliasname": "x"
                                 },
-                                "quals": {
-                                    "BoolExpr": {
-                                        "args": [
-                                            {
-                                                "A_Expr": {
-                                                    "kind": "AEXPR_OP",
-                                                    "lexpr": {
-                                                        "ColumnRef": {
-                                                            "fields": [
-                                                                {
-                                                                    "String": {
-                                                                        "str": "x"
-                                                                    }
-                                                                },
-                                                                {
-                                                                    "String": {
-                                                                        "str": "id"
-                                                                    }
-                                                                }
-                                                            ],
-                                                            "location": 32
-                                                        }
-                                                    },
-                                                    "location": 37,
-                                                    "name": [
-                                                        {
-                                                            "String": {
-                                                                "str": "="
-                                                            }
-                                                        }
-                                                    ],
-                                                    "rexpr": {
-                                                        "ColumnRef": {
-                                                            "fields": [
-                                                                {
-                                                                    "String": {
-                                                                        "str": "x_acl"
-                                                                    }
-                                                                },
-                                                                {
-                                                                    "String": {
-                                                                        "str": "x_id"
-                                                                    }
-                                                                }
-                                                            ],
-                                                            "location": 39
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            {
-                                                "A_Expr": {
-                                                    "kind": "AEXPR_OP",
-                                                    "lexpr": {
-                                                        "ColumnRef": {
-                                                            "fields": [
-                                                                {
-                                                                    "String": {
-                                                                        "str": "x_acl"
-                                                                    }
-                                                                },
-                                                                {
-                                                                    "String": {
-                                                                        "str": "perm_id"
-                                                                    }
-                                                                }
-                                                            ],
-                                                            "location": 54
-                                                        }
-                                                    },
-                                                    "location": 68,
-                                                    "name": [
-                                                        {
-                                                            "String": {
-                                                                "str": "="
-                                                            }
-                                                        }
-                                                    ],
-                                                    "rexpr": {
-                                                        "A_Const": {
-                                                            "location": 70,
-                                                            "val": {
-                                                                "Integer": {
-                                                                    "ival": 1
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            },
-                                            {
-                                                "A_Expr": {
-                                                    "kind": "AEXPR_OP",
-                                                    "lexpr": {
-                                                        "ColumnRef": {
-                                                            "fields": [
-                                                                {
-                                                                    "String": {
-                                                                        "str": "x_acl"
-                                                                    }
-                                                                },
-                                                                {
-                                                                    "String": {
-                                                                        "str": "principal"
-                                                                    }
-                                                                }
-                                                            ],
-                                                            "location": 76
-                                                        }
-                                                    },
-                                                    "location": 92,
-                                                    "name": [
-                                                        {
-                                                            "String": {
-                                                                "str": "="
-                                                            }
-                                                        }
-                                                    ],
-                                                    "rexpr": {
-                                                        "A_Const": {
-                                                            "location": 94,
-                                                            "val": {
-                                                                "String": {
-                                                                    "str": "kkwon"
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        ],
-                                        "boolop": "AND_EXPR",
-                                        "location": 50
-                                    }
-                                },
-                                "rarg": {
-                                    "RangeVar": {
-                                        "inh": true,
-                                        "location": 23,
-                                        "relname": "x_acl",
-                                        "relpersistence": "p"
-                                    }
-                                }
+                                "inh": true,
+                                "location": 14,
+                                "relname": "xavier",
+                                "relpersistence": "p"
                             }
                         }
                     ],
@@ -170,11 +25,6 @@
                                 "val": {
                                     "ColumnRef": {
                                         "fields": [
-                                            {
-                                                "String": {
-                                                    "str": "x"
-                                                }
-                                            },
                                             {
                                                 "A_Star": {}
                                             }
@@ -193,19 +43,14 @@
                                     "fields": [
                                         {
                                             "String": {
-                                                "str": "x"
-                                            }
-                                        },
-                                        {
-                                            "String": {
                                                 "str": "z"
                                             }
                                         }
                                     ],
-                                    "location": 108
+                                    "location": 29
                                 }
                             },
-                            "location": 112,
+                            "location": 31,
                             "name": [
                                 {
                                     "String": {
@@ -215,7 +60,7 @@
                             ],
                             "rexpr": {
                                 "A_Const": {
-                                    "location": 114,
+                                    "location": 33,
                                     "val": {
                                         "Integer": {
                                             "ival": 2

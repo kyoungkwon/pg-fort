@@ -3,113 +3,128 @@
         {
             "stmt": {
                 "SelectStmt": {
+                    "distinctClause": [
+                        {
+                            "ColumnRef": {
+                                "fields": [
+                                    {
+                                        "String": {
+                                            "str": "location"
+                                        }
+                                    }
+                                ],
+                                "location": 20
+                            }
+                        }
+                    ],
                     "fromClause": [
                         {
-                            "RangeSubselect": {
-                                "alias": {
-                                    "aliasname": "ss"
-                                },
-                                "subquery": {
-                                    "SelectStmt": {
-                                        "fromClause": [
-                                            {
-                                                "RangeVar": {
-                                                    "inh": true,
-                                                    "location": 29,
-                                                    "relname": "mytable",
-                                                    "relpersistence": "p"
-                                                }
-                                            }
-                                        ],
-                                        "limitOption": "LIMIT_OPTION_DEFAULT",
-                                        "lockingClause": [
-                                            {
-                                                "LockingClause": {
-                                                    "strength": "LCS_FORUPDATE",
-                                                    "waitPolicy": "LockWaitBlock"
-                                                }
-                                            }
-                                        ],
-                                        "op": "SETOP_NONE",
-                                        "targetList": [
-                                            {
-                                                "ResTarget": {
-                                                    "location": 22,
-                                                    "val": {
-                                                        "ColumnRef": {
-                                                            "fields": [
-                                                                {
-                                                                    "A_Star": {}
-                                                                }
-                                                            ],
-                                                            "location": 22
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
+                            "RangeVar": {
+                                "inh": true,
+                                "location": 58,
+                                "relname": "weather_reports",
+                                "relpersistence": "p"
                             }
                         }
                     ],
                     "limitOption": "LIMIT_OPTION_DEFAULT",
                     "op": "SETOP_NONE",
+                    "sortClause": [
+                        {
+                            "SortBy": {
+                                "location": -1,
+                                "node": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "location"
+                                                }
+                                            }
+                                        ],
+                                        "location": 83
+                                    }
+                                },
+                                "sortby_dir": "SORTBY_DEFAULT",
+                                "sortby_nulls": "SORTBY_NULLS_DEFAULT"
+                            }
+                        },
+                        {
+                            "SortBy": {
+                                "location": -1,
+                                "node": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "time"
+                                                }
+                                            }
+                                        ],
+                                        "location": 93
+                                    }
+                                },
+                                "sortby_dir": "SORTBY_DESC",
+                                "sortby_nulls": "SORTBY_NULLS_DEFAULT"
+                            }
+                        }
+                    ],
                     "targetList": [
                         {
                             "ResTarget": {
-                                "location": 7,
+                                "location": 30,
                                 "val": {
                                     "ColumnRef": {
                                         "fields": [
                                             {
-                                                "A_Star": {}
+                                                "String": {
+                                                    "str": "location"
+                                                }
                                             }
                                         ],
-                                        "location": 7
+                                        "location": 30
                                     }
                                 }
                             }
-                        }
-                    ],
-                    "whereClause": {
-                        "A_Expr": {
-                            "kind": "AEXPR_OP",
-                            "lexpr": {
-                                "ColumnRef": {
-                                    "fields": [
-                                        {
-                                            "String": {
-                                                "str": "col1"
+                        },
+                        {
+                            "ResTarget": {
+                                "location": 40,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "time"
+                                                }
                                             }
-                                        }
-                                    ],
-                                    "location": 58
-                                }
-                            },
-                            "location": 63,
-                            "name": [
-                                {
-                                    "String": {
-                                        "str": "="
+                                        ],
+                                        "location": 40
                                     }
                                 }
-                            ],
-                            "rexpr": {
-                                "A_Const": {
-                                    "location": 65,
-                                    "val": {
-                                        "Integer": {
-                                            "ival": 5
-                                        }
+                            }
+                        },
+                        {
+                            "ResTarget": {
+                                "location": 46,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "report"
+                                                }
+                                            }
+                                        ],
+                                        "location": 46
                                     }
                                 }
                             }
                         }
-                    }
+                    ]
                 }
             },
-            "stmt_len": 66
+            "stmt_len": 102
         }
     ],
     "version": 130003

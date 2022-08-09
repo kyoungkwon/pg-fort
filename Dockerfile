@@ -8,6 +8,7 @@ RUN apt -y install build-essential
 RUN apt -y install cmake
 RUN apt -y install gdb
 RUN apt -y install git
+RUN apt -y install libctemplate-dev
 RUN apt -y install libgmock-dev
 RUN apt -y install libgtest-dev
 RUN apt -y install libpg-query-dev

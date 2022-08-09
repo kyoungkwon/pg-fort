@@ -27,76 +27,6 @@
                             }
                         }
                     ],
-                    "havingClause": {
-                        "A_Expr": {
-                            "kind": "AEXPR_OP",
-                            "lexpr": {
-                                "FuncCall": {
-                                    "args": [
-                                        {
-                                            "ColumnRef": {
-                                                "fields": [
-                                                    {
-                                                        "String": {
-                                                            "str": "len"
-                                                        }
-                                                    }
-                                                ],
-                                                "location": 67
-                                            }
-                                        }
-                                    ],
-                                    "funcname": [
-                                        {
-                                            "String": {
-                                                "str": "sum"
-                                            }
-                                        }
-                                    ],
-                                    "location": 63
-                                }
-                            },
-                            "location": 72,
-                            "name": [
-                                {
-                                    "String": {
-                                        "str": "<"
-                                    }
-                                }
-                            ],
-                            "rexpr": {
-                                "TypeCast": {
-                                    "arg": {
-                                        "A_Const": {
-                                            "location": 83,
-                                            "val": {
-                                                "String": {
-                                                    "str": "5 hours"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "location": -1,
-                                    "typeName": {
-                                        "location": 74,
-                                        "names": [
-                                            {
-                                                "String": {
-                                                    "str": "pg_catalog"
-                                                }
-                                            },
-                                            {
-                                                "String": {
-                                                    "str": "interval"
-                                                }
-                                            }
-                                        ],
-                                        "typemod": -1
-                                    }
-                                }
-                            }
-                        }
-                    },
                     "limitOption": "LIMIT_OPTION_DEFAULT",
                     "op": "SETOP_NONE",
                     "targetList": [
@@ -152,7 +82,7 @@
                     ]
                 }
             },
-            "stmt_len": 92
+            "stmt_len": 55
         }
     ],
     "version": 130003

@@ -14,8 +14,13 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 20)
 
 
+# path
+set(CMAKE_LIBRARY_PATH /usr/lib/x86_64-linux-gnu)
+
+
 # dependencies
-find_library(LIBPG_QUERY pg_query PATHS /usr/lib/x86_64-linux-gnu)
+find_library(LIBCTEMPLATE ctemplate)
+find_library(LIBPG_QUERY pg_query)
 find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
 

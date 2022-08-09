@@ -2,10 +2,10 @@
 #include <gtest/gtest.h>
 #include <pg_query.h>
 #include <pg_query/pg_query.pb-c.h>
-#include <pg_query.pb.h>
 
 #include <fstream>
-#include <nlohmann/json.hpp>
+
+#include "query/query.h"
 
 using json = nlohmann::json;
 
@@ -116,12 +116,13 @@ TEST(PgQueryTest, ParseUnpackEditDeparse)
 
         // simple case (before)
         "SELECT * FROM x WHERE z = 2",
+        "SELECT * FROM xavier x WHERE z = 2",
 
         // simple case (after)
         "SELECT x.* FROM x JOIN x_acl ON x.id = x_acl.x_id AND x_acl.perm_id = 1 AND x_acl.principal = 'kkwon' WHERE x.z = 2",
 
         // more complex cases
-        /*
+        
         "SELECT DISTINCT ON (location) location, time, report FROM weather_reports ORDER BY location, time DESC;",
         "SELECT * FROM (SELECT * FROM mytable FOR UPDATE) ss WHERE col1 = 5;",
         "SELECT f.title, f.did, d.name, f.date_prod, f.kind FROM distributors d, films f WHERE f.did = d.did",
@@ -135,7 +136,7 @@ TEST(PgQueryTest, ParseUnpackEditDeparse)
         "WITH RECURSIVE employee_recursive(distance, employee_name, manager_name) AS (SELECT 1, employee_name, manager_name FROM employee WHERE manager_name = 'Mary' UNION ALL SELECT er.distance + 1, e.employee_name, e.manager_name FROM employee_recursive er, employee e WHERE er.employee_name = e.manager_name) SELECT distance, employee_name FROM employee_recursive;",
         "SELECT m.name AS mname, pname FROM manufacturers m, LATERAL get_product_names(m.id) pname;",
         "SELECT m.name AS mname, pname FROM manufacturers m LEFT JOIN LATERAL get_product_names(m.id) pname ON true;"
-        */
+        
     };
     // clang-format on
 
@@ -153,41 +154,21 @@ TEST(PgQueryTest, ParseUnpackEditDeparse)
         std::cout << " before: " << test_cases[i] << std::endl;
 
         // parse query
-        auto parse_result = pg_query_parse(test_cases[i]);
-        EXPECT_EQ(parse_result.error, nullptr);
+        Query q(test_cases[i]);
 
         // json
-        auto j = json::parse(parse_result.parse_tree);
+        auto j = q.Json();
 
         // pretty printing
         o << j.dump(4) << std::endl;
 
-        // TODO: mod query - by recursion?
-
-        // mod result
-        pg_query::ParseResult mod_result;
-        google::protobuf::util::JsonStringToMessage(j.dump(), &mod_result);
-
-        // serialize mod result
-        std::string output;
-        mod_result.SerializeToString(&output);
-
-        // copy to pbuf
-        PgQueryProtobuf pbuf;
-        pbuf.data = (char*)calloc(output.size(), sizeof(char));  // TODO: free
-        memcpy(pbuf.data, output.data(), output.size());
-        pbuf.len = output.size();
-
-        // deparse into query string
-        PgQueryDeparseResult deparse_result = pg_query_deparse_protobuf(pbuf);
-        EXPECT_EQ(deparse_result.error, nullptr);
+        // mod query
+        q.AddAclCheck();
 
         // modded query string
-        std::cout << " after:  " << deparse_result.query << std::endl;
+        std::cout << " after:  " << q.ToString() << std::endl;
         std::cout << "-----------------------------------------------------" << std::endl;
 
-        pg_query_free_deparse_result(deparse_result);
-        pg_query_free_parse_result(parse_result);
         o.close();
     }
 }
