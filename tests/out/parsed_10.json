@@ -3,14 +3,13 @@
         {
             "stmt": {
                 "SelectStmt": {
-                    "all": true,
                     "larg": {
                         "fromClause": [
                             {
                                 "RangeVar": {
                                     "inh": true,
-                                    "location": 74,
-                                    "relname": "t",
+                                    "location": 30,
+                                    "relname": "distributors",
                                     "relpersistence": "p"
                                 }
                             }
@@ -20,20 +19,67 @@
                         "targetList": [
                             {
                                 "ResTarget": {
-                                    "location": 67,
+                                    "location": 7,
                                     "val": {
                                         "ColumnRef": {
                                             "fields": [
                                                 {
-                                                    "A_Star": {}
+                                                    "String": {
+                                                        "str": "distributors"
+                                                    }
+                                                },
+                                                {
+                                                    "String": {
+                                                        "str": "name"
+                                                    }
                                                 }
                                             ],
-                                            "location": 67
+                                            "location": 7
                                         }
                                     }
                                 }
                             }
-                        ]
+                        ],
+                        "whereClause": {
+                            "A_Expr": {
+                                "kind": "AEXPR_LIKE",
+                                "lexpr": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "distributors"
+                                                }
+                                            },
+                                            {
+                                                "String": {
+                                                    "str": "name"
+                                                }
+                                            }
+                                        ],
+                                        "location": 49
+                                    }
+                                },
+                                "location": 67,
+                                "name": [
+                                    {
+                                        "String": {
+                                            "str": "~~"
+                                        }
+                                    }
+                                ],
+                                "rexpr": {
+                                    "A_Const": {
+                                        "location": 72,
+                                        "val": {
+                                            "String": {
+                                                "str": "W%"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     "limitOption": "LIMIT_OPTION_DEFAULT",
                     "op": "SETOP_UNION",
@@ -42,8 +88,8 @@
                             {
                                 "RangeVar": {
                                     "inh": true,
-                                    "location": 100,
-                                    "relname": "t",
+                                    "location": 107,
+                                    "relname": "actors",
                                     "relpersistence": "p"
                                 }
                             }
@@ -53,109 +99,71 @@
                         "targetList": [
                             {
                                 "ResTarget": {
-                                    "location": 93,
+                                    "location": 90,
                                     "val": {
                                         "ColumnRef": {
                                             "fields": [
                                                 {
-                                                    "A_Star": {}
+                                                    "String": {
+                                                        "str": "actors"
+                                                    }
+                                                },
+                                                {
+                                                    "String": {
+                                                        "str": "name"
+                                                    }
                                                 }
                                             ],
-                                            "location": 93
+                                            "location": 90
                                         }
                                     }
                                 }
                             }
-                        ]
-                    },
-                    "withClause": {
-                        "ctes": [
-                            {
-                                "CommonTableExpr": {
-                                    "ctematerialized": "CTEMaterializeDefault",
-                                    "ctename": "t",
-                                    "ctequery": {
-                                        "SelectStmt": {
-                                            "fromClause": [
-                                                {
-                                                    "RangeFunction": {
-                                                        "functions": [
-                                                            {
-                                                                "List": {
-                                                                    "items": [
-                                                                        {
-                                                                            "FuncCall": {
-                                                                                "args": [
-                                                                                    {
-                                                                                        "A_Const": {
-                                                                                            "location": 53,
-                                                                                            "val": {
-                                                                                                "Integer": {
-                                                                                                    "ival": 1
-                                                                                                }
-                                                                                            }
-                                                                                        }
-                                                                                    },
-                                                                                    {
-                                                                                        "A_Const": {
-                                                                                            "location": 56,
-                                                                                            "val": {
-                                                                                                "Integer": {
-                                                                                                    "ival": 3
-                                                                                                }
-                                                                                            }
-                                                                                        }
-                                                                                    }
-                                                                                ],
-                                                                                "funcname": [
-                                                                                    {
-                                                                                        "String": {
-                                                                                            "str": "generate_series"
-                                                                                        }
-                                                                                    }
-                                                                                ],
-                                                                                "location": 37
-                                                                            }
-                                                                        },
-                                                                        {}
-                                                                    ]
-                                                                }
-                                                            }
-                                                        ]
-                                                    }
+                        ],
+                        "whereClause": {
+                            "A_Expr": {
+                                "kind": "AEXPR_LIKE",
+                                "lexpr": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "actors"
                                                 }
-                                            ],
-                                            "limitOption": "LIMIT_OPTION_DEFAULT",
-                                            "op": "SETOP_NONE",
-                                            "targetList": [
-                                                {
-                                                    "ResTarget": {
-                                                        "location": 18,
-                                                        "name": "x",
-                                                        "val": {
-                                                            "FuncCall": {
-                                                                "funcname": [
-                                                                    {
-                                                                        "String": {
-                                                                            "str": "random"
-                                                                        }
-                                                                    }
-                                                                ],
-                                                                "location": 18
-                                                            }
-                                                        }
-                                                    }
+                                            },
+                                            {
+                                                "String": {
+                                                    "str": "name"
                                                 }
-                                            ]
+                                            }
+                                        ],
+                                        "location": 120
+                                    }
+                                },
+                                "location": 132,
+                                "name": [
+                                    {
+                                        "String": {
+                                            "str": "~~"
                                         }
-                                    },
-                                    "location": 5
+                                    }
+                                ],
+                                "rexpr": {
+                                    "A_Const": {
+                                        "location": 137,
+                                        "val": {
+                                            "String": {
+                                                "str": "W%"
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                        ]
+                        }
                     }
                 }
-            }
+            },
+            "stmt_len": 141
         }
     ],
     "version": 130003

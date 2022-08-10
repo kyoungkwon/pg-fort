@@ -11,15 +11,18 @@
 #include <cstring>
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include <unordered_set>
+#include <vector>
 
 using json = nlohmann::json;
 
 class Query
 {
 private:
-    char*              raw_query_;
-    PgQueryParseResult parse_result_;
-    json               j_;
+    char*                           raw_query_;
+    PgQueryParseResult              parse_result_;
+    json                            j_;
+    std::unordered_set<std::string> table_names_;
 
     void AddAclCheck(json& j);
     void AddAclCheckToSelectStmt(json& j);
@@ -33,6 +36,7 @@ public:
     Query(const char* raw_query);
     ~Query();
 
+    void  AddTableNames(std::vector<std::string> table_names);
     json& Json();
     void  AddAclCheck();
     char* ToString();

@@ -16,6 +16,14 @@ Query::~Query()
     free(raw_query_);
 }
 
+void Query::AddTableNames(std::vector<std::string> table_names)
+{
+    for (auto t : table_names)
+    {
+        table_names_.insert(t);
+    }
+}
+
 json& Query::Json()
 {
     return j_;
@@ -49,21 +57,28 @@ void Query::AddAclCheckToSelectStmt(json& j)
     {
         if (k == "fromClause")
         {
-            std::cout << "  found from clause" << std::endl;
             AddAclJoinToFromClause(v);
         }
         else if (k == "whereClause")
         {
-            std::cout << "  found where clause" << std::endl;
             // TODO
+            // * modify ColumnRef
+            //   * checking len(fields) == 1
+            //   * inserting fields[0] = table name/alias
+            // AddTableRefToWhereClause(v);
         }
         else if (k == "targetList")
         {
-            std::cout << "  found target list" << std::endl;
             // TODO
+            // * modify ColumnRef
+            //   * checking len(fields) == 1
+            //   * inserting fields[0] = table name/alias
+            // AddTableRefToTargetList(v);
         }
         else if (!v.is_primitive())
         {
+            // TODO: any other clauses?
+            // e.g., sortClause, distinctClause, groupClause, havingClause
             AddAclCheckToSelectStmt(v);
         }
     }
@@ -75,12 +90,18 @@ void Query::AddAclJoinToFromClause(json& j)
     {
         if (k == "RangeVar")
         {
-            std::cout << "   found range var" << std::endl;
             auto relname = v["relname"].get<std::string>();
-            std::cout << "    table_name = " << relname << std::endl;
+
+            // if relname is not a table, then ignore
+            if (table_names_.find(relname) == table_names_.end())
+            {
+                continue;
+            }
 
             ctemplate::TemplateDictionary dict("example");
             dict.SetValue("TABLE_NAME", relname);
+
+            // TODO: remove hard-coded values
             dict.SetValue("PRINCIPAL", "kkwon");
             dict.SetIntValue("PERM_ID", 1);
 
@@ -88,8 +109,7 @@ void Query::AddAclJoinToFromClause(json& j)
             if (v.contains("alias"))
             {
                 auto aliasname = v["alias"]["aliasname"].get<std::string>();
-                std::cout << "    aliasname = " << aliasname << std::endl;
-                ref = aliasname;
+                ref            = aliasname;
 
                 dict.SetValue("TABLE_ALIAS", aliasname);
                 dict.ShowSection("ALIAS");
@@ -106,25 +126,6 @@ void Query::AddAclJoinToFromClause(json& j)
         else if (!v.is_primitive())
         {
             AddAclJoinToFromClause(v);
-        }
-    }
-}
-
-void Query::print(json& j, int indent)
-{
-    for (auto& [k, v] : j.items())
-    {
-        std::cout << indent << ":" << std::setw(indent * 4);
-
-        std::cout << k << " (" << v.type_name() << ") : ";
-        if (v.is_array() || v.is_object())
-        {
-            std::cout << std::endl;
-            print(v, indent + 1);
-        }
-        else
-        {
-            std::cout << v << std::endl;
         }
     }
 }
@@ -156,4 +157,23 @@ char* Query::ToString()
     free(pbuf.data);
 
     return query;
+}
+
+void Query::print(json& j, int indent)
+{
+    for (auto& [k, v] : j.items())
+    {
+        std::cout << indent << ":" << std::setw(indent * 4);
+
+        std::cout << k << " (" << v.type_name() << ") : ";
+        if (v.is_array() || v.is_object())
+        {
+            std::cout << std::endl;
+            print(v, indent + 1);
+        }
+        else
+        {
+            std::cout << v << std::endl;
+        }
+    }
 }

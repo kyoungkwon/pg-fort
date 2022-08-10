@@ -3,167 +3,156 @@
         {
             "stmt": {
                 "SelectStmt": {
-                    "larg": {
-                        "fromClause": [
-                            {
-                                "RangeVar": {
-                                    "inh": true,
-                                    "location": 30,
-                                    "relname": "distributors",
-                                    "relpersistence": "p"
-                                }
+                    "fromClause": [
+                        {
+                            "RangeVar": {
+                                "inh": true,
+                                "location": 36,
+                                "relname": "films",
+                                "relpersistence": "p"
                             }
-                        ],
-                        "limitOption": "LIMIT_OPTION_DEFAULT",
-                        "op": "SETOP_NONE",
-                        "targetList": [
-                            {
-                                "ResTarget": {
-                                    "location": 7,
-                                    "val": {
-                                        "ColumnRef": {
-                                            "fields": [
-                                                {
-                                                    "String": {
-                                                        "str": "distributors"
-                                                    }
-                                                },
-                                                {
-                                                    "String": {
-                                                        "str": "name"
-                                                    }
-                                                }
-                                            ],
-                                            "location": 7
+                        }
+                    ],
+                    "groupClause": [
+                        {
+                            "ColumnRef": {
+                                "fields": [
+                                    {
+                                        "String": {
+                                            "str": "kind"
                                         }
                                     }
-                                }
+                                ],
+                                "location": 51
                             }
-                        ],
-                        "whereClause": {
-                            "A_Expr": {
-                                "kind": "AEXPR_LIKE",
-                                "lexpr": {
-                                    "ColumnRef": {
-                                        "fields": [
+                        }
+                    ],
+                    "havingClause": {
+                        "A_Expr": {
+                            "kind": "AEXPR_OP",
+                            "lexpr": {
+                                "FuncCall": {
+                                    "args": [
+                                        {
+                                            "ColumnRef": {
+                                                "fields": [
+                                                    {
+                                                        "String": {
+                                                            "str": "len"
+                                                        }
+                                                    }
+                                                ],
+                                                "location": 67
+                                            }
+                                        }
+                                    ],
+                                    "funcname": [
+                                        {
+                                            "String": {
+                                                "str": "sum"
+                                            }
+                                        }
+                                    ],
+                                    "location": 63
+                                }
+                            },
+                            "location": 72,
+                            "name": [
+                                {
+                                    "String": {
+                                        "str": "<"
+                                    }
+                                }
+                            ],
+                            "rexpr": {
+                                "TypeCast": {
+                                    "arg": {
+                                        "A_Const": {
+                                            "location": 83,
+                                            "val": {
+                                                "String": {
+                                                    "str": "5 hours"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "location": -1,
+                                    "typeName": {
+                                        "location": 74,
+                                        "names": [
                                             {
                                                 "String": {
-                                                    "str": "distributors"
+                                                    "str": "pg_catalog"
                                                 }
                                             },
                                             {
                                                 "String": {
-                                                    "str": "name"
+                                                    "str": "interval"
                                                 }
                                             }
                                         ],
-                                        "location": 49
-                                    }
-                                },
-                                "location": 67,
-                                "name": [
-                                    {
-                                        "String": {
-                                            "str": "~~"
-                                        }
-                                    }
-                                ],
-                                "rexpr": {
-                                    "A_Const": {
-                                        "location": 72,
-                                        "val": {
-                                            "String": {
-                                                "str": "W%"
-                                            }
-                                        }
+                                        "typemod": -1
                                     }
                                 }
                             }
                         }
                     },
                     "limitOption": "LIMIT_OPTION_DEFAULT",
-                    "op": "SETOP_UNION",
-                    "rarg": {
-                        "fromClause": [
-                            {
-                                "RangeVar": {
-                                    "inh": true,
-                                    "location": 107,
-                                    "relname": "actors",
-                                    "relpersistence": "p"
-                                }
-                            }
-                        ],
-                        "limitOption": "LIMIT_OPTION_DEFAULT",
-                        "op": "SETOP_NONE",
-                        "targetList": [
-                            {
-                                "ResTarget": {
-                                    "location": 90,
-                                    "val": {
-                                        "ColumnRef": {
-                                            "fields": [
-                                                {
-                                                    "String": {
-                                                        "str": "actors"
-                                                    }
-                                                },
-                                                {
-                                                    "String": {
-                                                        "str": "name"
-                                                    }
-                                                }
-                                            ],
-                                            "location": 90
-                                        }
-                                    }
-                                }
-                            }
-                        ],
-                        "whereClause": {
-                            "A_Expr": {
-                                "kind": "AEXPR_LIKE",
-                                "lexpr": {
+                    "op": "SETOP_NONE",
+                    "targetList": [
+                        {
+                            "ResTarget": {
+                                "location": 7,
+                                "val": {
                                     "ColumnRef": {
                                         "fields": [
                                             {
                                                 "String": {
-                                                    "str": "actors"
-                                                }
-                                            },
-                                            {
-                                                "String": {
-                                                    "str": "name"
+                                                    "str": "kind"
                                                 }
                                             }
                                         ],
-                                        "location": 120
+                                        "location": 7
                                     }
-                                },
-                                "location": 132,
-                                "name": [
-                                    {
-                                        "String": {
-                                            "str": "~~"
-                                        }
-                                    }
-                                ],
-                                "rexpr": {
-                                    "A_Const": {
-                                        "location": 137,
-                                        "val": {
-                                            "String": {
-                                                "str": "W%"
+                                }
+                            }
+                        },
+                        {
+                            "ResTarget": {
+                                "location": 13,
+                                "name": "total",
+                                "val": {
+                                    "FuncCall": {
+                                        "args": [
+                                            {
+                                                "ColumnRef": {
+                                                    "fields": [
+                                                        {
+                                                            "String": {
+                                                                "str": "len"
+                                                            }
+                                                        }
+                                                    ],
+                                                    "location": 17
+                                                }
                                             }
-                                        }
+                                        ],
+                                        "funcname": [
+                                            {
+                                                "String": {
+                                                    "str": "sum"
+                                                }
+                                            }
+                                        ],
+                                        "location": 13
                                     }
                                 }
                             }
                         }
-                    }
+                    ]
                 }
             },
-            "stmt_len": 141
+            "stmt_len": 92
         }
     ],
     "version": 130003

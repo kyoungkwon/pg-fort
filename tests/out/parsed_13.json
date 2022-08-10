@@ -5,98 +5,62 @@
                 "SelectStmt": {
                     "fromClause": [
                         {
-                            "JoinExpr": {
-                                "jointype": "JOIN_LEFT",
-                                "larg": {
-                                    "RangeVar": {
-                                        "alias": {
-                                            "aliasname": "m"
-                                        },
-                                        "inh": true,
-                                        "location": 35,
-                                        "relname": "manufacturers",
-                                        "relpersistence": "p"
-                                    }
+                            "RangeVar": {
+                                "alias": {
+                                    "aliasname": "m"
                                 },
-                                "quals": {
-                                    "TypeCast": {
-                                        "arg": {
-                                            "A_Const": {
-                                                "location": 102,
-                                                "val": {
-                                                    "String": {
-                                                        "str": "t"
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        "location": -1,
-                                        "typeName": {
-                                            "location": -1,
-                                            "names": [
+                                "inh": true,
+                                "location": 35,
+                                "relname": "manufacturers",
+                                "relpersistence": "p"
+                            }
+                        },
+                        {
+                            "RangeFunction": {
+                                "alias": {
+                                    "aliasname": "pname"
+                                },
+                                "functions": [
+                                    {
+                                        "List": {
+                                            "items": [
                                                 {
-                                                    "String": {
-                                                        "str": "pg_catalog"
+                                                    "FuncCall": {
+                                                        "args": [
+                                                            {
+                                                                "ColumnRef": {
+                                                                    "fields": [
+                                                                        {
+                                                                            "String": {
+                                                                                "str": "m"
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "String": {
+                                                                                "str": "id"
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "location": 78
+                                                                }
+                                                            }
+                                                        ],
+                                                        "funcname": [
+                                                            {
+                                                                "String": {
+                                                                    "str": "get_product_names"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "location": 60
                                                     }
                                                 },
-                                                {
-                                                    "String": {
-                                                        "str": "bool"
-                                                    }
-                                                }
-                                            ],
-                                            "typemod": -1
+                                                {}
+                                            ]
                                         }
                                     }
-                                },
-                                "rarg": {
-                                    "RangeFunction": {
-                                        "alias": {
-                                            "aliasname": "pname"
-                                        },
-                                        "functions": [
-                                            {
-                                                "List": {
-                                                    "items": [
-                                                        {
-                                                            "FuncCall": {
-                                                                "args": [
-                                                                    {
-                                                                        "ColumnRef": {
-                                                                            "fields": [
-                                                                                {
-                                                                                    "String": {
-                                                                                        "str": "m"
-                                                                                    }
-                                                                                },
-                                                                                {
-                                                                                    "String": {
-                                                                                        "str": "id"
-                                                                                    }
-                                                                                }
-                                                                            ],
-                                                                            "location": 87
-                                                                        }
-                                                                    }
-                                                                ],
-                                                                "funcname": [
-                                                                    {
-                                                                        "String": {
-                                                                            "str": "get_product_names"
-                                                                        }
-                                                                    }
-                                                                ],
-                                                                "location": 69
-                                                            }
-                                                        },
-                                                        {}
-                                                    ]
-                                                }
-                                            }
-                                        ],
-                                        "lateral": true
-                                    }
-                                }
+                                ],
+                                "lateral": true
                             }
                         }
                     ],
@@ -146,7 +110,7 @@
                     ]
                 }
             },
-            "stmt_len": 106
+            "stmt_len": 89
         }
     ],
     "version": 130003

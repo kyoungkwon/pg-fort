@@ -107,36 +107,40 @@ TEST(PgQueryTest, ParseUnpack)
     }
 }
 
-TEST(PgQueryTest, ParseUnpackEditDeparse)
+TEST(PgQueryTest, ParseModifyDeparse)
 {
     // clang-format off
     const char* test_cases[] = {
-        // no change
+        // 00: no change
         "SELECT 1",
-
-        // simple case (before)
+        // 01: simple example
         "SELECT * FROM x WHERE z = 2",
+        // 02: another simple example
         "SELECT * FROM xavier x WHERE z = 2",
-
-        // simple case (after)
-        "SELECT x.* FROM x JOIN x_acl ON x.id = x_acl.x_id AND x_acl.perm_id = 1 AND x_acl.principal = 'kkwon' WHERE x.z = 2",
-
-        // more complex cases
-        
+        // 03: another simple example
+        "SELECT * FROM xavier x WHERE y = 'hello' AND z = 2",
+        // 04: self-join example
+        "SELECT e.name employee, m.name manager FROM employee e INNER JOIN employee m ON m.employee_id = e.manager_id ORDER BY manager;",
+        // 05:
         "SELECT DISTINCT ON (location) location, time, report FROM weather_reports ORDER BY location, time DESC;",
+        // 06:
         "SELECT * FROM (SELECT * FROM mytable FOR UPDATE) ss WHERE col1 = 5;",
+        // 07:
         "SELECT f.title, f.did, d.name, f.date_prod, f.kind FROM distributors d, films f WHERE f.did = d.did",
+        // 08:
         "SELECT kind, sum(len) AS total FROM films GROUP BY kind;",
+        // 09:
         "SELECT kind, sum(len) AS total FROM films GROUP BY kind HAVING sum(len) < interval '5 hours';",
+        // 10:
         "SELECT distributors.name FROM distributors WHERE distributors.name LIKE 'W%' UNION SELECT actors.name FROM actors WHERE actors.name LIKE 'W%';",
-
-        // TODO: experiment if WITH can reuse an existing table name
+        // 11: TODO: experiment if WITH can reuse an existing table name as an alias
         "WITH t AS (SELECT random() as x FROM generate_series(1, 3)) SELECT * FROM t UNION ALL SELECT * FROM t",
-
+        // 12: resursive example
         "WITH RECURSIVE employee_recursive(distance, employee_name, manager_name) AS (SELECT 1, employee_name, manager_name FROM employee WHERE manager_name = 'Mary' UNION ALL SELECT er.distance + 1, e.employee_name, e.manager_name FROM employee_recursive er, employee e WHERE er.employee_name = e.manager_name) SELECT distance, employee_name FROM employee_recursive;",
+        // 13: lateral example
         "SELECT m.name AS mname, pname FROM manufacturers m, LATERAL get_product_names(m.id) pname;",
+        // 14: another lateral example
         "SELECT m.name AS mname, pname FROM manufacturers m LEFT JOIN LATERAL get_product_names(m.id) pname ON true;"
-        
     };
     // clang-format on
 
@@ -144,14 +148,7 @@ TEST(PgQueryTest, ParseUnpackEditDeparse)
 
     for (int i = 0; i < n; i++)
     {
-        // output file
-        char f[100] = {0};
-        sprintf(f, "/workspace/tests/out/parsed_%02d.json", i);
-        std::ofstream o(f);
-        std::cout << "out: " << f << std::endl;
-
-        // raw query string
-        std::cout << " before: " << test_cases[i] << std::endl;
+        printf("testcase: %02d\n", i);
 
         // parse query
         Query q(test_cases[i]);
@@ -159,16 +156,50 @@ TEST(PgQueryTest, ParseUnpackEditDeparse)
         // json
         auto j = q.Json();
 
-        // pretty printing
-        o << j.dump(4) << std::endl;
+        if (false)
+        {
+            // output file
+            char f[100] = {0};
+            sprintf(f, "/workspace/tests/out/parsed_%02d.json", i);
+            std::ofstream o(f);
+            printf(" output: %s\n", f);
 
-        // mod query
+            // pretty printing
+            o << j.dump(4) << std::endl;
+            o.close();
+        }
+
+        // raw query string
+        printf(" before: %s\n", test_cases[i]);
+
+        // remember table names
+        q.AddTableNames({"x", "xavier", "employee", "weather_reports", "mytable", "distributors",
+                         "films", "actors", "manufacturers"});
+
+        // modify query
         q.AddAclCheck();
 
-        // modded query string
-        std::cout << " after:  " << q.ToString() << std::endl;
-        std::cout << "-----------------------------------------------------" << std::endl;
+        // modified query string
+        printf(" after: %s\n", q.ToString());
+        printf("-----------------------------------------------------\n");
+    }
+}
 
-        o.close();
+TEST(PgQueryTest, TranslateSpecial)
+{
+    // clang-format off
+    const char* test_cases[] = {
+        ""
+    };
+    // clang-format on
+
+    auto n = sizeof(test_cases) / sizeof(test_cases[0]);
+
+    for (int i = 0; i < n; i++)
+    {
+        printf("testcase: %02d\n", i);
+        
+        printf(" special:   %s\n", test_cases[i]);
+        printf(" translate: %s\n", test_cases[i]);
     }
 }

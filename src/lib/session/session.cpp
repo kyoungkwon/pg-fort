@@ -95,6 +95,7 @@ State* Session::PrepFwdReq()
 {
     std::cout << "[" << id << "] 3:PrepFwdReq" << std::endl;
 
+    // TODO: db_conn_ = db_conn_pool_.acquire()
     context_.ev_.data.fd = db_conn_->GetSocket();
     context_.ev_.events  = EPOLLOUT;
     context_.waiting_    = true;
@@ -106,6 +107,7 @@ State* Session::FwdReq()
     std::cout << "[" << id << "] 4:FwdReq";
 
     auto res = db_conn_->ForwardRequest(context_.request_);
+    // TODO: db_conn_.release()
 
     std::cout << "\t" << res << std::endl;
 
@@ -122,6 +124,7 @@ State* Session::PrepRecvResp()
 {
     std::cout << "[" << id << "] 5:PrepRecvResp" << std::endl;
 
+    // TODO: db_conn_ = db_conn_pool_.acquire()
     context_.ev_.data.fd = db_conn_->GetSocket();
     context_.ev_.events  = EPOLLIN;
     context_.waiting_    = true;
@@ -134,6 +137,7 @@ State* Session::RecvResp()
     std::cout << "[" << id << "] 6:RecvResp";
 
     auto res = db_conn_->ReceiveResponse(context_.response_);
+    // TODO: db_conn_.release()
 
     std::cout << "\t" << res << std::endl;
 
