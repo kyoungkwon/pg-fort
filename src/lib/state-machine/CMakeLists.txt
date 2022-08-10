@@ -1,4 +1,4 @@
-add_library(libstatemachine state-machine.cpp)
+add_library(libstatemachine SHARED state-machine.cpp)
 
 target_include_directories(libstatemachine
     PUBLIC

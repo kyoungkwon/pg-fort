@@ -1,4 +1,4 @@
-add_library(libsession session.cpp session-operator.cpp)
+add_library(libsession SHARED session.cpp session-operator.cpp)
 
 target_include_directories(libsession
     PUBLIC
