@@ -10,17 +10,17 @@
 class Buffer
 {
 protected:
-    std::vector<unsigned char> buf_;
-    std::size_t                buf_size_;
-    std::size_t                data_size_;
+    std::vector<char> buf_;
+    std::size_t       buf_size_;
+    std::size_t       data_size_;
 
 public:
     Buffer();
     virtual ~Buffer();
 
-    unsigned char* Data();
-    std::size_t    Size();
-    void           Reset();
+    char*       Data();
+    std::size_t Size();
+    void        Reset();
 
     int RecvFrom(int socket);
     int SendTo(int socket);

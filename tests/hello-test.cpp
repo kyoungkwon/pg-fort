@@ -22,9 +22,9 @@ TEST(HelloTest, BasicAssertions)
 
 TEST(HelloTest, VectorAsResizableBuffer)
 {
-    std::size_t                buf_size  = 4;
-    std::size_t                prev_size = 0;
-    std::vector<unsigned char> buf(buf_size * 2);
+    std::size_t       buf_size  = 4;
+    std::size_t       prev_size = 0;
+    std::vector<char> buf(buf_size * 2);
 
     // a
     std::memcpy(buf.data(), std::string(buf_size, 'a').data(), buf_size);

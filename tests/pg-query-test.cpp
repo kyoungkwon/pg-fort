@@ -180,7 +180,7 @@ TEST(PgQueryTest, ParseModifyDeparse)
         q.AddAclCheck();
 
         // modified query string
-        printf(" after: %s\n", q.ToString());
+        printf(" after:  %s\n", q.ToString());
         printf("-----------------------------------------------------\n");
     }
 }
@@ -189,7 +189,9 @@ TEST(PgQueryTest, TranslateSpecial)
 {
     // clang-format off
     const char* test_cases[] = {
-        ""
+        "CREATE TABLE what ( id integer NOT NULL, description text );",
+        "CREATE INDEX idx_rental_by_inventory_id ON rental USING btree(inventory_id)",
+        "CREATE ACCESS PERMISSION view ON x FOR SELECT"
     };
     // clang-format on
 
@@ -198,8 +200,26 @@ TEST(PgQueryTest, TranslateSpecial)
     for (int i = 0; i < n; i++)
     {
         printf("testcase: %02d\n", i);
-        
         printf(" special:   %s\n", test_cases[i]);
+
+        try
+        {
+            // parse query
+            Query q(test_cases[i]);
+
+            // json
+            auto j = q.Json();
+
+            // pretty printing
+            std::cout << j.dump(4) << std::endl;
+        }
+        catch (ParseException e)
+        {
+            // parse error detail
+            printf("  %s\n", e.what());
+        }
+
         printf(" translate: %s\n", test_cases[i]);
+        printf("-----------------------------------------------------\n");
     }
 }

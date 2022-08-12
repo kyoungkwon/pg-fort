@@ -16,7 +16,7 @@ Buffer::~Buffer()
     buf_.clear();
 }
 
-unsigned char* Buffer::Data()
+char* Buffer::Data()
 {
     return buf_.data();
 }
@@ -41,10 +41,21 @@ int Buffer::RecvFrom(int socket)
         int res = recv(socket, buf_.data() + data_size_, buf_size_, 0);
         if (res < 0)
         {
+            std::cout << "\t\033[43m"
+                      << "res = " << res;
+            std::cout << ", errno = " << errno;
+            std::cout << ", data size = " << data_size_;
+            std::cout << ", buf size = " << buf_.size();
+            std::cout << "\033[0m";
             return errno == EAGAIN ? data_size_ : res;  // TODO: better handling
         }
         else if (res == 0)
         {
+            std::cout << "\t\033[43m"
+                      << "res = " << res;
+            std::cout << ", data size = " << data_size_;
+            std::cout << ", buf size = " << buf_.size();
+            std::cout << "\033[0m";
             return data_size_;  // complete
         }
 

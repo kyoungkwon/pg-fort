@@ -42,4 +42,22 @@ public:
     char* ToString();
 };
 
+class ParseException : public std::exception
+{
+private:
+    PgQueryError* error_;
+
+public:
+    ParseException(PgQueryError* error)
+        : error_(error)
+    {
+    }
+
+    char* what()
+    {
+        // TODO
+        return nullptr;
+    }
+};
+
 #endif
