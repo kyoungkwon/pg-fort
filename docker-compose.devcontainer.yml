@@ -10,7 +10,25 @@ services:
     ports:
       - 8890:8890
     depends_on:
-      - postgresql
+      postgresql:
+        condition: service_healthy
+      postgresql-migrate:
+        condition: service_completed_successfully
+
+  postgresql-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build-deps
+    volumes:
+      - ./acl-schema:/acl-schema
+    environment:
+      POSTGRES_USER: myusername
+      POSTGRES_PASSWORD: mypassword
+    command: sql-migrate up --config=acl-schema/dbconfig.yml -env=development
+    depends_on:
+      postgresql:
+        condition: service_healthy
 
   postgresql:
     image: postgres
@@ -21,6 +39,11 @@ services:
     environment:
       POSTGRES_USER: myusername
       POSTGRES_PASSWORD: mypassword
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myusername"]
+      interval: 10s
+      timeout: 10s
+      retries: 50
 
 volumes:
   test-postgres-db:
