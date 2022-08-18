@@ -147,9 +147,8 @@ char* Query::ToString()
 
     // copy to pbuf
     PgQueryProtobuf pbuf;
-    pbuf.data = (char*)calloc(output.size(), sizeof(char));
-    memcpy(pbuf.data, output.data(), output.size());
-    pbuf.len = output.size();
+    pbuf.data = const_cast<char*>(output.c_str());
+    pbuf.len  = output.size();
 
     // deparse into query string
     PgQueryDeparseResult deparse_result = pg_query_deparse_protobuf(pbuf);
@@ -159,7 +158,6 @@ char* Query::ToString()
 
     // free
     pg_query_free_deparse_result(deparse_result);
-    free(pbuf.data);
 
     return query;
 }
