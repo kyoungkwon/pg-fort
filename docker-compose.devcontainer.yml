@@ -23,8 +23,9 @@ services:
     volumes:
       - ./acl-schema:/acl-schema
     environment:
-      POSTGRES_USER: myusername
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     command: sql-migrate up --config=acl-schema/dbconfig.yml -env=development
     depends_on:
       postgresql:
@@ -37,8 +38,9 @@ services:
     ports:
       - 5432:5432
     environment:
-      POSTGRES_USER: myusername
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U myusername"]
       interval: 10s

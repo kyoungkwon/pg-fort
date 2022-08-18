@@ -19,10 +19,20 @@ set(CMAKE_LIBRARY_PATH /usr/lib/x86_64-linux-gnu)
 
 
 # dependencies
-find_library(LIBCTEMPLATE ctemplate)
-find_library(LIBPG_QUERY pg_query)
+find_package(PkgConfig)
+
+# libpqxx
+pkg_check_modules(LIBPQXX REQUIRED libpqxx)
+
+# libctemplate
+pkg_check_modules(LIBCTEMPLATE REQUIRED libctemplate)
+
+# protobuf
 find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
+
+# libpg_query
+find_library(LIBPG_QUERY pg_query)
 
 
 # executable
