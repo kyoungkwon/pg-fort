@@ -98,7 +98,7 @@ void Query::AddAclJoinToFromClause(json& j)
             auto relname = v["relname"].get<std::string>();
 
             // if relname is not a table, then ignore
-            if (table_names_.find(relname) == table_names_.end())
+            if (!table_names_.contains(relname))
             {
                 continue;
             }

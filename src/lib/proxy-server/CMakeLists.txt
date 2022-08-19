@@ -1,4 +1,4 @@
-add_library(libproxyserver SHARED proxy-server.cpp)
+add_library(libproxyserver proxy-server.cpp)
 
 target_include_directories(libproxyserver
     PUBLIC

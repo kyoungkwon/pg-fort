@@ -28,7 +28,7 @@ WORKDIR /src
 
 RUN mkdir build \
     && cd build \
-    && cmake .. \
+    && cmake -DBUILD_SHARED_LIBS=OFF .. \
     && make
 
 
