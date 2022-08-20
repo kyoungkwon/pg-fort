@@ -22,12 +22,15 @@
 class Session : public StateMachine
 {
 private:
+    std::unordered_map<std::string, std::string> parameters_;
+
     ClientConn* cl_conn_;
     DbConn*     db_conn_;
 
     struct
     {
         struct epoll_event ev_;
+        bool               initiated_;
         bool               waiting_;
         Request            request_;
         Response           response_;
@@ -35,28 +38,40 @@ private:
     } context_;
 
     // declare states and actions
-    State  prep_recv_req;
+    State  initiate_;
+    State* Initiate();
+
+    State  prep_recv_req_;
     State* PrepRecvReq();
 
-    State  recv_req;
+    State  recv_req_;
     State* RecvReq();
 
-    State  prep_fwd_req;
+    // TODO: need to run plugins:
+    //  - acl queries
+
+    State  prep_fwd_req_;
     State* PrepFwdReq();
 
-    State  fwd_req;
+    State  fwd_req_;
     State* FwdReq();
 
-    State  prep_recv_resp;
+    State  prep_recv_resp_;
     State* PrepRecvResp();
 
-    State  recv_resp;
+    State  recv_resp_;
     State* RecvResp();
 
-    State  prep_fwd_resp;
+    // TODO: need to run plugins:
+    //  - check request type and command type
+    //  - check response and command result
+    //  - for create/alter/drop table:
+    //    - notify schema tracker about table name
+
+    State  prep_fwd_resp_;
     State* PrepFwdResp();
 
-    State  fwd_resp;
+    State  fwd_resp_;
     State* FwdResp();
 
 public:

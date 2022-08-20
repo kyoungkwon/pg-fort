@@ -38,7 +38,7 @@ find_library(LIBPG_QUERY pg_query)
 
 
 # executable
-add_executable(${PROJECT_NAME} src/bin/proxy-server/main.cpp)
+add_subdirectory(src/bin/proxy-server)
 
 
 # libraries

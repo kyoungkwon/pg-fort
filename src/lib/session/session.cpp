@@ -3,17 +3,19 @@
 Session::Session(ClientConn* cl_conn, DbConn* db_conn)
     : cl_conn_(cl_conn),
       db_conn_(db_conn),
-      prep_recv_req("PREP_RECV_REQ", std::bind(&Session::PrepRecvReq, this)),
-      recv_req("RECV_REQ", std::bind(&Session::RecvReq, this)),
-      prep_fwd_req("PREP_FWD_REQ", std::bind(&Session::PrepFwdReq, this)),
-      fwd_req("FWD_REQ", std::bind(&Session::FwdReq, this)),
-      prep_recv_resp("PREP_RECV_RESP", std::bind(&Session::PrepRecvResp, this)),
-      recv_resp("RECV_RESP", std::bind(&Session::RecvResp, this)),
-      prep_fwd_resp("PREP_FWD_RESP", std::bind(&Session::PrepFwdResp, this)),
-      fwd_resp("FWD_RESP", std::bind(&Session::FwdResp, this))
+      context_{0},
+      initiate_("INITIATE", std::bind(&Session::Initiate, this)),
+      prep_recv_req_("PREP_RECV_REQ", std::bind(&Session::PrepRecvReq, this)),
+      recv_req_("RECV_REQ", std::bind(&Session::RecvReq, this)),
+      prep_fwd_req_("PREP_FWD_REQ", std::bind(&Session::PrepFwdReq, this)),
+      fwd_req_("FWD_REQ", std::bind(&Session::FwdReq, this)),
+      prep_recv_resp_("PREP_RECV_RESP", std::bind(&Session::PrepRecvResp, this)),
+      recv_resp_("RECV_RESP", std::bind(&Session::RecvResp, this)),
+      prep_fwd_resp_("PREP_FWD_RESP", std::bind(&Session::PrepFwdResp, this)),
+      fwd_resp_("FWD_RESP", std::bind(&Session::FwdResp, this))
 {
     id = std::rand();
-    SetInitialState(prep_recv_req);
+    SetInitialState(prep_recv_req_);
 }
 
 Session::~Session()
@@ -122,10 +124,9 @@ void PrintInfo(SentBy src, char* data, int size)
             pos += strlen(name) + 1 + 4 + 2 + 4 + 2 + 4 + 2;
         }
         std::cout << "\t\tdone [pos: " << pos << "]" << std::endl;
-
-        // TODO: what comes after pos?
     }
 
+    // check last 6 bytes
     if (size > 6)
     {
         uint32_t i = size - 6;
@@ -141,6 +142,58 @@ void PrintInfo(SentBy src, char* data, int size)
     std::cout << std::endl;
 }
 
+State* Session::Initiate()
+{
+    std::cout << "[" << id << "] 1:Initiate (from " << cl_conn_->GetSocket() << ")" << std::endl;
+
+    std::cout << "\t\"StartupMessage\"" << std::endl;
+
+    char* data = context_.request_.Data();
+    int   size = context_.request_.Size();
+
+    std::cout << "\ttotal size = " << size << std::endl;
+
+    if (size <= 8)
+    {
+        // empty StartupMessage message, wait for next
+        return &prep_fwd_req_;
+    }
+
+    int32_t len = (int32_t(data[0]) << 24) + (int32_t(data[1]) << 16) + (int32_t(data[2]) << 8) +
+                  int32_t(data[3]);
+
+    std::cout << "\ttotal len = " << len << std::endl;
+
+    int32_t pver = (int32_t(data[4]) << 24) + (int32_t(data[5]) << 16) + (int32_t(data[6]) << 8) +
+                   int32_t(data[7]);
+
+    std::cout << "\tprotocol ver = " << pver << std::endl;
+
+    uint32_t pos = 8;
+    while (data[pos])
+    {
+        auto pname = std::string(data + pos);
+        pos += pname.length() + 1;
+        auto pval = std::string(data + pos);
+        pos += pval.length() + 1;
+
+        parameters_[pname] = pval;
+        if (pname == "user" && !parameters_.contains("database"))
+        {
+            parameters_["database"] = pval;
+        }
+    }
+
+    std::cout << "\tparameters:" << std::endl;
+    for (const auto& [k, v] : parameters_)
+    {
+        std::cout << "\t\t" << k << " = " << v << std::endl;
+    }
+
+    context_.initiated_ = true;
+    return &prep_fwd_req_;
+}
+
 State* Session::PrepRecvReq()
 {
     std::cout << "[" << id << "] 1:PrepRecvReq (from " << cl_conn_->GetSocket() << ")" << std::endl;
@@ -149,7 +202,7 @@ State* Session::PrepRecvReq()
     context_.ev_.events  = EPOLLIN;
     context_.waiting_    = true;
     context_.request_.Reset();
-    return &recv_req;
+    return &recv_req_;
 }
 
 State* Session::RecvReq()
@@ -167,9 +220,9 @@ State* Session::RecvReq()
     }
 
     PrintInfo(FRONTEND, context_.request_.Data(), res);
-
+    
     context_.waiting_ = false;
-    return &prep_fwd_req;
+    return context_.initiated_ ? &prep_fwd_req_ : &initiate_;
 }
 
 State* Session::PrepFwdReq()
@@ -180,7 +233,7 @@ State* Session::PrepFwdReq()
     context_.ev_.data.fd = db_conn_->GetSocket();
     context_.ev_.events  = EPOLLOUT;
     context_.waiting_    = true;
-    return &fwd_req;
+    return &fwd_req_;
 }
 
 State* Session::FwdReq()
@@ -198,7 +251,7 @@ State* Session::FwdReq()
         return nullptr;
     }
     context_.waiting_ = false;
-    return &prep_recv_resp;
+    return &prep_recv_resp_;
 }
 
 State* Session::PrepRecvResp()
@@ -211,7 +264,7 @@ State* Session::PrepRecvResp()
     context_.ev_.events  = EPOLLIN;
     context_.waiting_    = true;
     context_.response_.Reset();
-    return &recv_resp;
+    return &recv_resp_;
 }
 
 State* Session::RecvResp()
@@ -243,11 +296,11 @@ State* Session::RecvResp()
 
     if (!ready_for_query(context_.response_.Data(), res))
     {
-        return &recv_resp;
+        return &recv_resp_;
     }
 
     context_.waiting_ = false;
-    return &prep_fwd_resp;
+    return &prep_fwd_resp_;
 }
 
 State* Session::PrepFwdResp()
@@ -257,7 +310,7 @@ State* Session::PrepFwdResp()
     context_.ev_.data.fd = cl_conn_->GetSocket();
     context_.ev_.events  = EPOLLOUT;
     context_.waiting_    = true;
-    return &fwd_resp;
+    return &fwd_resp_;
 }
 
 State* Session::FwdResp()
@@ -274,5 +327,5 @@ State* Session::FwdResp()
         return nullptr;
     }
     context_.waiting_ = false;
-    return &prep_recv_req;
+    return &prep_recv_req_;
 }
