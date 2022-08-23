@@ -7,6 +7,6 @@ target_include_directories(libquery
 		${CMAKE_CURRENT_BINARY_DIR}
 		${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_link_libraries(libquery ${Protobuf_LIBRARIES} ${LIBCTEMPLATE_LIBRARIES})
+target_link_libraries(libquery ${LIBPG_QUERY} ${Protobuf_LIBRARIES} ${LIBCTEMPLATE_LIBRARIES})
 
 target_link_libraries(${PROJECT_NAME} libquery)

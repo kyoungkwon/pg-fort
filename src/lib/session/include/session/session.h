@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 
 #include <cstring>
+#include <functional>
 #include <future>
 #include <iostream>
 #include <string>
@@ -17,6 +18,7 @@
 #include "conn/db-conn.h"
 #include "conn/request.h"
 #include "conn/response.h"
+#include "query/query.h"
 #include "state-machine/state-machine.h"
 
 class Session : public StateMachine
@@ -26,6 +28,8 @@ private:
 
     ClientConn* cl_conn_;
     DbConn*     db_conn_;
+
+    // SchemaTracker* schema_;
 
     struct
     {
@@ -50,6 +54,9 @@ private:
     // TODO: need to run plugins:
     //  - acl queries
 
+    // State  req_plugin;
+    // State* ReqPlugin;
+
     State  prep_fwd_req_;
     State* PrepFwdReq();
 
@@ -67,6 +74,9 @@ private:
     //  - check response and command result
     //  - for create/alter/drop table:
     //    - notify schema tracker about table name
+
+    // State  resp_plugin;
+    // State* RespPlugin;
 
     State  prep_fwd_resp_;
     State* PrepFwdResp();
@@ -86,6 +96,39 @@ public:
 
     // TODO: improve this
     int id;
+
+private:
+    class PlugIn
+    {
+    public:
+        PlugIn(std::function<bool()> f, bool skip_on_error);
+        ~PlugIn();
+
+        bool SkipOnError();
+        bool Execute();
+
+    private:
+        std::function<bool()> f_;
+        bool                  skip_on_error_;
+    };
+
+    class PlugInFactory
+    {
+    public:
+        PlugInFactory(Session* s);
+        ~PlugInFactory();
+
+        PlugIn CheckMessageTypePlugin();
+        PlugIn AclQueryPlugIn();
+        PlugIn CreateAclTablePlugIn();
+        PlugIn DropAclTablePlugIn();
+
+    private:
+        Session* s_;
+    };
+    friend class PlugInFactory;
+
+    PlugInFactory pf_;
 };
 
 #endif

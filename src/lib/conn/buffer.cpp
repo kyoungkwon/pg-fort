@@ -34,6 +34,13 @@ void Buffer::Reset()
     data_size_ = 0;
 }
 
+void Buffer::Take(std::vector<char>& data)
+{
+    buf_       = std::move(data);
+    data_size_ = buf_.size();
+    buf_size_  = buf_.capacity() - data_size_;
+}
+
 int Buffer::RecvFrom(int socket)
 {
     while (true)

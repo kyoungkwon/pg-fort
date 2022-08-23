@@ -4,6 +4,7 @@ Session::Session(ClientConn* cl_conn, DbConn* db_conn)
     : cl_conn_(cl_conn),
       db_conn_(db_conn),
       context_{0},
+      pf_(this),
       initiate_("INITIATE", std::bind(&Session::Initiate, this)),
       prep_recv_req_("PREP_RECV_REQ", std::bind(&Session::PrepRecvReq, this)),
       recv_req_("RECV_REQ", std::bind(&Session::RecvReq, this)),
@@ -220,10 +221,20 @@ State* Session::RecvReq()
     }
 
     PrintInfo(FRONTEND, context_.request_.Data(), res);
-    
+
     context_.waiting_ = false;
     return context_.initiated_ ? &prep_fwd_req_ : &initiate_;
 }
+
+// State* Session::ReqPlugin()
+// {
+//     char* data = context_.request_.Data();
+//     int   size = context_.request_.Size();
+
+//     // create a plugin instance with:
+//     //  - start_at = &acl_query_
+//     //  - return_to = &prep_fwd_req_
+// }
 
 State* Session::PrepFwdReq()
 {
