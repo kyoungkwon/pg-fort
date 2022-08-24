@@ -82,6 +82,45 @@ Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
             std::cout << "CreateAclTablePlugIn";
             std::cout << std::endl;
 
+            // TODO: check if request was "create-table" command
+            //       also account for "create-table-if-not-exists"
+
+            // logic:
+            // table_name = CreateStmt -> relation -> relname
+            // acl_table_name = table_name + "__acl__"
+
+            // logic:
+            // if_not_exist = CreateStmt ? if_not_exists
+            // if_not_exist &= CreateStmt -> if_not_exists
+
+            // TODO: analyse response to see if a new table was created
+
+            // TODO: issue a chain-command to create acl table
+
+            // TODO: update schema tracker with the new table
+
+            return true;
+        },
+        false);
+}
+
+Session::PlugIn Session::PlugInFactory::SelectIntoTablePlugIn()
+{
+    return Session::PlugIn(
+        []()
+        {
+            std::cout << "this is";
+            std::cout << "SelectIntoTablePlugIn";
+            std::cout << std::endl;
+
+            // TODO: check if request was "select-into" command
+
+            // logic:
+            // table_name = SelectStmt -> intoClause -> rel -> relname
+            // acl_table_name = table_name + "__acl__"
+
+            // TODO: analyse response to see if a new table was created
+
             // TODO: issue a chain-command to create acl table
 
             // TODO: update schema tracker with the new table

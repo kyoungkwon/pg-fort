@@ -143,7 +143,25 @@ TEST(PgQueryTest, ParseModifyDeparse)
         // 13: lateral example
         "SELECT m.name AS mname, pname FROM manufacturers m, LATERAL get_product_names(m.id) pname;",
         // 14: another lateral example
-        "SELECT m.name AS mname, pname FROM manufacturers m LEFT JOIN LATERAL get_product_names(m.id) pname ON true;"
+        "SELECT m.name AS mname, pname FROM manufacturers m LEFT JOIN LATERAL get_product_names(m.id) pname ON true;",
+        // 15: select into a new table
+        "select * into xxx_copy from xxx;",
+        // 16: create a table
+        "CREATE TABLE xxx (id BIGSERIAL NOT NULL, name TEXT NOT NULL, tags TEXT[] NOT NULL, PRIMARY KEY (name));",
+        // 17: create a table (if not exists)
+        "CREATE TABLE IF NOT EXISTS xxx (id BIGSERIAL NOT NULL, name TEXT NOT NULL, tags TEXT[] NOT NULL, PRIMARY KEY (name));",
+        // 18: create a view
+        "CREATE VIEW zzz AS SELECT * FROM xxx x JOIN yyy y ON x.signature = y.signature",
+        // 19: create or replace a view
+        "CREATE OR REPLACE VIEW zzz AS SELECT * FROM xxx x JOIN yyy y ON x.signature = y.signature",
+        // 20: drop a view
+        "DROP VIEW zzz",
+        // 21: drop a view (if exists)
+        "DROP VIEW IF EXISTS zzz",
+        // 22: drop a table
+        "DROP TABLE xxx",
+        // 23: drop a table (if exists)
+        "DROP TABLE IF EXISTS xxx"
     };
     // clang-format on
 
@@ -177,7 +195,9 @@ TEST(PgQueryTest, ParseModifyDeparse)
         d   = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         std::cout << " - json (ms):  " << d.count() << std::endl;
 
-        if (false)
+        // write to file?
+        auto write_to_file = true;
+        if (write_to_file)
         {
             // output file
             char f[100] = {0};
@@ -205,6 +225,13 @@ TEST(PgQueryTest, ParseModifyDeparse)
         d   = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         std::cout << " - to_string (ms):  " << d.count() << std::endl;
 
+        // dump json?
+        std::unordered_set<int> dump = {15, 16, 17, 18, 19, 20, 21, 22, 23};
+        if (dump.contains(i))
+        {
+            std::cout << j.dump(4) << std::endl;
+        }
+
         // raw query string
         printf(" before: %s\n", test_cases[i]);
 
@@ -214,6 +241,8 @@ TEST(PgQueryTest, ParseModifyDeparse)
     }
 }
 
+// clang-format off
+/*
 TEST(PgQueryTest, TranslateSpecial)
 {
     // clang-format off
@@ -251,7 +280,7 @@ TEST(PgQueryTest, TranslateSpecial)
         // 06:
         {
             "CREATE ACCESS PERMISSION x_insert ON x FOR INSERT",
-            "INSERT INTO __access_permissions__ (id, name, t_name, op) VALUES (6, 'x_insert', 'x', 'INSERT')" 
+            "INSERT INTO __access_permissions__ (id, name, t_name, op) VALUES (6, 'x_insert', 'x', 'INSERT')"
         },
         // 07:
         {
@@ -280,8 +309,7 @@ TEST(PgQueryTest, TranslateSpecial)
         },
         // 12:
         {
-            "CREATE ACCESS BINDING ROLE staff ON directory where id = 4567 WITH u:kkwon AS temp_access_kkwon",
-            "INSERT INTO __access_bindings__ (id, role, t_name, cond, prin, alias) VALUES (346, 'staff', 'directory', 'id = 4567', 'u:kkwon', 'temp_access_kkwon')"
+            "CREATE ACCESS BINDING ROLE staff ON directory where id = 4567 WITH u:kkwon AS temp_access_kkwon", "INSERT INTO __access_bindings__ (id, role, t_name, cond, prin, alias) VALUES (346, 'staff', 'directory', 'id = 4567', 'u:kkwon', 'temp_access_kkwon')"
         },
         // 13: creating inheritances
         {
@@ -378,7 +406,7 @@ TEST(PgQueryTest, TranslateSpecial)
         //      - change policy acl? (maybe think in terms of roles)
         //        - who can create permissions?     how do you limit scope?     A: only the db admin and scope is limited the db (or unlimited)
         //        - who can create roles?           how do you limit scope?     A: __access_roles____acl table should have acl data with predefined permissions
-        //        - who can create inheritances?    how do you limit scope?     A: 
+        //        - who can create inheritances?    how do you limit scope?     A:
         //        - who can create bindings?        how do you limit scope?     A:
 
         // references (Organization Role Administrator role):
@@ -411,9 +439,9 @@ TEST(PgQueryTest, TranslateSpecial)
         //   - __access_binding_viewer__ ()
         //   - __access_binding_editor__ ()
 
-        
+
         // (infra) need the following acl tables
-        //   - 
+        //   -
     };
     // clang-format on
 
@@ -472,3 +500,4 @@ TEST(PgQueryTest, TranslateSpecial)
         printf("-----------------------------------------------------\n");
     }
 }
+*/

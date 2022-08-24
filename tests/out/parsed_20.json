@@ -1,0 +1,26 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "DropStmt": {
+                    "behavior": "DROP_RESTRICT",
+                    "objects": [
+                        {
+                            "List": {
+                                "items": [
+                                    {
+                                        "String": {
+                                            "str": "zzz"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "removeType": "OBJECT_VIEW"
+                }
+            }
+        }
+    ],
+    "version": 130003
+}

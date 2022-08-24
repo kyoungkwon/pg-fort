@@ -122,6 +122,7 @@ private:
         PlugIn CheckMessageTypePlugin();
         PlugIn AclQueryPlugIn();
         PlugIn CreateAclTablePlugIn();
+        PlugIn SelectIntoTablePlugIn();
         PlugIn DropAclTablePlugIn();
 
     private:
