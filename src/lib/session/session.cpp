@@ -1,8 +1,9 @@
 #include "session/session.h"
 
-Session::Session(ClientConn* cl_conn, DbConn* db_conn)
+Session::Session(ClientConn* cl_conn, DbConn* db_conn, std::shared_ptr<SchemaTracker> st)
     : cl_conn_(cl_conn),
       db_conn_(db_conn),
+      st_(st),
       context_{0},
       pf_(this),
       initiate_("INITIATE", std::bind(&Session::Initiate, this)),
@@ -240,7 +241,6 @@ State* Session::PrepFwdReq()
 {
     std::cout << "[" << id << "] 3:PrepFwdReq (to " << db_conn_->GetSocket() << ")" << std::endl;
 
-    // TODO: db_conn_ = db_conn_pool_.acquire()
     context_.ev_.data.fd = db_conn_->GetSocket();
     context_.ev_.events  = EPOLLOUT;
     context_.waiting_    = true;
@@ -252,7 +252,6 @@ State* Session::FwdReq()
     std::cout << "[" << id << "] 4:FwdReq (to " << db_conn_->GetSocket() << ")";
 
     auto res = db_conn_->ForwardRequest(context_.request_);
-    // TODO: db_conn_.release()
 
     std::cout << "\t" << res << std::endl;
 
@@ -270,7 +269,6 @@ State* Session::PrepRecvResp()
     std::cout << "[" << id << "] 5:PrepRecvResp (from " << db_conn_->GetSocket() << ")"
               << std::endl;
 
-    // TODO: db_conn_ = db_conn_pool_.acquire()
     context_.ev_.data.fd = db_conn_->GetSocket();
     context_.ev_.events  = EPOLLIN;
     context_.waiting_    = true;
@@ -284,7 +282,6 @@ State* Session::RecvResp()
               << "[" << id << "] 6:RecvResp (from " << db_conn_->GetSocket() << ")\033[0m";
 
     auto res = db_conn_->ReceiveResponse(context_.response_);
-    // TODO: db_conn_.release()
 
     std::cout << "\t" << res << std::endl;
 

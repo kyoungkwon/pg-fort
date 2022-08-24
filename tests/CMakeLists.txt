@@ -25,3 +25,8 @@ gtest_discover_tests(state-machine-pool-test)
 add_executable(pg-query-test pg-query-test.cpp)
 target_link_libraries(pg-query-test GTest::gtest GTest::gtest_main ${LIBPG_QUERY} libquery)
 gtest_discover_tests(pg-query-test)
+
+
+add_executable(pqxx-test pqxx-test.cpp)
+target_link_libraries(pqxx-test GTest::gtest GTest::gtest_main libconn)
+gtest_discover_tests(pqxx-test)

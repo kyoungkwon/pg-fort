@@ -153,9 +153,17 @@ TEST(PgQueryTest, ParseModifyDeparse)
     {
         printf("testcase: %02d\n", i);
 
+        // prepare mock schema tracker
+        std::shared_ptr<SchemaTracker> st = std::make_shared<SchemaTracker>();
+        for (auto& rn : {"x", "xavier", "employee", "weather_reports", "mytable", "distributors",
+                         "films", "actors", "manufacturers"})
+        {
+            st->AddRelName(rn);
+        }
+
         // parse query
         auto  start = std::chrono::steady_clock::now();
-        Query q(test_cases[i]);
+        Query q(test_cases[i], st);
 
         auto end = std::chrono::steady_clock::now();
         auto d   = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -182,12 +190,8 @@ TEST(PgQueryTest, ParseModifyDeparse)
             o.close();
         }
 
-        // remember table names
-        start = std::chrono::steady_clock::now();
-        q.AddTableNames({"x", "xavier", "employee", "weather_reports", "mytable", "distributors",
-                         "films", "actors", "manufacturers"});
-
         // modify query
+        start = std::chrono::steady_clock::now();
         q.AddAclCheck();
 
         end = std::chrono::steady_clock::now();
@@ -420,7 +424,7 @@ TEST(PgQueryTest, TranslateSpecial)
         printf(" original:  %s\n", input.c_str());
 
         // parse as regular query
-        EXPECT_THROW(Query _(input.c_str()), ParseException);
+        EXPECT_THROW(Query _(input.c_str(), nullptr), ParseException);
 
         // scan as reqular query
         auto result = pg_query_scan(input.c_str());

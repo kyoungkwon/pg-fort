@@ -46,9 +46,8 @@ Session::PlugIn Session::PlugInFactory::AclQueryPlugIn()
             }
 
             // convert data into query
-            Query q(data + 5);
+            Query q(data + 5, s->st_);
 
-            // TODO: add table names
             // add acl check to query
             q.AddAclCheck();
             auto qstr = q.ToString();
@@ -82,6 +81,11 @@ Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
             std::cout << "this is";
             std::cout << "CreateAclTablePlugIn";
             std::cout << std::endl;
+
+            // TODO: issue a chain-command to create acl table
+
+            // TODO: update schema tracker with the new table
+
             return true;
         },
         false);

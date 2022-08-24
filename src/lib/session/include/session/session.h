@@ -19,6 +19,7 @@
 #include "conn/request.h"
 #include "conn/response.h"
 #include "query/query.h"
+#include "schema/schema-tracker.h"
 #include "state-machine/state-machine.h"
 
 class Session : public StateMachine
@@ -29,7 +30,7 @@ private:
     ClientConn* cl_conn_;
     DbConn*     db_conn_;
 
-    // SchemaTracker* schema_;
+    std::shared_ptr<SchemaTracker> st_;
 
     struct
     {
@@ -85,7 +86,7 @@ private:
     State* FwdResp();
 
 public:
-    Session(ClientConn* cl_conn, DbConn* db_conn);
+    Session(ClientConn* cl_conn, DbConn* db_conn, std::shared_ptr<SchemaTracker> st);
     ~Session();
 
     // session functor takes a state machine action

@@ -1,6 +1,7 @@
 #include "query/query.h"
 
-Query::Query(const char* raw_query)
+Query::Query(const char* raw_query, std::shared_ptr<SchemaTracker> st)
+    : st_(st)
 {
     raw_query_ = strdup(raw_query);
 
@@ -19,14 +20,6 @@ Query::~Query()
 {
     pg_query_free_parse_result(parse_result_);
     free(raw_query_);
-}
-
-void Query::AddTableNames(std::vector<std::string> table_names)
-{
-    for (auto t : table_names)
-    {
-        table_names_.insert(t);
-    }
 }
 
 json& Query::Json()
@@ -98,7 +91,7 @@ void Query::AddAclJoinToFromClause(json& j)
             auto relname = v["relname"].get<std::string>();
 
             // if relname is not a table, then ignore
-            if (!table_names_.contains(relname))
+            if (st_ == nullptr || !st_->Exist(relname))
             {
                 continue;
             }

@@ -1,19 +1,21 @@
 #include "proxy-server/proxy-server.h"
 
-ProxyServer::ProxyServer(int port, DbConnFactory &factory)
+ProxyServer::ProxyServer(int port, std::shared_ptr<DbConnFactory> dbcf,
+                         std::shared_ptr<SchemaTracker> st)
     : ip_("localhost"),
       port_(port),
-      factory_(factory),
       flag_(true),
-      operator_(4)
+      dbcf_(dbcf),
+      st_(st),
+      so_(4)
 {
     int res = 0;
 
-    socket_ = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (socket_ < 0)
+    sock_ = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock_ < 0)
     {
         // TODO: throw exception
-        std::cerr << "ProxyServer() socket failed: " << socket_ << " (errno=" << errno << ")"
+        std::cerr << "ProxyServer() socket failed: " << sock_ << " (errno=" << errno << ")"
                   << std::endl;
     }
 
@@ -22,42 +24,42 @@ ProxyServer::ProxyServer(int port, DbConnFactory &factory)
     sock_addr_.sin_addr.s_addr = htonl(INADDR_ANY);
     sock_addr_.sin_port        = htons(port_);
 
-    res = setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR, &flag_, sizeof(flag_));
+    res = setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, &flag_, sizeof(flag_));
     if (res < 0)
     {
         // TODO: throw exception
-        std::cerr << "ProxyServer() setsockopt failed: " << socket_ << " (errno=" << errno << ")"
+        std::cerr << "ProxyServer() setsockopt failed: " << sock_ << " (errno=" << errno << ")"
                   << std::endl;
     }
 
-    res = bind(socket_, (const sockaddr *)&sock_addr_, sock_len_);
+    res = bind(sock_, (const sockaddr *)&sock_addr_, sock_len_);
     if (res < 0)
     {
         // TODO: throw exception
-        std::cerr << "ProxyServer() bind failed: " << socket_ << " (errno=" << errno << ")"
+        std::cerr << "ProxyServer() bind failed: " << sock_ << " (errno=" << errno << ")"
                   << std::endl;
     }
 
-    res = fcntl(socket_, F_SETFL, O_NONBLOCK);
+    res = fcntl(sock_, F_SETFL, O_NONBLOCK);
     if (res < 0)
     {
         // TODO: throw exception
-        std::cerr << "ProxyServer() fcntl failed: " << socket_ << " (errno=" << errno << ")"
+        std::cerr << "ProxyServer() fcntl failed: " << sock_ << " (errno=" << errno << ")"
                   << std::endl;
     }
 
-    res = listen(socket_, 2048);
+    res = listen(sock_, 2048);
     if (res < 0)
     {
         // TODO: throw exception
-        std::cerr << "ProxyServer() listen failed: " << socket_ << " (errno=" << errno << ")"
+        std::cerr << "ProxyServer() listen failed: " << sock_ << " (errno=" << errno << ")"
                   << std::endl;
     }
 }
 
 ProxyServer::~ProxyServer()
 {
-    operator_.Stop();
+    so_.Stop();
 }
 
 void ProxyServer::Run()
@@ -70,13 +72,13 @@ void ProxyServer::Run()
     timeout.tv_usec        = 0;
 
     // start session operator
-    operator_.Start();
+    so_.Start();
 
     while (true)
     {
         FD_ZERO(&fds);
-        FD_SET(socket_, &fds);
-        int res = select(socket_ + 1, &fds, NULL, NULL, &timeout);
+        FD_SET(sock_, &fds);
+        int res = select(sock_ + 1, &fds, NULL, NULL, &timeout);
         if (res == 0)
         {
             continue;  // timeout
@@ -90,8 +92,8 @@ void ProxyServer::Run()
         }
 
         // accept and create session
-        int newsocket = accept(socket_, 0, 0);
-        if (newsocket < 0)
+        int new_sock = accept(sock_, 0, 0);
+        if (new_sock < 0)
         {
             // TODO: better errno handling
             std::cerr << "accept failed with errno = " << errno << std::endl;
@@ -99,16 +101,16 @@ void ProxyServer::Run()
         }
 
         // create a client connection
-        auto cl_conn = new ClientConn(newsocket);
+        auto cl_conn = new ClientConn(new_sock);
 
         // create a db connection
-        auto db_conn = factory_.CreateDbConn();
+        auto db_conn = dbcf_->CreateDbConn();
 
         // create a session and submit to the operator
-        auto session = new Session(cl_conn, db_conn);
+        auto s = new Session(cl_conn, db_conn, st_);
 
-        std::cout << "New session [" << session->id << "]" << std::endl;
+        std::cout << "New session [" << s->id << "]" << std::endl;
 
-        operator_.Submit(session);
+        so_.Submit(s);
     }
 }

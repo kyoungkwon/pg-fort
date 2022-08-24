@@ -14,15 +14,18 @@
 #include <unordered_set>
 #include <vector>
 
+#include "schema/schema-tracker.h"
+
 using json = nlohmann::json;
 
 class Query
 {
 private:
-    char*                           raw_query_;
-    PgQueryParseResult              parse_result_;
-    json                            j_;
-    std::unordered_set<std::string> table_names_;
+    char*              raw_query_;
+    PgQueryParseResult parse_result_;
+    json               j_;
+
+    std::shared_ptr<SchemaTracker> st_;
 
     void AddAclCheck(json& j);
     void AddAclCheckToSelectStmt(json& j);
@@ -33,10 +36,9 @@ private:
     void print(json& j, int indent);
 
 public:
-    Query(const char* raw_query);
+    Query(const char* raw_query, std::shared_ptr<SchemaTracker> st);
     ~Query();
 
-    void  AddTableNames(std::vector<std::string> table_names);
     json& Json();
     void  AddAclCheck();
     char* ToString();

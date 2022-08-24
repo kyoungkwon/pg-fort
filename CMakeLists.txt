@@ -45,10 +45,11 @@ add_subdirectory(src/bin/proxy-server)
 add_subdirectory(src/lib/common)
 add_subdirectory(src/lib/concurrency)
 add_subdirectory(src/lib/conn)
-add_subdirectory(src/lib/session)
-add_subdirectory(src/lib/state-machine)
 add_subdirectory(src/lib/proxy-server)
 add_subdirectory(src/lib/query)
+add_subdirectory(src/lib/schema)
+add_subdirectory(src/lib/session)
+add_subdirectory(src/lib/state-machine)
 
 
 # tests
