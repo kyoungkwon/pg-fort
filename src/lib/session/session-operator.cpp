@@ -61,6 +61,10 @@ void SessionOperator::Watch()
         nfds = epoll_wait(epollfd_, events, MAX_EVENTS, 1000);
         if (nfds == -1)
         {
+            if (errno == EINTR)
+            {
+                continue;
+            }
             perror("epoll_wait");
             exit(EXIT_FAILURE);
         }
