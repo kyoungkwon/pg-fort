@@ -7,6 +7,7 @@
 #include <fstream>
 #include <vector>
 
+#include "query/jsonutil.h"
 #include "query/query.h"
 #include "query/special-query.h"
 
@@ -147,9 +148,9 @@ TEST(PgQueryTest, ParseModifyDeparse)
         // 15: select into a new table
         "select * into xxx_copy from xxx;",
         // 16: create a table
-        "CREATE TABLE xxx (id BIGSERIAL NOT NULL, name TEXT NOT NULL, tags TEXT[] NOT NULL, PRIMARY KEY (name));",
+        "CREATE TABLE xxx (id BIGSERIAL NOT NULL UNIQUE, name TEXT NOT NULL, tags TEXT[] NOT NULL, PRIMARY KEY (name));",
         // 17: create a table (if not exists)
-        "CREATE TABLE IF NOT EXISTS xxx (id BIGSERIAL NOT NULL, name TEXT NOT NULL, tags TEXT[] NOT NULL, PRIMARY KEY (name));",
+        "CREATE TABLE IF NOT EXISTS xxx (id BIGSERIAL NOT NULL, name TEXT NOT NULL, tags TEXT[] NOT NULL, PRIMARY KEY (id));",
         // 18: create a view
         "CREATE VIEW zzz AS SELECT * FROM xxx x JOIN yyy y ON x.signature = y.signature",
         // 19: create or replace a view
@@ -162,6 +163,8 @@ TEST(PgQueryTest, ParseModifyDeparse)
         "DROP TABLE xxx",
         // 23: drop a table (if exists)
         "DROP TABLE IF EXISTS xxx"
+
+        // TODO (M1): SELECT * FROM (INSERT INTO ... RETURNING ...)
     };
     // clang-format on
 
@@ -230,6 +233,30 @@ TEST(PgQueryTest, ParseModifyDeparse)
         if (dump.contains(i))
         {
             std::cout << j.dump(4) << std::endl;
+        }
+
+        // experiment?
+        bool experiment = false;
+        if (experiment && i == 17)
+        {
+            std::cout << "********************" << std::endl;
+
+            auto n = JsonUtil::FindNode(j, "CreateStmt");
+            if (n == nullptr)
+            {
+                std::cout << "Not Found" << std::endl;
+                return;
+            }
+
+            auto table_name = (*n)["relation"]["relname"].get<std::string>();
+            std::cout << table_name << std::endl;
+
+            auto if_not_exists = (*n).contains("if_not_exists");
+            if_not_exists      = if_not_exists ? (*n)["if_not_exists"].get<bool>() : false;
+            std::cout << if_not_exists << std::endl;
+
+            std::cout << "********************" << std::endl;
+            return;
         }
 
         // raw query string
