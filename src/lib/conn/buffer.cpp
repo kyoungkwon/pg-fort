@@ -5,8 +5,8 @@
 #define DEFAULT_SIZE 1024
 
 Buffer::Buffer()
-    : buf_(),
-      buf_size_(0),
+    : buf_(2 * DEFAULT_SIZE),
+      buf_size_(DEFAULT_SIZE),
       data_size_(0)
 {
 }
