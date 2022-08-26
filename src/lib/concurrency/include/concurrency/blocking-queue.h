@@ -23,6 +23,15 @@ public:
         cv_.notify_one();
     }
 
+    void Push(T&& item)
+    {
+        {
+            std::unique_lock<std::mutex> lock(m_);
+            q_.push(std::move(item));
+        }
+        cv_.notify_one();
+    }
+
     bool Pop(T& item, const int ms = 100)
     {
         auto timeout = std::chrono::system_clock::now() + std::chrono::milliseconds(ms);
@@ -40,7 +49,7 @@ public:
             }
         }
 
-        item = q_.front();
+        item = std::move(q_.front());
         q_.pop();
         return true;
     }
