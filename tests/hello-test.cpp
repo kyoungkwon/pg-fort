@@ -44,6 +44,37 @@ TEST(HelloTest, PrintChar)
     EXPECT_NE(a, b);  // not equal
 }
 
+TEST(HelloTest, UniquePtr)
+{
+    class B
+    {
+    public:
+        B()
+        {
+            std::cout << "B::B" << std::endl;
+        }
+
+        ~B()
+        {
+            std::cout << "B::~B" << std::endl;
+        }
+    };
+
+    std::cout << "creating p" << std::endl;
+    std::unique_ptr<B> p = std::make_unique<B>();
+
+    struct
+    {
+        std::unique_ptr<B> b;
+    } c;
+
+    std::cout << "moving p to c.b" << std::endl;
+    c.b = std::move(p);
+
+    std::cout << "resetting c" << std::endl;
+    c = {0};
+}
+
 TEST(HelloTest, CharVectorManip)
 {
     char l[] = "abcdefghijklmnopqrstuvwxyz";
