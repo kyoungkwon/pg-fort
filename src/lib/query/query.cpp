@@ -57,6 +57,10 @@ void Query::AddAclCheckToSelectStmt(json& j)
         {
             AddAclJoinToFromClause(v);
         }
+        else if (k == "intoClause")
+        {
+            // ignore
+        }
         else if (k == "whereClause")
         {
             // TODO
