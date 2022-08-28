@@ -13,7 +13,7 @@
 #include <thread>
 
 #include "conn/client-conn.h"
-#include "conn/db-conn.h"
+#include "conn/server-conn.h"
 #include "schema/schema-tracker.h"
 #include "session/session-operator.h"
 
@@ -27,12 +27,14 @@ private:
     socklen_t   sock_len_;
     int         flag_;
 
-    std::shared_ptr<DbConnFactory> dbcf_;
-    std::shared_ptr<SchemaTracker> st_;
-    SessionOperator                so_;
+    std::shared_ptr<ServerConnFactory> scf_;
+    std::shared_ptr<PqxxConnPool>      pcp_;
+    std::shared_ptr<SchemaTracker>     st_;
+    SessionOperator                    so_;
 
 public:
-    ProxyServer(int port, std::shared_ptr<DbConnFactory> dbcf, std::shared_ptr<SchemaTracker> st);
+    ProxyServer(int port, std::shared_ptr<ServerConnFactory> scf, std::shared_ptr<PqxxConnPool> pcp,
+                std::shared_ptr<SchemaTracker> st);
     ~ProxyServer();
 
     void Run();

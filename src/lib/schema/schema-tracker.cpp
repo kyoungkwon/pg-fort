@@ -7,15 +7,25 @@ const static std::vector<std::string> excluded_ = {
     "__access_roles__",        "__access_roles___id_seq",
     "gorp_migrations"};
 
-SchemaTracker::SchemaTracker()
+SchemaTracker::SchemaTracker(std::shared_ptr<PqxxConnPool> pcp)
+    : pcp_(pcp)
+{
+    Refresh();
+}
+
+SchemaTracker::~SchemaTracker()
 {
 }
 
-SchemaTracker::SchemaTracker(const char* host, const char* port)
-    : SchemaTracker()
+void SchemaTracker::Refresh()
 {
-    PqxxConn   c(host, port);
-    pqxx::work w(c);
+    if (pcp_ == nullptr)
+    {
+        return;
+    }
+
+    auto       c = pcp_->Acquire();
+    pqxx::work w(*c);
 
     // get table list
     // relkind
@@ -31,21 +41,19 @@ SchemaTracker::SchemaTracker(const char* host, const char* port)
     //   I = partitioned index
     auto r = w.exec(
         "SELECT *"
-        " FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace"
+        " FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = "
+        "c.relnamespace"
         " WHERE c.relkind = ANY(ARRAY['r','p','v','m','f'])"
         " AND pg_catalog.pg_table_is_visible(c.oid)"
         " AND n.nspname <> 'pg_catalog'"
         " AND n.nspname <> 'information_schema'"
         " AND n.nspname !~ '^pg_toast'");
 
+    std::unique_lock w_lock(mutex_);
     for (auto row : r)
     {
         relnames_.emplace(row["relname"].c_str());
     }
-}
-
-SchemaTracker::~SchemaTracker()
-{
 }
 
 void SchemaTracker::AddRelName(std::string relname)

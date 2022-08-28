@@ -20,6 +20,12 @@
                                             "contype": "CONSTR_NOTNULL",
                                             "location": 31
                                         }
+                                    },
+                                    {
+                                        "Constraint": {
+                                            "contype": "CONSTR_UNIQUE",
+                                            "location": 40
+                                        }
                                     }
                                 ],
                                 "is_local": true,
@@ -44,14 +50,14 @@
                                     {
                                         "Constraint": {
                                             "contype": "CONSTR_NOTNULL",
-                                            "location": 51
+                                            "location": 58
                                         }
                                     }
                                 ],
                                 "is_local": true,
-                                "location": 41,
+                                "location": 48,
                                 "typeName": {
-                                    "location": 46,
+                                    "location": 53,
                                     "names": [
                                         {
                                             "String": {
@@ -70,12 +76,12 @@
                                     {
                                         "Constraint": {
                                             "contype": "CONSTR_NOTNULL",
-                                            "location": 73
+                                            "location": 80
                                         }
                                     }
                                 ],
                                 "is_local": true,
-                                "location": 61,
+                                "location": 68,
                                 "typeName": {
                                     "arrayBounds": [
                                         {
@@ -84,7 +90,7 @@
                                             }
                                         }
                                     ],
-                                    "location": 66,
+                                    "location": 73,
                                     "names": [
                                         {
                                             "String": {
@@ -106,13 +112,13 @@
                                         }
                                     }
                                 ],
-                                "location": 83
+                                "location": 90
                             }
                         }
                     ]
                 }
             },
-            "stmt_len": 102
+            "stmt_len": 109
         }
     ],
     "version": 130003

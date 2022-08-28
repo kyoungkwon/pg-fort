@@ -1,11 +1,12 @@
 #include "proxy-server/proxy-server.h"
 
-ProxyServer::ProxyServer(int port, std::shared_ptr<DbConnFactory> dbcf,
-                         std::shared_ptr<SchemaTracker> st)
+ProxyServer::ProxyServer(int port, std::shared_ptr<ServerConnFactory> scf,
+                         std::shared_ptr<PqxxConnPool> pcp, std::shared_ptr<SchemaTracker> st)
     : ip_("localhost"),
       port_(port),
       flag_(true),
-      dbcf_(dbcf),
+      scf_(scf),
+      pcp_(pcp),
       st_(st),
       so_(4)
 {
@@ -103,11 +104,11 @@ void ProxyServer::Run()
         // create a client connection
         auto cl_conn = new ClientConn(new_sock);
 
-        // create a db connection
-        auto db_conn = dbcf_->CreateDbConn();
+        // create a server connection
+        auto sv_conn = scf_->CreateServerConn();
 
         // create a session and submit to the operator
-        auto s = new Session(cl_conn, db_conn, st_);
+        auto s = new Session(cl_conn, sv_conn, pcp_, st_);
 
         std::cout << "New session [" << s->id << "]" << std::endl;
 

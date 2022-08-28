@@ -1,8 +1,8 @@
-#include "conn/db-conn.h"
+#include "conn/server-conn.h"
 
 #include <cstring>
 
-DbConn::DbConn(const char* host, const char* port)
+ServerConn::ServerConn(const char* host, const char* port)
     : Conn(socket(PF_INET, SOCK_STREAM, 0)),
       host_(host),
       port_(port)
@@ -10,7 +10,7 @@ DbConn::DbConn(const char* host, const char* port)
     if (socket_ < 0)
     {
         // TODO: throw exception
-        std::cerr << "DbConn() socket failed: " << socket_ << " (errno=" << errno << ")"
+        std::cerr << "ServerConn() socket failed: " << socket_ << " (errno=" << errno << ")"
                   << std::endl;
     }
 
@@ -25,7 +25,7 @@ DbConn::DbConn(const char* host, const char* port)
     if (res != 0)
     {
         // TODO: throw exception
-        std::cerr << "DbConn() getaddrinfo failed: " << res << " (errno=" << errno << ")"
+        std::cerr << "ServerConn() getaddrinfo failed: " << res << " (errno=" << errno << ")"
                   << std::endl;
     }
 
@@ -41,7 +41,7 @@ DbConn::DbConn(const char* host, const char* port)
     if (res != 0)
     {
         // TODO: throw exception
-        std::cerr << "DbConn() connect failed: " << res << " (errno=" << errno << ")" << std::endl;
+        std::cerr << "ServerConn() connect failed: " << res << " (errno=" << errno << ")" << std::endl;
     }
     else
     {
@@ -49,37 +49,37 @@ DbConn::DbConn(const char* host, const char* port)
         if (res < 0)
         {
             // TODO: throw exception
-            std::cerr << "DbConn() fcntl failed: " << socket_ << " (errno=" << errno << ")"
+            std::cerr << "ServerConn() fcntl failed: " << socket_ << " (errno=" << errno << ")"
                       << std::endl;
         }
     }
 }
 
-DbConn::~DbConn()
+ServerConn::~ServerConn()
 {
 }
 
-int DbConn::ForwardRequest(Request& request)
+int ServerConn::ForwardRequest(Request& request)
 {
     return request.SendTo(socket_);
 }
 
-int DbConn::ReceiveResponse(Response& response)
+int ServerConn::ReceiveResponse(Response& response)
 {
     return response.RecvFrom(socket_);
 }
 
-DbConnFactory::DbConnFactory(const char* host, const char* port)
+ServerConnFactory::ServerConnFactory(const char* host, const char* port)
     : host_(host),
       port_(port)
 {
 }
 
-DbConnFactory::~DbConnFactory()
+ServerConnFactory::~ServerConnFactory()
 {
 }
 
-DbConn* DbConnFactory::CreateDbConn()
+ServerConn* ServerConnFactory::CreateServerConn()
 {
-    return new DbConn(host_, port_);
+    return new ServerConn(host_, port_);
 }

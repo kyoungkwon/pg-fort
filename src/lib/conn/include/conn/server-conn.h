@@ -15,7 +15,7 @@
 #include "conn/request.h"
 #include "conn/response.h"
 
-class DbConn : public Conn
+class ServerConn : public Conn
 {
 private:
     const char* host_;
@@ -23,24 +23,24 @@ private:
     sockaddr_in sock_addr_;
 
 public:
-    DbConn(const char* host, const char* port);
-    ~DbConn();
+    ServerConn(const char* host, const char* port);
+    ~ServerConn();
 
     int ForwardRequest(Request& request);
     int ReceiveResponse(Response& response);
 };
 
-class DbConnFactory
+class ServerConnFactory
 {
 private:
     const char* host_;
     const char* port_;
 
 public:
-    DbConnFactory(const char* host, const char* port);
-    ~DbConnFactory();
+    ServerConnFactory(const char* host, const char* port);
+    ~ServerConnFactory();
 
-    DbConn* CreateDbConn();
+    ServerConn* CreateServerConn();
 };
 
 #endif

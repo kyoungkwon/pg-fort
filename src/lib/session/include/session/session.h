@@ -15,12 +15,15 @@
 
 #include "concurrency/thread-pool.h"
 #include "conn/client-conn.h"
-#include "conn/db-conn.h"
 #include "conn/request.h"
 #include "conn/response.h"
+#include "conn/server-conn.h"
+#include "query/jsonutil.h"
 #include "query/query.h"
 #include "schema/schema-tracker.h"
 #include "state-machine/state-machine.h"
+
+using json = nlohmann::json;
 
 class Session : public StateMachine
 {
@@ -28,19 +31,10 @@ private:
     std::unordered_map<std::string, std::string> parameters_;
 
     ClientConn* cl_conn_;
-    DbConn*     db_conn_;
+    ServerConn* sv_conn_;
 
+    std::shared_ptr<PqxxConnPool>  pcp_;
     std::shared_ptr<SchemaTracker> st_;
-
-    struct
-    {
-        struct epoll_event ev_;
-        bool               initiated_;
-        bool               waiting_;
-        Request            request_;
-        Response           response_;
-        int                errno_;
-    } context_;
 
     // declare states and actions
     State  initiate_;
@@ -85,8 +79,12 @@ private:
     State  fwd_resp_;
     State* FwdResp();
 
+    State  reset_context_;
+    State* ResetContext();
+
 public:
-    Session(ClientConn* cl_conn, DbConn* db_conn, std::shared_ptr<SchemaTracker> st);
+    Session(ClientConn* cl_conn, ServerConn* sv_conn, std::shared_ptr<PqxxConnPool> pcp,
+            std::shared_ptr<SchemaTracker> st);
     ~Session();
 
     // session functor takes a state machine action
@@ -99,18 +97,30 @@ public:
     int id;
 
 private:
+    class Context
+    {
+    public:
+        struct epoll_event     ev_;
+        bool                   initiated_;
+        bool                   waiting_;
+        Request                request_;
+        Response               response_;
+        std::unique_ptr<Query> query_;
+        int                    errno_;
+    };
+
     class PlugIn
     {
     public:
         PlugIn(std::function<bool()> f, bool skip_on_error);
         ~PlugIn();
 
-        bool SkipOnError();
+        bool SkipOnFail();
         bool Execute();
 
     private:
         std::function<bool()> f_;
-        bool                  skip_on_error_;
+        bool                  skip_on_fail_;
     };
 
     class PlugInFactory
@@ -119,17 +129,24 @@ private:
         PlugInFactory(Session* s);
         ~PlugInFactory();
 
-        PlugIn CheckMessageTypePlugin();
+        // pre-request plugins
+        PlugIn GetQueryPlugIn();
         PlugIn AclQueryPlugIn();
+        PlugIn EnsureNewTableHasIdPlugIn();
+        PlugIn RestrictInternalTableAccessPlugIn();
+
+        // post-response plugins
         PlugIn CreateAclTablePlugIn();
         PlugIn SelectIntoTablePlugIn();
-        PlugIn DropAclTablePlugIn();
+        PlugIn DropAclTablePlugIn();  // necessary?
 
     private:
         Session* s_;
     };
+
     friend class PlugInFactory;
 
+    Context       context_;
     PlugInFactory pf_;
 };
 

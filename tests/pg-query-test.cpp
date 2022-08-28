@@ -175,9 +175,9 @@ TEST(PgQueryTest, ParseModifyDeparse)
         printf("testcase: %02d\n", i);
 
         // prepare mock schema tracker
-        std::shared_ptr<SchemaTracker> st = std::make_shared<SchemaTracker>();
+        std::shared_ptr<SchemaTracker> st = std::make_shared<SchemaTracker>(nullptr);
         for (auto& rn : {"x", "xavier", "employee", "weather_reports", "mytable", "distributors",
-                         "films", "actors", "manufacturers"})
+                         "films", "actors", "manufacturers", "xxx", "xxx_copy", "yyy"})
         {
             st->AddRelName(rn);
         }
@@ -229,15 +229,17 @@ TEST(PgQueryTest, ParseModifyDeparse)
         std::cout << " - to_string (ms):  " << d.count() << std::endl;
 
         // dump json?
-        std::unordered_set<int> dump = {15, 16, 17, 18, 19, 20, 21, 22, 23};
-        if (dump.contains(i))
+        bool                    dump      = false;
+        std::unordered_set<int> dump_list = {15, 16, 17, 18, 19, 20, 21, 22, 23};
+        if (dump && dump_list.contains(i))
         {
             std::cout << j.dump(4) << std::endl;
         }
 
         // experiment?
-        bool experiment = false;
-        if (experiment && i == 17)
+        bool                    experiment      = false;
+        std::unordered_set<int> experiment_list = {17};
+        if (experiment && experiment_list.contains(i))
         {
             std::cout << "********************" << std::endl;
 

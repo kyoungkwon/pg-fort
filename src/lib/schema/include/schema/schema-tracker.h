@@ -14,13 +14,14 @@ private:
     std::unordered_set<std::string> relnames_;
     std::unordered_set<std::string> excluded_;
 
-    mutable std::shared_mutex mutex_;
+    std::shared_ptr<PqxxConnPool> pcp_;
+    mutable std::shared_mutex     mutex_;
 
 public:
-    SchemaTracker();
-    SchemaTracker(const char* host, const char* port);
+    SchemaTracker(std::shared_ptr<PqxxConnPool> pcp);
     ~SchemaTracker();
 
+    void Refresh();
     void AddRelName(std::string relname);
     bool Exist(std::string relname);
 };

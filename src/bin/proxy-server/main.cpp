@@ -1,3 +1,4 @@
+#include "conn/pqxx-conn.h"
 #include "proxy-server/proxy-server.h"
 #include "schema/schema-tracker.h"
 
@@ -18,13 +19,11 @@ int main(int argc, char const *argv[])
     auto db_port    = argv[3];
     auto proxy_port = atoi(argv[1]);
 
-    std::shared_ptr<DbConnFactory> dbcf = std::make_shared<DbConnFactory>(db_host, db_port);
-    std::shared_ptr<SchemaTracker> st   = std::make_shared<SchemaTracker>(db_host, db_port);
+    auto scf = std::make_shared<ServerConnFactory>(db_host, db_port);
+    auto pcp = std::make_shared<PqxxConnPool>(db_host, db_port, 10);
+    auto st  = std::make_shared<SchemaTracker>(pcp);
 
-    ProxyServer proxy(proxy_port, dbcf, st);
-    dbcf.reset();
-    st.reset();
-
+    ProxyServer proxy(proxy_port, scf, pcp, st);
     proxy.Run();
 
     std::cout << "exiting main.." << std::endl;

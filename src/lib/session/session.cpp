@@ -1,10 +1,11 @@
 #include "session/session.h"
 
-Session::Session(ClientConn* cl_conn, DbConn* db_conn, std::shared_ptr<SchemaTracker> st)
+Session::Session(ClientConn* cl_conn, ServerConn* sv_conn, std::shared_ptr<PqxxConnPool> pcp,
+                 std::shared_ptr<SchemaTracker> st)
     : cl_conn_(cl_conn),
-      db_conn_(db_conn),
+      sv_conn_(sv_conn),
+      pcp_(pcp),
       st_(st),
-      context_{0},
       pf_(this),
       initiate_("INITIATE", std::bind(&Session::Initiate, this)),
       prep_recv_req_("PREP_RECV_REQ", std::bind(&Session::PrepRecvReq, this)),
@@ -14,7 +15,8 @@ Session::Session(ClientConn* cl_conn, DbConn* db_conn, std::shared_ptr<SchemaTra
       prep_recv_resp_("PREP_RECV_RESP", std::bind(&Session::PrepRecvResp, this)),
       recv_resp_("RECV_RESP", std::bind(&Session::RecvResp, this)),
       prep_fwd_resp_("PREP_FWD_RESP", std::bind(&Session::PrepFwdResp, this)),
-      fwd_resp_("FWD_RESP", std::bind(&Session::FwdResp, this))
+      fwd_resp_("FWD_RESP", std::bind(&Session::FwdResp, this)),
+      reset_context_("RESET_CONTEXT", std::bind(&Session::ResetContext, this))
 {
     id = std::rand();
     SetInitialState(prep_recv_req_);
@@ -24,7 +26,7 @@ Session::~Session()
 {
     std::cout << "Deleting session [" << id << "]" << std::endl;
     delete cl_conn_;
-    delete db_conn_;
+    delete sv_conn_;
 }
 
 void Session::operator()()
@@ -146,7 +148,7 @@ void PrintInfo(SentBy src, char* data, int size)
 
 State* Session::Initiate()
 {
-    std::cout << "[" << id << "] 1:Initiate (from " << cl_conn_->GetSocket() << ")" << std::endl;
+    std::cout << "[" << id << "] 0:Initiate (from " << cl_conn_->GetSocket() << ")" << std::endl;
 
     std::cout << "\t\"StartupMessage\"" << std::endl;
 
@@ -203,7 +205,6 @@ State* Session::PrepRecvReq()
     context_.ev_.data.fd = cl_conn_->GetSocket();
     context_.ev_.events  = EPOLLIN;
     context_.waiting_    = true;
-    context_.request_.Reset();
     return &recv_req_;
 }
 
@@ -239,9 +240,9 @@ State* Session::RecvReq()
 
 State* Session::PrepFwdReq()
 {
-    std::cout << "[" << id << "] 3:PrepFwdReq (to " << db_conn_->GetSocket() << ")" << std::endl;
+    std::cout << "[" << id << "] 3:PrepFwdReq (to " << sv_conn_->GetSocket() << ")" << std::endl;
 
-    context_.ev_.data.fd = db_conn_->GetSocket();
+    context_.ev_.data.fd = sv_conn_->GetSocket();
     context_.ev_.events  = EPOLLOUT;
     context_.waiting_    = true;
     return &fwd_req_;
@@ -249,9 +250,9 @@ State* Session::PrepFwdReq()
 
 State* Session::FwdReq()
 {
-    std::cout << "[" << id << "] 4:FwdReq (to " << db_conn_->GetSocket() << ")";
+    std::cout << "[" << id << "] 4:FwdReq (to " << sv_conn_->GetSocket() << ")";
 
-    auto res = db_conn_->ForwardRequest(context_.request_);
+    auto res = sv_conn_->ForwardRequest(context_.request_);
 
     std::cout << "\t" << res << std::endl;
 
@@ -266,22 +267,21 @@ State* Session::FwdReq()
 
 State* Session::PrepRecvResp()
 {
-    std::cout << "[" << id << "] 5:PrepRecvResp (from " << db_conn_->GetSocket() << ")"
+    std::cout << "[" << id << "] 5:PrepRecvResp (from " << sv_conn_->GetSocket() << ")"
               << std::endl;
 
-    context_.ev_.data.fd = db_conn_->GetSocket();
+    context_.ev_.data.fd = sv_conn_->GetSocket();
     context_.ev_.events  = EPOLLIN;
     context_.waiting_    = true;
-    context_.response_.Reset();
     return &recv_resp_;
 }
 
 State* Session::RecvResp()
 {
     std::cout << "\033[31m"
-              << "[" << id << "] 6:RecvResp (from " << db_conn_->GetSocket() << ")\033[0m";
+              << "[" << id << "] 6:RecvResp (from " << sv_conn_->GetSocket() << ")\033[0m";
 
-    auto res = db_conn_->ReceiveResponse(context_.response_);
+    auto res = sv_conn_->ReceiveResponse(context_.response_);
 
     std::cout << "\t" << res << std::endl;
 
@@ -335,5 +335,13 @@ State* Session::FwdResp()
         return nullptr;
     }
     context_.waiting_ = false;
+    return &reset_context_;
+}
+
+State* Session::ResetContext()
+{
+    std::cout << "[" << id << "] 9:ResetContext" << std::endl;
+
+    context_ = {0};
     return &prep_recv_req_;
 }
