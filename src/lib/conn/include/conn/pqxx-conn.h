@@ -1,44 +1,41 @@
-#ifndef __POSTGRESQL_PROXY_PQXX_H__
-#define __POSTGRESQL_PROXY_PQXX_H__
+#ifndef __POSTGRESQL_PROXY_PQXXCONN_H__
+#define __POSTGRESQL_PROXY_PQXXCONN_H__
 
 #include <memory>
 #include <pqxx/pqxx>
-#include <unordered_map>
 
-static std::string uri(const char* host, const char* port)
-{
-    std::stringstream ss;
+#include "concurrency/blocking-queue.h"
 
-    ss << "postgresql://" << std::getenv("POSTGRES_USER") << ":" << std::getenv("POSTGRES_PASSWORD")
-       << "@" << host << ":" << port << "/" << std::getenv("POSTGRES_DB");
-
-    return ss.str();
-}
+// forward declaration for circular dependecy resolution
+class PqxxConnPool;
 
 class PqxxConn : public pqxx::connection
 {
+    friend PqxxConnPool;
+
+private:
+    PqxxConnPool* pool_;
+
 public:
-    PqxxConn(const char* host, const char* port)
-        : pqxx::connection(uri(host, port).c_str())
-    {
-    }
+    PqxxConn(const char* host, const char* port);
+    ~PqxxConn();
 };
 
-// TODO: use conn pool
 class PqxxConnPool
 {
 private:
-    std::unordered_map<PqxxConn*, std::unique_ptr<PqxxConn>> idle_;
-    std::unordered_map<PqxxConn*, std::unique_ptr<PqxxConn>> busy_;
+    const char* host_;
+    const char* port_;
+    std::size_t size_;
+
+    BlockingQueue<std::unique_ptr<PqxxConn>> conns_;
 
 public:
-    PqxxConnPool(const char* host, const char* port, std::size_t size)
-    {
-        for (std::size_t i = 0; i < size; i++)
-        {
-            // TODO: fill idle_ with PqxxConn
-        }
-    }
+    PqxxConnPool(const char* host, const char* port, std::size_t size);
+    ~PqxxConnPool();
+
+    std::unique_ptr<PqxxConn> Acquire(const int ms = 500);
+    void                      Release();
 };
 
 #endif
