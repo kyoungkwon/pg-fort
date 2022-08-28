@@ -60,8 +60,11 @@ TEST(HelloTest, UniquePtr)
         }
     };
 
+    std::unique_ptr<B> p;
+    std::cout << (p == nullptr) << std::endl;
+
     std::cout << "creating p" << std::endl;
-    std::unique_ptr<B> p = std::make_unique<B>();
+    p = std::make_unique<B>();
 
     struct
     {
