@@ -6,6 +6,7 @@ Session::Session(ClientConn* cl_conn, ServerConn* sv_conn, std::shared_ptr<PqxxC
       sv_conn_(sv_conn),
       pcp_(pcp),
       st_(st),
+      context_({0}),
       pf_(this),
       initiate_("INITIATE", std::bind(&Session::Initiate, this)),
       prep_recv_req_("PREP_RECV_REQ", std::bind(&Session::PrepRecvReq, this)),
@@ -342,6 +343,6 @@ State* Session::ResetContext()
 {
     std::cout << "[" << id << "] 9:ResetContext" << std::endl;
 
-    context_ = {0};
+    context_.Reset();
     return &prep_recv_req_;
 }

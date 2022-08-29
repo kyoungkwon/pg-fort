@@ -107,6 +107,13 @@ private:
         Response               response_;
         std::unique_ptr<Query> query_;
         int                    errno_;
+
+        void Reset()
+        {
+            auto t     = initiated_;
+            *this      = {0};
+            initiated_ = t;
+        }
     };
 
     class PlugIn
