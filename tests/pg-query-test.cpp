@@ -148,9 +148,9 @@ TEST(PgQueryTest, ParseModifyDeparse)
         // 15: select into a new table
         "select * into xxx_copy from xxx;",
         // 16: create a table
-        "CREATE TABLE xxx (id BIGSERIAL NOT NULL UNIQUE, name TEXT NOT NULL, tags TEXT[] NOT NULL, PRIMARY KEY (name));",
+        "CREATE TABLE xxx (ID BIGSERIAL NOT NULL UNIQUE, name TEXT NOT NULL, tags TEXT[] NOT NULL, PRIMARY KEY (id, name));",
         // 17: create a table (if not exists)
-        "CREATE TABLE IF NOT EXISTS xxx (id BIGSERIAL NOT NULL, name TEXT NOT NULL, tags TEXT[] NOT NULL, PRIMARY KEY (id));",
+        "CREATE TABLE IF NOT EXISTS xxx (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, tags TEXT[] NOT NULL);",
         // 18: create a view
         "CREATE VIEW zzz AS SELECT * FROM xxx x JOIN yyy y ON x.signature = y.signature",
         // 19: create or replace a view

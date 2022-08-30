@@ -1,8 +1,7 @@
 #include "session/session.h"
 
-Session::PlugIn::PlugIn(std::function<bool()> f, bool skip_on_error)
-    : f_(f),
-      skip_on_fail_(skip_on_error)
+Session::PlugIn::PlugIn(std::function<void()> f)
+    : f_(f)
 {
 }
 
@@ -10,12 +9,7 @@ Session::PlugIn::~PlugIn()
 {
 }
 
-bool Session::PlugIn::SkipOnFail()
-{
-    return skip_on_fail_;
-}
-
-bool Session::PlugIn::Execute()
+void Session::PlugIn::Execute()
 {
     return f_();
 }
@@ -35,20 +29,16 @@ Session::PlugIn Session::PlugInFactory::GetQueryPlugIn()
         [&]()
         {
             // get request data
-            auto c    = &this->s_->context_;
+            auto c    = &s_->context_;
             auto data = c->request_.Data();
 
-            // is this query?
-            if (data[0] != 'Q')
+            // is request a query?
+            if (data[0] == 'Q')
             {
-                return false;
+                // parse the query
+                c->query_ = std::make_unique<Query>(data + 5, s_->st_);
             }
-
-            // get the query
-            c->query_ = std::make_unique<Query>(data + 5, this->s_->st_);
-            return true;
-        },
-        false);
+        });
 }
 
 Session::PlugIn Session::PlugInFactory::AclQueryPlugIn()
@@ -56,29 +46,23 @@ Session::PlugIn Session::PlugInFactory::AclQueryPlugIn()
     return Session::PlugIn(
         [&]()
         {
+            // is request a query?
+            auto c = &s_->context_;
+            if (c->query_ == nullptr)
+            {
+                return;
+            }
+
             // add acl check to query
-            auto c = &this->s_->context_;
             c->query_->AddAclCheck();
             auto qstr = c->query_->ToString();
-            auto qlen = strlen(qstr);
-            auto mlen = qlen + 6;
 
-            // vectorize
-            std::vector<char> v(qstr, qstr + qlen + 1);
-            free(qstr);
-
-            // append message type and info
-            v.insert(v.begin(), mlen);
-            v.insert(v.begin(), mlen >> 8);
-            v.insert(v.begin(), mlen >> 16);
-            v.insert(v.begin(), mlen >> 24);
-            v.insert(v.begin(), 'Q');
+            std::cout << "Acled query:\n\t" << qstr << std::endl;
 
             // update request with acled query
-            c->request_.Take(v);
-            return true;
-        },
-        true);
+            c->request_.SetQuery(qstr);
+            free(qstr);
+        });
 }
 
 Session::PlugIn Session::PlugInFactory::EnsureNewTableHasIdPlugIn()
@@ -86,40 +70,75 @@ Session::PlugIn Session::PlugInFactory::EnsureNewTableHasIdPlugIn()
     return Session::PlugIn(
         [&]()
         {
-            // check if request was "create-table" command
-            auto c = &this->s_->context_;
+            // is request a query?
+            auto c = &s_->context_;
+            if (c->query_ == nullptr)
+            {
+                return;
+            }
+
+            // check if query was "create-table" command
             auto n = JsonUtil::FindNode(c->query_->Json(), "CreateStmt");
             if (n == nullptr)
             {
-                return true;
+                return;
             }
 
-            // if doesn't have column named "id" then reject
+            // "id" column must exist
             auto have_id = false;
-            for (auto& [k, v] : (*n)["tableElts"].items())
+
+            // "id" column must be NOT NULL UNIQUE or PRIMARY
+            auto not_null = false;
+            auto unique   = false;
+            auto primary  = false;
+
+            // inspect table
+            for (auto& [_, elt] : (*n)["tableElts"].items())
             {
-                // TODO: make sure "id" is NOT NULL UNIQUE or PRIMARY
-                if (k == "ColumnDef" && v["colname"] == "id")
+                // check per-column constraints
+                if (elt["ColumnDef"]["colname"] == "id")
                 {
                     have_id = true;
-                    break;
+                    for (auto& [idx, cstr] : elt["ColumnDef"]["constraints"].items())
+                    {
+                        auto contype = cstr["Constraint"]["contype"];
+                        not_null |= contype == "CONSTR_NOTNULL";
+                        unique |= contype == "CONSTR_UNIQUE";
+                        primary |= contype == "CONSTR_PRIMARY";
+                    }
+                }
+
+                // check table constraints
+                if (elt["Constraint"]["contype"] == "CONSTR_PRIMARY")
+                {
+                    auto keys = elt["Constraint"]["keys"];
+                    if (keys.size() == 1)
+                    {
+                        primary |= keys[0]["String"]["str"] == "id";
+                    }
                 }
             }
 
             if (!have_id)
             {
-                // TODO: proper exception
-                throw "ID column missing!!";
+                auto msg = "column \"id\" missing";
+                std::cout << msg << std::endl;
+                throw std::invalid_argument(msg);
             }
-            return true;
-        },
-        true);
+
+            if (!primary && !(not_null && unique))
+            {
+                auto msg = "column \"id\" is neither PRIMARY nor NOT NULL UNIQUE";
+                std::cout << msg << std::endl;
+                throw std::invalid_argument(msg);
+            }
+        });
 }
 
 Session::PlugIn Session::PlugInFactory::RestrictInternalTableAccessPlugIn()
 {
     // TODO
-    return Session::PlugIn([&]() { return true; }, true);
+    return Session::PlugIn([&]() {});
 }
 
 Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
@@ -127,19 +146,25 @@ Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
     return Session::PlugIn(
         [&]()
         {
+            // is request a query?
+            auto c = &s_->context_;
+            if (c->query_ == nullptr)
+            {
+                return;
+            }
+
             // check if request was "create-table" command
-            auto c = &this->s_->context_;
             auto n = JsonUtil::FindNode(c->query_->Json(), "CreateStmt");
             if (n == nullptr)
             {
-                return true;
+                return;
             }
 
             // check response to see if it succeeded
             auto mtype = c->response_.Data()[0];
             if (mtype != 'C')
             {
-                return true;
+                return;
             }
 
             // get table name
@@ -154,12 +179,12 @@ Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
 
             // TODO: set {{TABLE_NAME}}_id type accordingly to the actual source type
             static const char tpl[] =
-                "CREATE TABLE {{TABLE_NAME}}__acl__ ("
-                "   {{TABLE_NAME}}_id   BIGINT NOT NULL,"
-                "   perm_name           TEXT NOT NULL,"
-                "   principal           TEXT NOT NULL,"
-                "   FOREIGN KEY ({{TABLE_NAME}}_id) REFERENCES {{TABLE_NAME}} (id),"
-                "   FOREIGN KEY (perm_name) REFERENCES __access_permissions__ (name)"
+                "CREATE TABLE {{TABLE_NAME}}__acl__ (\n"
+                "   {{TABLE_NAME}}_id   BIGINT NOT NULL,\n"
+                "   perm_name           TEXT NOT NULL,\n"
+                "   principal           TEXT NOT NULL,\n"
+                "   FOREIGN KEY ({{TABLE_NAME}}_id) REFERENCES {{TABLE_NAME}} (id),\n"
+                "   FOREIGN KEY (perm_name) REFERENCES __access_permissions__ (name)\n"
                 ");";
 
             ctemplate::StringToTemplateCache("acl_table", tpl, ctemplate::DO_NOT_STRIP);
@@ -169,22 +194,21 @@ Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
             std::string cmd;
             ctemplate::ExpandTemplate("acl_table", ctemplate::DO_NOT_STRIP, &dict, &cmd);
 
-            pqxx::result r;
+            std::cout << "Creating a new acl table:\n" << cmd << std::endl;
+
             {
                 // get a pqxx conn from conn-pool
-                auto       pqxx = (this->s_->pcp_->Acquire());
+                auto       pqxx = (s_->pcp_->Acquire());
                 pqxx::work w(*pqxx);
 
                 // issue the command to create acl table
-                r = w.exec(cmd);  // TODO: what if it failed?
-                w.commit();       // TODO: what if client txn hasn't committed yet?
+                w.exec(cmd);  // TODO: what if it failed?
+                w.commit();   // TODO: what if client txn hasn't committed yet?
             }
 
             // update schema tracker with the new table
-            this->s_->st_->AddRelName(table_name);
-            return true;
-        },
-        true);
+            s_->st_->AddRelName(table_name);
+        });
 }
 
 Session::PlugIn Session::PlugInFactory::SelectIntoTablePlugIn()
@@ -192,10 +216,6 @@ Session::PlugIn Session::PlugInFactory::SelectIntoTablePlugIn()
     return Session::PlugIn(
         [&]()
         {
-            std::cout << "this is";
-            std::cout << "SelectIntoTablePlugIn";
-            std::cout << std::endl;
-
             // TODO: check if request was "select-into" command
 
             // logic:
@@ -207,14 +227,11 @@ Session::PlugIn Session::PlugInFactory::SelectIntoTablePlugIn()
             // TODO: issue a chain-command to create acl table
 
             // TODO: update schema tracker with the new table
-
-            return true;
-        },
-        true);
+        });
 }
 
 Session::PlugIn Session::PlugInFactory::DropAclTablePlugIn()
 {
     // TODO
-    return Session::PlugIn([&]() { return true; }, true);
+    return Session::PlugIn([&]() {});
 }

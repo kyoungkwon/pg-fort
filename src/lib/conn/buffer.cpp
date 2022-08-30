@@ -26,23 +26,20 @@ std::size_t Buffer::Size()
     return data_size_;
 }
 
-void Buffer::Reset()
-{
-    buf_.clear();
-    buf_size_ = DEFAULT_SIZE;
-    buf_.resize(2 * buf_size_);
-    data_size_ = 0;
-}
-
-void Buffer::Take(std::vector<char>& data)
-{
-    buf_       = std::move(data);
-    data_size_ = buf_.size();
-    buf_size_  = buf_.capacity() - data_size_;
-}
-
 int Buffer::RecvFrom(int socket)
 {
+    // buf_size_ == 0 indicates manual buffer manipulation,
+    // need to resize it properly for reallocation strategy to work
+    if (buf_size_ == 0)
+    {
+        buf_size_ = DEFAULT_SIZE;
+        if (data_size_ > buf_size_)
+        {
+            buf_size_ *= 2;
+        }
+        buf_.resize(buf_size_ * 2);
+    }
+
     while (true)
     {
         int res = recv(socket, buf_.data() + data_size_, buf_size_, 0);

@@ -1,4 +1,5 @@
 #include "session/session.h"
+
 #include "print-info.cpp"
 
 Session::Session(ClientConn* cl_conn, ServerConn* sv_conn, std::shared_ptr<PqxxConnPool> pcp,
@@ -10,18 +11,35 @@ Session::Session(ClientConn* cl_conn, ServerConn* sv_conn, std::shared_ptr<PqxxC
       context_({0}),
       pf_(this),
       initiate_("INITIATE", std::bind(&Session::Initiate, this)),
-      prep_recv_req_("PREP_RECV_REQ", std::bind(&Session::PrepRecvReq, this)),
-      recv_req_("RECV_REQ", std::bind(&Session::RecvReq, this)),
-      prep_fwd_req_("PREP_FWD_REQ", std::bind(&Session::PrepFwdReq, this)),
-      fwd_req_("FWD_REQ", std::bind(&Session::FwdReq, this)),
-      prep_recv_resp_("PREP_RECV_RESP", std::bind(&Session::PrepRecvResp, this)),
-      recv_resp_("RECV_RESP", std::bind(&Session::RecvResp, this)),
-      prep_fwd_resp_("PREP_FWD_RESP", std::bind(&Session::PrepFwdResp, this)),
-      fwd_resp_("FWD_RESP", std::bind(&Session::FwdResp, this)),
+      prepare_to_receive_request_("PREPARE_TO_RECEIVE_REQUEST", std::bind(&Session::PrepareToReceiveRequest, this)),
+      receive_request_("RECEIVE_REQUEST", std::bind(&Session::ReceiveRequest, this)),
+      apply_pre_request_plugins_("APPLY_PRE_REQUEST_PLUGINS", std::bind(&Session::ApplyPreRequestPlugins, this)),
+      prepare_to_forward_request_("PREPARE_TO_FORWARD_REQUEST", std::bind(&Session::PrepareToForwardRequest, this)),
+      forward_request_("FORWARD_REQUEST", std::bind(&Session::ForwardRequest, this)),
+      prepare_to_receive_response_("PREPARE_TO_RECEIVE_RESPONSE", std::bind(&Session::PrepareToReceiveResponse, this)),
+      receive_response_("RECEIVE_RESPONSE", std::bind(&Session::ReceiveResponse, this)),
+      apply_post_response_plugins_("APPLY_POST_RESPONSE_PLUGINS", std::bind(&Session::ApplyPostResponsePlugins, this)),
+      prepare_to_forward_response_("PREPARE_TO_FORWARD_RESPONSE", std::bind(&Session::PrepareToForwardResponse, this)),
+      forward_response_("FORWARD_RESPONSE", std::bind(&Session::ForwardResponse, this)),
       reset_context_("RESET_CONTEXT", std::bind(&Session::ResetContext, this))
 {
     id = std::rand();
-    SetInitialState(prep_recv_req_);
+    SetInitialState(prepare_to_receive_request_);
+
+    // clang-format off
+    pre_request_plugins_ = {
+        pf_.GetQueryPlugIn(),
+        pf_.AclQueryPlugIn(),
+        pf_.EnsureNewTableHasIdPlugIn(),
+        pf_.RestrictInternalTableAccessPlugIn()
+    };
+
+    post_response_plugins_ = {
+        pf_.CreateAclTablePlugIn(),
+        pf_.SelectIntoTablePlugIn(),
+        pf_.DropAclTablePlugIn()
+    };
+    // clang-format on
 }
 
 Session::~Session()
@@ -60,17 +78,13 @@ State* Session::Initiate()
     if (size <= 8)
     {
         // empty StartupMessage message, wait for next
-        return &prep_fwd_req_;
+        return &prepare_to_forward_request_;
     }
 
-    int32_t len = (int32_t(data[0]) << 24) + (int32_t(data[1]) << 16) + (int32_t(data[2]) << 8) +
-                  int32_t(data[3]);
-
+    int32_t len = (int32_t(data[0]) << 24) + (int32_t(data[1]) << 16) + (int32_t(data[2]) << 8) + int32_t(data[3]);
     std::cout << "\ttotal len = " << len << std::endl;
 
-    int32_t pver = (int32_t(data[4]) << 24) + (int32_t(data[5]) << 16) + (int32_t(data[6]) << 8) +
-                   int32_t(data[7]);
-
+    int32_t pver = (int32_t(data[4]) << 24) + (int32_t(data[5]) << 16) + (int32_t(data[6]) << 8) + int32_t(data[7]);
     std::cout << "\tprotocol ver = " << pver << std::endl;
 
     uint32_t pos = 8;
@@ -95,22 +109,22 @@ State* Session::Initiate()
     }
 
     context_.initiated_ = true;
-    return &prep_fwd_req_;
+    return &prepare_to_forward_request_;
 }
 
-State* Session::PrepRecvReq()
+State* Session::PrepareToReceiveRequest()
 {
-    std::cout << "[" << id << "] 1:PrepRecvReq (from " << cl_conn_->GetSocket() << ")" << std::endl;
+    std::cout << "[" << id << "] 1:PrepareToReceiveRequest (from " << cl_conn_->GetSocket() << ")" << std::endl;
 
     context_.ev_.data.fd = cl_conn_->GetSocket();
     context_.ev_.events  = EPOLLIN;
     context_.waiting_    = true;
-    return &recv_req_;
+    return &receive_request_;
 }
 
-State* Session::RecvReq()
+State* Session::ReceiveRequest()
 {
-    std::cout << "[" << id << "] 2:RecvReq (from " << cl_conn_->GetSocket() << ")";
+    std::cout << "[" << id << "] 2:ReceiveRequest (from " << cl_conn_->GetSocket() << ")";
 
     auto res = cl_conn_->ReceiveRequest(context_.request_);
 
@@ -125,32 +139,44 @@ State* Session::RecvReq()
     PrintInfo(FRONTEND, context_.request_.Data(), res);
 
     context_.waiting_ = false;
-    return context_.initiated_ ? &prep_fwd_req_ : &initiate_;
+    return context_.initiated_ ? &apply_pre_request_plugins_ : &initiate_;
 }
 
-// State* Session::ReqPlugin()
-// {
-//     char* data = context_.request_.Data();
-//     int   size = context_.request_.Size();
-
-//     // create a plugin instance with:
-//     //  - start_at = &acl_query_
-//     //  - return_to = &prep_fwd_req_
-// }
-
-State* Session::PrepFwdReq()
+State* Session::ApplyPreRequestPlugins()
 {
-    std::cout << "[" << id << "] 3:PrepFwdReq (to " << sv_conn_->GetSocket() << ")" << std::endl;
+    std::cout << "[" << id << "] 3:ApplyPreRequestPlugins" << std::endl;
+
+    try
+    {
+        for (auto& p : pre_request_plugins_)
+        {
+            p.Execute();
+        }
+    }
+    catch (std::exception& e)
+    {
+        // send error response to client
+        context_.response_.SetError(e);
+        PrintInfo(BACKEND, context_.response_.Data(), context_.response_.Size());
+        return &prepare_to_forward_response_;
+    }
+
+    return &prepare_to_forward_request_;
+}
+
+State* Session::PrepareToForwardRequest()
+{
+    std::cout << "[" << id << "] 4:PrepareToForwardRequest (to " << sv_conn_->GetSocket() << ")" << std::endl;
 
     context_.ev_.data.fd = sv_conn_->GetSocket();
     context_.ev_.events  = EPOLLOUT;
     context_.waiting_    = true;
-    return &fwd_req_;
+    return &forward_request_;
 }
 
-State* Session::FwdReq()
+State* Session::ForwardRequest()
 {
-    std::cout << "[" << id << "] 4:FwdReq (to " << sv_conn_->GetSocket() << ")";
+    std::cout << "[" << id << "] 5:ForwardRequest (to " << sv_conn_->GetSocket() << ")";
 
     auto res = sv_conn_->ForwardRequest(context_.request_);
 
@@ -162,24 +188,23 @@ State* Session::FwdReq()
         return nullptr;
     }
     context_.waiting_ = false;
-    return &prep_recv_resp_;
+    return &prepare_to_receive_response_;
 }
 
-State* Session::PrepRecvResp()
+State* Session::PrepareToReceiveResponse()
 {
-    std::cout << "[" << id << "] 5:PrepRecvResp (from " << sv_conn_->GetSocket() << ")"
-              << std::endl;
+    std::cout << "[" << id << "] 6:PrepareToReceiveResponse (from " << sv_conn_->GetSocket() << ")" << std::endl;
 
     context_.ev_.data.fd = sv_conn_->GetSocket();
     context_.ev_.events  = EPOLLIN;
     context_.waiting_    = true;
-    return &recv_resp_;
+    return &receive_response_;
 }
 
-State* Session::RecvResp()
+State* Session::ReceiveResponse()
 {
     std::cout << "\033[31m"
-              << "[" << id << "] 6:RecvResp (from " << sv_conn_->GetSocket() << ")\033[0m";
+              << "[" << id << "] 7:ReceiveResponse (from " << sv_conn_->GetSocket() << ")\033[0m";
 
     auto res = sv_conn_->ReceiveResponse(context_.response_);
 
@@ -197,33 +222,44 @@ State* Session::RecvResp()
     auto ready_for_query = [](char* data, int size)
     {
         return data[0] != 'E' ||  // only happens with ErrorResponse
-               (data[size - 6] == 'Z' && data[size - 5] == 0 && data[size - 4] == 0 &&
-                data[size - 3] == 0 && data[size - 2] == 5 &&
-                (data[size - 1] == 'I' || data[size - 1] == 'T' || data[size - 1] == 'E'));
+               (data[size - 6] == 'Z' && data[size - 5] == 0 && data[size - 4] == 0 && data[size - 3] == 0 &&
+                data[size - 2] == 5 && (data[size - 1] == 'I' || data[size - 1] == 'T' || data[size - 1] == 'E'));
     };
 
     if (!ready_for_query(context_.response_.Data(), res))
     {
-        return &recv_resp_;
+        return &receive_response_;
     }
 
     context_.waiting_ = false;
-    return &prep_fwd_resp_;
+    return &apply_post_response_plugins_;
 }
 
-State* Session::PrepFwdResp()
+State* Session::ApplyPostResponsePlugins()
 {
-    std::cout << "[" << id << "] 7:PrepFwdResp (to " << cl_conn_->GetSocket() << ")" << std::endl;
+    std::cout << "[" << id << "] 8:ApplyPostResponsePlugins" << std::endl;
+
+    for (auto& p : post_response_plugins_)
+    {
+        // TODO: catch and handle exception
+        p.Execute();
+    }
+    return &prepare_to_forward_response_;
+}
+
+State* Session::PrepareToForwardResponse()
+{
+    std::cout << "[" << id << "] 9:PrepareToForwardResponse (to " << cl_conn_->GetSocket() << ")" << std::endl;
 
     context_.ev_.data.fd = cl_conn_->GetSocket();
     context_.ev_.events  = EPOLLOUT;
     context_.waiting_    = true;
-    return &fwd_resp_;
+    return &forward_response_;
 }
 
-State* Session::FwdResp()
+State* Session::ForwardResponse()
 {
-    std::cout << "[" << id << "] 8:FwdResp (to " << cl_conn_->GetSocket() << ")";
+    std::cout << "[" << id << "] 10:ForwardResponse (to " << cl_conn_->GetSocket() << ")";
 
     auto res = cl_conn_->ForwardResponse(context_.response_);
 
@@ -240,8 +276,8 @@ State* Session::FwdResp()
 
 State* Session::ResetContext()
 {
-    std::cout << "[" << id << "] 9:ResetContext" << std::endl;
+    std::cout << "[" << id << "] 11:ResetContext" << std::endl;
 
     context_.Reset();
-    return &prep_recv_req_;
+    return &prepare_to_receive_request_;
 }

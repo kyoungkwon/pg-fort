@@ -40,44 +40,35 @@ private:
     State  initiate_;
     State* Initiate();
 
-    State  prep_recv_req_;
-    State* PrepRecvReq();
+    State  prepare_to_receive_request_;
+    State* PrepareToReceiveRequest();
 
-    State  recv_req_;
-    State* RecvReq();
+    State  receive_request_;
+    State* ReceiveRequest();
 
-    // TODO: need to run plugins:
-    //  - acl queries
+    State  apply_pre_request_plugins_;
+    State* ApplyPreRequestPlugins();
 
-    // State  req_plugin;
-    // State* ReqPlugin;
+    State  prepare_to_forward_request_;
+    State* PrepareToForwardRequest();
 
-    State  prep_fwd_req_;
-    State* PrepFwdReq();
+    State  forward_request_;
+    State* ForwardRequest();
 
-    State  fwd_req_;
-    State* FwdReq();
+    State  prepare_to_receive_response_;
+    State* PrepareToReceiveResponse();
 
-    State  prep_recv_resp_;
-    State* PrepRecvResp();
+    State  receive_response_;
+    State* ReceiveResponse();
 
-    State  recv_resp_;
-    State* RecvResp();
+    State  apply_post_response_plugins_;
+    State* ApplyPostResponsePlugins();
 
-    // TODO: need to run plugins:
-    //  - check request type and command type
-    //  - check response and command result
-    //  - for create/alter/drop table:
-    //    - notify schema tracker about table name
+    State  prepare_to_forward_response_;
+    State* PrepareToForwardResponse();
 
-    // State  resp_plugin;
-    // State* RespPlugin;
-
-    State  prep_fwd_resp_;
-    State* PrepFwdResp();
-
-    State  fwd_resp_;
-    State* FwdResp();
+    State  forward_response_;
+    State* ForwardResponse();
 
     State  reset_context_;
     State* ResetContext();
@@ -119,15 +110,13 @@ private:
     class PlugIn
     {
     public:
-        PlugIn(std::function<bool()> f, bool skip_on_error);
+        PlugIn(std::function<void()> f);
         ~PlugIn();
 
-        bool SkipOnFail();
-        bool Execute();
+        void Execute();
 
     private:
-        std::function<bool()> f_;
-        bool                  skip_on_fail_;
+        std::function<void()> f_;
     };
 
     class PlugInFactory
@@ -145,7 +134,10 @@ private:
         // post-response plugins
         PlugIn CreateAclTablePlugIn();
         PlugIn SelectIntoTablePlugIn();
-        PlugIn DropAclTablePlugIn();  // necessary?
+        PlugIn DropAclTablePlugIn();
+
+        // TODO: maybe apply all plugins pre-request in txn and commit post-response
+        // TODO: capture client txn status
 
     private:
         Session* s_;
@@ -153,8 +145,10 @@ private:
 
     friend class PlugInFactory;
 
-    Context       context_;
-    PlugInFactory pf_;
+    Context             context_;
+    PlugInFactory       pf_;
+    std::vector<PlugIn> pre_request_plugins_;
+    std::vector<PlugIn> post_response_plugins_;
 };
 
 #endif

@@ -108,6 +108,11 @@
                                 "keys": [
                                     {
                                         "String": {
+                                            "str": "id"
+                                        }
+                                    },
+                                    {
+                                        "String": {
                                             "str": "name"
                                         }
                                     }
@@ -118,7 +123,7 @@
                     ]
                 }
             },
-            "stmt_len": 109
+            "stmt_len": 113
         }
     ],
     "version": 130003

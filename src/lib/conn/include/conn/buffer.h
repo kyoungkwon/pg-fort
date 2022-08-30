@@ -20,8 +20,6 @@ public:
 
     char*       Data();
     std::size_t Size();
-    void        Reset();
-    void        Take(std::vector<char>& data);
 
     int RecvFrom(int socket);
     int SendTo(int socket);
