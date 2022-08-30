@@ -13,7 +13,7 @@
 
 using json = nlohmann::json;
 
-TEST(PgQueryTest, Parse)
+TEST(QueryTest, Parse)
 {
     // clang-format off
     const char* test_cases[] = {
@@ -50,7 +50,7 @@ TEST(PgQueryTest, Parse)
     }
 }
 
-TEST(PgQueryTest, ParseDeparse)
+TEST(QueryTest, ParseDeparse)
 {
     // clang-format off
     const char* test_cases[] = {
@@ -81,7 +81,7 @@ TEST(PgQueryTest, ParseDeparse)
     }
 }
 
-TEST(PgQueryTest, ParseUnpack)
+TEST(QueryTest, ParseUnpack)
 {
     // clang-format off
     const char* test_cases[] = {
@@ -111,7 +111,7 @@ TEST(PgQueryTest, ParseUnpack)
     }
 }
 
-TEST(PgQueryTest, ParseModifyDeparse)
+TEST(QueryTest, ParseModifyDeparse)
 {
     // clang-format off
     const char* test_cases[] = {
@@ -278,7 +278,7 @@ TEST(PgQueryTest, ParseModifyDeparse)
 
 // clang-format off
 /*
-TEST(PgQueryTest, TranslateSpecial)
+TEST(QueryTest, TranslateSpecial)
 {
     // clang-format off
     std::vector<std::pair<std::string, std::string>> positive_cases = {
