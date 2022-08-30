@@ -2,7 +2,7 @@
 
 Session::PlugIn::PlugIn(std::function<bool()> f, bool skip_on_error)
     : f_(f),
-      skip_on_error_(skip_on_error)
+      skip_on_fail_(skip_on_error)
 {
 }
 
@@ -10,9 +10,9 @@ Session::PlugIn::~PlugIn()
 {
 }
 
-bool Session::PlugIn::SkipOnError()
+bool Session::PlugIn::SkipOnFail()
 {
-    return skip_on_error_;
+    return skip_on_fail_;
 }
 
 bool Session::PlugIn::Execute()
@@ -29,28 +29,37 @@ Session::PlugInFactory::~PlugInFactory()
 {
 }
 
-Session::PlugIn Session::PlugInFactory::AclQueryPlugIn()
+Session::PlugIn Session::PlugInFactory::GetQueryPlugIn()
 {
     return Session::PlugIn(
         [&]()
         {
             // get request data
-            auto s    = this->s_;
-            auto data = s->context_.request_.Data();
-            auto size = s->context_.request_.Size();
+            auto c    = &this->s_->context_;
+            auto data = c->request_.Data();
 
             // is this query?
             if (data[0] != 'Q')
             {
-                return true;
+                return false;
             }
 
-            // convert data into query
-            Query q(data + 5, s->st_);
+            // get the query
+            c->query_ = std::make_unique<Query>(data + 5, this->s_->st_);
+            return true;
+        },
+        false);
+}
 
+Session::PlugIn Session::PlugInFactory::AclQueryPlugIn()
+{
+    return Session::PlugIn(
+        [&]()
+        {
             // add acl check to query
-            q.AddAclCheck();
-            auto qstr = q.ToString();
+            auto c = &this->s_->context_;
+            c->query_->AddAclCheck();
+            auto qstr = c->query_->ToString();
             auto qlen = strlen(qstr);
             auto mlen = qlen + 6;
 
@@ -66,48 +75,122 @@ Session::PlugIn Session::PlugInFactory::AclQueryPlugIn()
             v.insert(v.begin(), 'Q');
 
             // update request with acled query
-            s->context_.request_.Take(v);
-
+            c->request_.Take(v);
             return true;
         },
-        false);
+        true);
+}
+
+Session::PlugIn Session::PlugInFactory::EnsureNewTableHasIdPlugIn()
+{
+    return Session::PlugIn(
+        [&]()
+        {
+            // check if request was "create-table" command
+            auto c = &this->s_->context_;
+            auto n = JsonUtil::FindNode(c->query_->Json(), "CreateStmt");
+            if (n == nullptr)
+            {
+                return true;
+            }
+
+            // if doesn't have column named "id" then reject
+            auto have_id = false;
+            for (auto& [k, v] : (*n)["tableElts"].items())
+            {
+                // TODO: make sure "id" is NOT NULL UNIQUE or PRIMARY
+                if (k == "ColumnDef" && v["colname"] == "id")
+                {
+                    have_id = true;
+                    break;
+                }
+            }
+
+            if (!have_id)
+            {
+                // TODO: proper exception
+                throw "ID column missing!!";
+            }
+            return true;
+        },
+        true);
+}
+
+Session::PlugIn Session::PlugInFactory::RestrictInternalTableAccessPlugIn()
+{
+    // TODO
+    return Session::PlugIn([&]() { return true; }, true);
 }
 
 Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
 {
     return Session::PlugIn(
-        []()
+        [&]()
         {
-            std::cout << "this is";
-            std::cout << "CreateAclTablePlugIn";
-            std::cout << std::endl;
+            // check if request was "create-table" command
+            auto c = &this->s_->context_;
+            auto n = JsonUtil::FindNode(c->query_->Json(), "CreateStmt");
+            if (n == nullptr)
+            {
+                return true;
+            }
 
-            // TODO: check if request was "create-table" command
-            //       also account for "create-table-if-not-exists"
+            // check response to see if it succeeded
+            auto mtype = c->response_.Data()[0];
+            if (mtype != 'C')
+            {
+                return true;
+            }
 
-            // logic:
-            // table_name = CreateStmt -> relation -> relname
-            // acl_table_name = table_name + "__acl__"
+            // get table name
+            auto table_name = (*n)["relation"]["relname"].get<std::string>();
 
-            // logic:
-            // if_not_exist = CreateStmt ? if_not_exists
-            // if_not_exist &= CreateStmt -> if_not_exists
+            // get "if not exists" flag
+            auto if_not_exists = (*n).contains("if_not_exists");
+            if (if_not_exists)
+            {
+                if_not_exists = (*n)["if_not_exists"].get<bool>();
+            }
 
-            // TODO: analyse response to see if a new table was created
+            // TODO: set {{TABLE_NAME}}_id type accordingly to the actual source type
+            static const char tpl[] =
+                "CREATE TABLE {{TABLE_NAME}}__acl__ ("
+                "   {{TABLE_NAME}}_id   BIGINT NOT NULL,"
+                "   perm_name           TEXT NOT NULL,"
+                "   principal           TEXT NOT NULL,"
+                "   FOREIGN KEY ({{TABLE_NAME}}_id) REFERENCES {{TABLE_NAME}} (id),"
+                "   FOREIGN KEY (perm_name) REFERENCES __access_permissions__ (name)"
+                ");";
 
-            // TODO: issue a chain-command to create acl table
+            ctemplate::StringToTemplateCache("acl_table", tpl, ctemplate::DO_NOT_STRIP);
+            ctemplate::TemplateDictionary dict("acl_table_dict");
+            dict.SetValue("TABLE_NAME", table_name);
 
-            // TODO: update schema tracker with the new table
+            std::string cmd;
+            ctemplate::ExpandTemplate("acl_table", ctemplate::DO_NOT_STRIP, &dict, &cmd);
 
+            pqxx::result r;
+            {
+                // get a pqxx conn from conn-pool
+                auto       pqxx = (this->s_->pcp_->Acquire());
+                pqxx::work w(*pqxx);
+
+                // issue the command to create acl table
+                r = w.exec(cmd);  // TODO: what if it failed?
+                w.commit();       // TODO: what if client txn hasn't committed yet?
+            }
+
+            // update schema tracker with the new table
+            this->s_->st_->AddRelName(table_name);
             return true;
         },
-        false);
+        true);
 }
 
 Session::PlugIn Session::PlugInFactory::SelectIntoTablePlugIn()
 {
     return Session::PlugIn(
-        []()
+        [&]()
         {
             std::cout << "this is";
             std::cout << "SelectIntoTablePlugIn";
@@ -127,18 +210,11 @@ Session::PlugIn Session::PlugInFactory::SelectIntoTablePlugIn()
 
             return true;
         },
-        false);
+        true);
 }
 
 Session::PlugIn Session::PlugInFactory::DropAclTablePlugIn()
 {
-    return Session::PlugIn(
-        []()
-        {
-            std::cout << "this is";
-            std::cout << "DropAclTablePlugIn";
-            std::cout << std::endl;
-            return true;
-        },
-        false);
+    // TODO
+    return Session::PlugIn([&]() { return true; }, true);
 }

@@ -86,6 +86,18 @@ void PrintInfo(SentBy src, char* data, int size)
         }
         std::cout << "\t\tdone [pos: " << pos << "]" << std::endl;
     }
+    else if (type == 'C' && src == BACKEND)
+    {
+        std::cout << "\t\"CommandComplete\"" << std::endl;
+
+        uint32_t len = (uint32_t(data[1]) << 24) + (uint32_t(data[2]) << 16) +
+                       (uint32_t(data[3]) << 8) + uint32_t(data[4]);
+
+        std::cout << "\ttotal len = " << len << std::endl;
+
+        uint32_t pos = 5;
+        std::cout << "\tcommand tag = " << data + pos << std::endl;
+    }
 
     // check last 6 bytes
     if (size > 6)

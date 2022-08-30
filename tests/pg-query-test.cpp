@@ -162,7 +162,13 @@ TEST(PgQueryTest, ParseModifyDeparse)
         // 22: drop a table
         "DROP TABLE xxx",
         // 23: drop a table (if exists)
-        "DROP TABLE IF EXISTS xxx"
+        "DROP TABLE IF EXISTS xxx",
+        // 24: create table as ... (1)
+        "CREATE TABLE films_recent AS SELECT * FROM films WHERE date_prod >= '2002-01-01';",
+        // 25: create table as ... (2)
+        "CREATE TABLE films2 AS TABLE films;",
+        // 26: prepare + create temp table
+        "PREPARE recentfilms(date) AS SELECT * FROM films WHERE date_prod > $1; CREATE TEMP TABLE films_recent ON COMMIT DROP AS EXECUTE recentfilms('2002-01-01');"
 
         // TODO (M1): SELECT * FROM (INSERT INTO ... RETURNING ...)
     };

@@ -32,6 +32,8 @@ TEST(PqxxTest, Constructor)
         " AND n.nspname <> 'information_schema'"
         " AND n.nspname !~ '^pg_toast'");
 
+    w.commit();
+
     for (auto row : r)
     {
         std::cout << "relname = " << row["relname"] << '\n';
@@ -143,9 +145,34 @@ TEST(PqxxTest, PqxxConnPoolTest)
         " AND n.nspname <> 'information_schema'"
         " AND n.nspname !~ '^pg_toast'");
 
+    w.commit();
+
     for (auto row : r)
     {
         std::cout << "relname = " << row["relname"] << '\n';
         std::cout << "-------------------------------------------" << std::endl;
     }
+}
+
+TEST(PqxxTest, CreateTable)
+{
+    PqxxConnPool cp("postgresql", "5432", 10);
+
+    auto c = cp.Acquire();
+    ASSERT_NE(c, nullptr);
+
+    pqxx::work w1(*c);
+
+    w1.exec("create table xxx (id bigserial, name text);");
+    w1.commit();
+
+    pqxx::work w2(*c);
+
+    EXPECT_THROW(w2.exec("create table xxx (id bigserial, name text);"), std::exception);
+    w2.abort();
+
+    pqxx::work w3(*c);
+
+    w3.exec("drop table if exists xxx");
+    w3.commit();
 }

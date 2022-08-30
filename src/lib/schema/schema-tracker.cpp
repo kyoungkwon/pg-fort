@@ -49,6 +49,8 @@ void SchemaTracker::Refresh()
         " AND n.nspname <> 'information_schema'"
         " AND n.nspname !~ '^pg_toast'");
 
+    w.commit();
+
     std::unique_lock w_lock(mutex_);
     for (auto row : r)
     {

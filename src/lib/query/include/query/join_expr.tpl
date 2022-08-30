@@ -45,7 +45,7 @@
 									"fields": [
 										{
 											"String": {
-												"str": "{{TABLE_REF}}_acl"
+												"str": "{{TABLE_REF}}__acl__"
 											}
 										},
 										{
@@ -66,12 +66,12 @@
 									"fields": [
 										{
 											"String": {
-												"str": "{{TABLE_REF}}_acl"
+												"str": "{{TABLE_REF}}__acl__"
 											}
 										},
 										{
 											"String": {
-												"str": "perm_id"
+												"str": "perm_name"
 											}
 										}
 									]
