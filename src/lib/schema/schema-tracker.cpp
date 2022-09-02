@@ -1,11 +1,10 @@
 #include "schema/schema-tracker.h"
 
-const static std::vector<std::string> excluded_ = {
-    "__access_bindings__",     "__access_bindings___id_seq",
-    "__access_inheritances__", "__access_inheritances___id_seq",
-    "__access_permissions__",  "__access_permissions___id_seq",
-    "__access_roles__",        "__access_roles___id_seq",
-    "gorp_migrations"};
+const static std::vector<std::string> excluded_ = {"__access_bindings__",     "__access_bindings___id_seq",
+                                                   "__access_inheritances__", "__access_inheritances___id_seq",
+                                                   "__access_permissions__",  "__access_permissions___id_seq",
+                                                   "__access_roles__",        "__access_roles___id_seq",
+                                                   "gorp_migrations"};
 
 SchemaTracker::SchemaTracker(std::shared_ptr<PqxxConnPool> pcp)
     : pcp_(pcp)
@@ -54,7 +53,11 @@ void SchemaTracker::Refresh()
     std::unique_lock w_lock(mutex_);
     for (auto row : r)
     {
-        relnames_.emplace(row["relname"].c_str());
+        auto relname = std::string(row["relname"].c_str());
+        if (!relname.ends_with("__acl__"))
+        {
+            relnames_.emplace();
+        }
     }
 }
 
