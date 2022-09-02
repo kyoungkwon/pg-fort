@@ -1,4 +1,0 @@
-#ifndef __POSTGRESQL_PROXY_ERRORS_H__
-#define __POSTGRESQL_PROXY_ERRORS_H__
-
-#endif
