@@ -44,21 +44,39 @@ public:
     char* ToString();
 };
 
-class ParseException : public std::exception
+class ParseException : public std::runtime_error
 {
 private:
-    PgQueryError* error_;
+    PgQueryError* e_;
 
 public:
-    ParseException(PgQueryError* error)
-        : error_(error)
+    ParseException(PgQueryError* e)
+        : e_(e),
+          std::runtime_error("msg: " + std::string(e->message) + ", func: " + std::string(e->funcname) +
+                             ", file: " + std::string(e->filename) + ", line: " + std::to_string(e->lineno) +
+                             ", pos: " + std::to_string(e->cursorpos) + (e->context ? std::string(e->context) : ""))
     {
     }
 
-    char* what()
+    ~ParseException()
     {
-        // TODO
-        return nullptr;
+        // copied "pg_query_free_error" from "pg_query_internal.h"
+        if (e_)
+        {
+            free(e_->message);
+            free(e_->funcname);
+            free(e_->filename);
+            if (e_->context)
+            {
+                free(e_->context);
+            }
+            free(e_);
+        }
+    }
+
+    PgQueryError* error()
+    {
+        return e_;
     }
 };
 

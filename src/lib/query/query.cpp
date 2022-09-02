@@ -3,16 +3,12 @@
 Query::Query(const char* raw_query, std::shared_ptr<SchemaTracker> st)
     : st_(st)
 {
-    raw_query_ = strdup(raw_query);
-
+    raw_query_    = strdup(raw_query);
     parse_result_ = pg_query_parse(raw_query_);
     if (parse_result_.error)
     {
         throw ParseException(parse_result_.error);
     }
-
-    assert(parse_result_.error == nullptr);  // TODO: throw exception
-
     j_ = json::parse(parse_result_.parse_tree);
 }
 
@@ -119,8 +115,8 @@ void Query::AddAclJoinToFromClause(json& j)
             dict.SetValue("TABLE_REF", ref);
 
             std::string output;
-            ctemplate::ExpandTemplate("/workspace/src/lib/query/include/query/join_expr.tpl",
-                                      ctemplate::DO_NOT_STRIP, &dict, &output);
+            ctemplate::ExpandTemplate("/workspace/src/lib/query/include/query/join_expr.tpl", ctemplate::DO_NOT_STRIP,
+                                      &dict, &output);
 
             j = json::parse(output);
             return;
