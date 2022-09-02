@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace testing
@@ -16,6 +17,7 @@ TEST(HelloTest, BasicAssertions)
 {
     // Expect two strings not to be equal.
     EXPECT_STRNE("hello", "world");
+
     // Expect equality.
     EXPECT_EQ(7 * 6, 42);
 
@@ -27,6 +29,16 @@ TEST(HelloTest, BasicAssertions)
 
     b |= true;
     EXPECT_TRUE(b);
+
+    std::unordered_map<int, int> m = {
+        {1, 2},
+        {3, 4}
+    };
+
+    EXPECT_EQ(m[1], 2);
+    EXPECT_EQ(m[5], 0);
+    EXPECT_EQ(m.at(3), 4);
+    EXPECT_THROW(m.at(7), std::exception);
 }
 
 TEST(HelloTest, PrintChar)
@@ -82,8 +94,7 @@ TEST(HelloTest, CharVectorManip)
 {
     char l[] = "abcdefghijklmnopqrstuvwxyz";
 
-    std::cout << "l = " << l << ", strlen(l) = " << strlen(l) << ", sizeof(l) = " << sizeof(l)
-              << std::endl;
+    std::cout << "l = " << l << ", strlen(l) = " << strlen(l) << ", sizeof(l) = " << sizeof(l) << std::endl;
 
     std::vector<char> v(l, l + sizeof(l));
 
@@ -102,8 +113,8 @@ TEST(HelloTest, CharVectorManip)
     std::vector<char> w = std::move(v);
 
     std::cout << "v.size() = " << v.size() << ", v.capacity() = " << v.capacity() << std::endl;
-    std::cout << "w = " << w.data() + 5 << ", w.size() = " << w.size()
-              << ", w.capacity() = " << w.capacity() << std::endl;
+    std::cout << "w = " << w.data() + 5 << ", w.size() = " << w.size() << ", w.capacity() = " << w.capacity()
+              << std::endl;
 
     // ROUND 2
 
@@ -112,14 +123,13 @@ TEST(HelloTest, CharVectorManip)
     char* l_ = (char*)malloc(sizeof(l));
     memcpy(l_, l, sizeof(l));
 
-    std::cout << "l_ = " << l_ << ", strlen(l_) = " << strlen(l_) << ", sizeof(l_) = " << sizeof(l_)
-              << std::endl;
+    std::cout << "l_ = " << l_ << ", strlen(l_) = " << strlen(l_) << ", sizeof(l_) = " << sizeof(l_) << std::endl;
 
     std::vector<char> v_(l_, l_ + strlen(l_) + 1);
     free(l_);
 
-    std::cout << "v_ = " << v_.data() << ", v_.size() = " << v_.size()
-              << ", v_.capacity() = " << v_.capacity() << std::endl;
+    std::cout << "v_ = " << v_.data() << ", v_.size() = " << v_.size() << ", v_.capacity() = " << v_.capacity()
+              << std::endl;
 
     class B
     {
@@ -137,8 +147,8 @@ TEST(HelloTest, CharVectorManip)
 
     std::cout << "v_.size() = " << v_.size() << ", v_.capacity() = " << v_.capacity() << std::endl;
 
-    std::cout << "b.d = " << b.d.data() << ", b.d.size() = " << b.d.size()
-              << ", b.d.capacity() = " << b.d.capacity() << std::endl;
+    std::cout << "b.d = " << b.d.data() << ", b.d.size() = " << b.d.size() << ", b.d.capacity() = " << b.d.capacity()
+              << std::endl;
 }
 
 TEST(HelloTest, IntToBytesViceVersa)
@@ -179,8 +189,7 @@ TEST(HelloTest, VectorAsResizableBuffer)
     buf.resize(buf_size * 2);
     std::memcpy(buf.data() + prev_size, std::string(buf_size, 'b').data(), buf_size);
     EXPECT_EQ(16, buf.size());
-    ASSERT_THAT(buf, ElementsAre('a', 'a', 'a', 'a', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', '\0',
-                                 '\0', '\0', '\0'));
+    ASSERT_THAT(buf, ElementsAre('a', 'a', 'a', 'a', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', '\0', '\0', '\0', '\0'));
 
     // c
     prev_size += buf_size;
@@ -188,9 +197,8 @@ TEST(HelloTest, VectorAsResizableBuffer)
     buf.resize(buf_size * 2);
     std::memcpy(buf.data() + prev_size, std::string(buf_size, 'c').data(), buf_size);
     EXPECT_EQ(32, buf.size());
-    ASSERT_THAT(buf, ElementsAre('a', 'a', 'a', 'a', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'c',
-                                 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',
-                                 'c', 'c', '\0', '\0', '\0', '\0'));
+    ASSERT_THAT(buf, ElementsAre('a', 'a', 'a', 'a', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'c', 'c', 'c', 'c', 'c',
+                                 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', '\0', '\0', '\0', '\0'));
 }
 }  // namespace gmock_matchers_test
 }  // namespace testing

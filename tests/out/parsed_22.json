@@ -3,7 +3,7 @@
         {
             "stmt": {
                 "DropStmt": {
-                    "behavior": "DROP_RESTRICT",
+                    "behavior": "DROP_CASCADE",
                     "objects": [
                         {
                             "List": {
@@ -11,6 +11,28 @@
                                     {
                                         "String": {
                                             "str": "xxx"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "List": {
+                                "items": [
+                                    {
+                                        "String": {
+                                            "str": "yyy"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "List": {
+                                "items": [
+                                    {
+                                        "String": {
+                                            "str": "zzz"
                                         }
                                     }
                                 ]

@@ -160,7 +160,7 @@ TEST(QueryTest, ParseModifyDeparse)
         // 21: drop a view (if exists)
         "DROP VIEW IF EXISTS zzz",
         // 22: drop a table
-        "DROP TABLE xxx",
+        "DROP TABLE xxx, yyy, zzz CASCADE",
         // 23: drop a table (if exists)
         "DROP TABLE IF EXISTS xxx",
         // 24: create table as ... (1)
