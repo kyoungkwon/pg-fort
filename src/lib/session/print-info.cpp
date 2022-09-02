@@ -16,8 +16,8 @@ void PrintInfo(SentBy src, char* data, int size)
     {
         std::cout << "\t\"Query\"" << std::endl;
 
-        int32_t len = (uint32_t(data[1]) << 24) + (uint32_t(data[2]) << 16) +
-                      (uint32_t(data[3]) << 8) + uint32_t(data[4]);
+        uint32_t len = (uint32_t((unsigned char)data[1]) << 24) + (uint32_t((unsigned char)data[2]) << 16) +
+                       (uint32_t((unsigned char)data[3]) << 8) + uint32_t((unsigned char)data[4]);
 
         std::cout << "\ttotal len = " << len << std::endl;
 
@@ -33,8 +33,8 @@ void PrintInfo(SentBy src, char* data, int size)
     {
         std::cout << "\t\033[1;35m\"ErrorResponse\"\033[0m" << std::endl;
 
-        uint32_t len = (uint32_t(data[1]) << 24) + (uint32_t(data[2]) << 16) +
-                       (uint32_t(data[3]) << 8) + uint32_t(data[4]);
+        uint32_t len = (uint32_t((unsigned char)data[1]) << 24) + (uint32_t((unsigned char)data[2]) << 16) +
+                       (uint32_t((unsigned char)data[3]) << 8) + uint32_t((unsigned char)data[4]);
 
         std::cout << "\ttotal len = " << len << std::endl;
         std::cout << "\tbody len = " << len - 4 << std::endl;
@@ -65,8 +65,8 @@ void PrintInfo(SentBy src, char* data, int size)
     {
         std::cout << "\t\033[1;33m\"RowDescription\"\033[0m" << std::endl;
 
-        uint32_t len = (uint32_t(data[1]) << 24) + (uint32_t(data[2]) << 16) +
-                       (uint32_t(data[3]) << 8) + uint32_t(data[4]);
+        uint32_t len = (uint32_t((unsigned char)data[1]) << 24) + (uint32_t((unsigned char)data[2]) << 16) +
+                       (uint32_t((unsigned char)data[3]) << 8) + uint32_t((unsigned char)data[4]);
 
         std::cout << "\ttotal len = " << len << std::endl;
 
@@ -90,8 +90,8 @@ void PrintInfo(SentBy src, char* data, int size)
     {
         std::cout << "\t\"CommandComplete\"" << std::endl;
 
-        uint32_t len = (uint32_t(data[1]) << 24) + (uint32_t(data[2]) << 16) +
-                       (uint32_t(data[3]) << 8) + uint32_t(data[4]);
+        uint32_t len = (uint32_t((unsigned char)data[1]) << 24) + (uint32_t((unsigned char)data[2]) << 16) +
+                       (uint32_t((unsigned char)data[3]) << 8) + uint32_t((unsigned char)data[4]);
 
         std::cout << "\ttotal len = " << len << std::endl;
 
