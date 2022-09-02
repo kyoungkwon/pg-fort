@@ -1,49 +1,81 @@
 #ifndef __POSTGRESQL_PROXY_RESPONSE_H__
 #define __POSTGRESQL_PROXY_RESPONSE_H__
 
-#include <cstring>
+#include <assert.h>
 
+#include <cstring>
+#include <map>
+
+#include "common/error.h"
 #include "conn/buffer.h"
 
 class Response : public Buffer
 {
 public:
-    void SetError(std::exception& e)
+    // reference: https://www.postgresql.org/docs/current/protocol-error-fields.html
+    void SetError(const char* s, const char* c, const char* m, const char* f, const char* r, const char* l,
+                  const char* p)
     {
-        auto w    = e.what();
-        auto wlen = strlen(w);
-        auto mlen = 5 + 7 + 7 + 7 + wlen + 2;
+        uint32_t total_len = 5;
+        std::cout << "total_len = " << total_len << std::endl;
 
-        // TODO: these should be extracted from exception
-        auto s = "ERROR";
-        auto c = "42P16";
-
-        // ErrorResponse
+        // reinitialize buffer
         buf_.clear();
         buf_.push_back('E');
-        buf_.push_back(mlen >> 24);
-        buf_.push_back(mlen >> 16);
-        buf_.push_back(mlen >> 8);
-        buf_.push_back(mlen);
-
-        // S
-        buf_.push_back('S');
-        buf_.insert(buf_.end(), s, s + 6);
-
-        // V
-        buf_.push_back('V');
-        buf_.insert(buf_.end(), s, s + 6);
-
-        // C
-        buf_.push_back('C');
-        buf_.insert(buf_.end(), c, c + 6);
-
-        // P? F? L? R?
-
-        // M
-        buf_.push_back('M');
-        buf_.insert(buf_.end(), w, w + wlen + 1);
         buf_.push_back(0);
+        buf_.push_back(0);
+        buf_.push_back(0);
+        buf_.push_back(0);
+
+        // S and V are identical
+        const char* v = s;
+
+        // always present fields
+        std::map<const char, const char*> mandatory_fields = {
+            {'S', s},
+            {'V', v},
+            {'C', c},
+            {'M', m}
+        };
+
+        for (auto& [key, val] : mandatory_fields)
+        {
+            assert(key && val);
+            auto len = strlen(val);
+            buf_.push_back(key);
+            buf_.insert(buf_.end(), val, val + len + 1);
+            total_len += len + 2;
+            std::cout << "total_len = " << total_len << std::endl;
+        }
+
+        // optional fields
+        std::map<const char, const char*> optional_fields = {
+            {'F', f},
+            {'R', r},
+            {'L', l},
+            {'P', p}
+        };
+
+        for (auto& [key, val] : optional_fields)
+        {
+            if (val != nullptr)
+            {
+                auto len = strlen(val);
+                buf_.push_back(key);
+                buf_.insert(buf_.end(), val, val + len + 1);
+                total_len += len + 2;
+                std::cout << "total_len = " << total_len << std::endl;
+            }
+        }
+
+        // eom indicator
+        buf_.push_back(0);
+
+        // update the total size
+        buf_[1] = total_len >> 24;
+        buf_[2] = total_len >> 16;
+        buf_[3] = total_len >> 8;
+        buf_[4] = total_len;
 
         // ReadyForQuery
         buf_.push_back('Z');
@@ -53,8 +85,17 @@ public:
         buf_.push_back(5);
         buf_.push_back('I');  // TODO: reflect txn status properly
 
+        // set size vars
         data_size_ = buf_.size();
         buf_size_  = 0;
+    }
+
+    void SetError(Error err)
+    {
+        SetError(err.contains("S") ? err["S"].c_str() : nullptr, err.contains("C") ? err["C"].c_str() : nullptr,
+                 err.contains("M") ? err["M"].c_str() : nullptr, err.contains("F") ? err["F"].c_str() : nullptr,
+                 err.contains("R") ? err["R"].c_str() : nullptr, err.contains("L") ? err["L"].c_str() : nullptr,
+                 err.contains("P") ? err["P"].c_str() : nullptr);
     }
 };
 

@@ -13,6 +13,7 @@
 #include <thread>
 #include <vector>
 
+#include "common/error.h"
 #include "concurrency/thread-pool.h"
 #include "conn/client-conn.h"
 #include "conn/request.h"
@@ -110,13 +111,13 @@ private:
     class PlugIn
     {
     public:
-        PlugIn(std::function<void()> f);
+        PlugIn(std::function<Error()> f);
         ~PlugIn();
 
-        void Execute();
+        Error Apply();
 
     private:
-        std::function<void()> f_;
+        std::function<Error()> f_;
     };
 
     class PlugInFactory

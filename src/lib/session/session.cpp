@@ -150,13 +150,23 @@ State* Session::ApplyPreRequestPlugins()
     {
         for (auto& p : pre_request_plugins_)
         {
-            p.Execute();
+            auto err = p.Apply();
+            if (err)
+            {
+                context_.response_.SetError(err);
+                PrintInfo(BACKEND, context_.response_.Data(), context_.response_.Size());
+                return &prepare_to_forward_response_;
+            }
         }
     }
     catch (std::exception& e)
     {
-        // send error response to client
-        context_.response_.SetError(e);
+        // unexpected internal error
+        context_.response_.SetError(Error({
+            {"S",  "ERROR"},
+            {"C",  "XX000"},
+            {"M", e.what()}
+        }));
         PrintInfo(BACKEND, context_.response_.Data(), context_.response_.Size());
         return &prepare_to_forward_response_;
     }
@@ -219,9 +229,9 @@ State* Session::ReceiveResponse()
     PrintInfo(BACKEND, context_.response_.Data(), res);
 
     // HACK: pgcli will hang unless received ReadyForQuery message from db
-    auto ready_for_query = [](char* data, int size)
+    auto ready_for_query = [&](char* data, int size)
     {
-        return data[0] != 'E' ||  // only happens with ErrorResponse
+        return !context_.initiated_ || data[0] == 'R' ||
                (data[size - 6] == 'Z' && data[size - 5] == 0 && data[size - 4] == 0 && data[size - 3] == 0 &&
                 data[size - 2] == 5 && (data[size - 1] == 'I' || data[size - 1] == 'T' || data[size - 1] == 'E'));
     };
@@ -242,7 +252,7 @@ State* Session::ApplyPostResponsePlugins()
     for (auto& p : post_response_plugins_)
     {
         // TODO: catch and handle exception
-        p.Execute();
+        p.Apply();
     }
     return &prepare_to_forward_response_;
 }
