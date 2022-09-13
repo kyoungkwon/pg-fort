@@ -19,6 +19,32 @@ public:
     {
     }
 
+    Error(const Error& e)
+        : m_(e.m_)
+    {
+    }
+
+    Error(Error&& e) noexcept
+        : m_(std::move(e.m_))
+    {
+    }
+
+    ~Error()
+    {
+    }
+
+    Error& operator=(const Error& other)
+    {
+        m_ = other.m_;
+        return *this;
+    }
+
+    Error& operator=(Error&& other)
+    {
+        m_ = std::move(other.m_);
+        return *this;
+    }
+
     explicit operator bool() const
     {
         return !m_.empty();

@@ -7,6 +7,11 @@ target_link_libraries(hello-test GTest::gtest GTest::gtest_main)
 gtest_discover_tests(hello-test)
 
 
+add_executable(error-test error-test.cpp)
+target_link_libraries(error-test GTest::gtest GTest::gtest_main libcommon)
+gtest_discover_tests(error-test)
+
+
 add_executable(blocking-queue-test blocking-queue-test.cpp)
 target_link_libraries(blocking-queue-test GTest::gtest GTest::gtest_main libconcurrency)
 gtest_discover_tests(blocking-queue-test)
