@@ -56,7 +56,7 @@ void SchemaTracker::Refresh()
         auto relname = std::string(row["relname"].c_str());
         if (!relname.ends_with("__acl__"))
         {
-            relnames_.emplace();
+            relnames_.emplace(relname);
         }
     }
 }

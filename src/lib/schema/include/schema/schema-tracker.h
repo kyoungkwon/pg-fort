@@ -8,6 +8,9 @@
 
 #include "conn/pqxx-conn.h"
 
+// TODO: this works only as a single container..
+// TODO: it doesn't reflect changes when a table is dropped (i.e., RemoveRelName)
+//       maybe there should only be "Exist()" and hit/miss cache?
 class SchemaTracker
 {
 private:
