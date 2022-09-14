@@ -3,9 +3,12 @@
 
 #include <cstring>
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+using json = nlohmann::json;
 
 namespace testing
 {
@@ -199,6 +202,40 @@ TEST(HelloTest, VectorAsResizableBuffer)
     EXPECT_EQ(32, buf.size());
     ASSERT_THAT(buf, ElementsAre('a', 'a', 'a', 'a', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'b', 'c', 'c', 'c', 'c', 'c',
                                  'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', '\0', '\0', '\0', '\0'));
+}
+
+TEST(HelloTest, JsonExamples)
+{
+    // json root = {
+    //     {"stmts",
+    //      {{{"stmt", {{"DropStmt", {{"objects", {{{"List", {{"items", {{{"String", {{"str", "zzz"}}}}}}}}}}}}}}}}}}
+    // };
+
+    json root = {
+        {"stmts", {{{"stmt", {{"DropStmt", {{"objects", {}}}}}}}}}
+    };
+
+    std::cout << root.dump(4) << "\n---------------" << std::endl;
+
+    json copy(root);
+    std::cout << "step 1\n";
+
+    json& objs = copy["stmts"][0]["stmt"]["DropStmt"]["objects"];
+    std::cout << "step 2\n";
+
+    objs.emplace_back(json({
+        {"List", {{"items", {{{"String", {{"str", "xxx"}}}}}}}}
+    }));
+    std::cout << "step 3\n";
+
+    objs.emplace_back(json({
+        {"List", {{"items", {{{"String", {{"str", "yyy"}}}}}}}}
+    }));
+    std::cout << "step 4\n";
+
+    std::cout << copy.dump(4) << "\n---------------" << std::endl;
+
+    std::cout << root.dump(4) << "\n---------------" << std::endl;
 }
 }  // namespace gmock_matchers_test
 }  // namespace testing

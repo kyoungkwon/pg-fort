@@ -1,3 +1,5 @@
+#include "query/query.h"
+
 #include <google/protobuf/util/json_util.h>
 #include <gtest/gtest.h>
 #include <pg_query.h>
@@ -8,8 +10,9 @@
 #include <vector>
 
 #include "query/jsonutil.h"
-#include "query/query.h"
+#include "query/query-acler.h"
 #include "query/special-query.h"
+#include "schema/schema-tracker.h"
 
 using json = nlohmann::json;
 
@@ -46,6 +49,21 @@ TEST(QueryTest, Parse)
         result = pg_query_parse(test_cases[i]);
         EXPECT_EQ(result.error, nullptr);
         EXPECT_STREQ(result.parse_tree, expected[i]);
+
+        // copy
+        auto c = result;
+        EXPECT_EQ(c.error, nullptr);
+        EXPECT_STREQ(c.parse_tree, expected[i]);
+
+        // move
+        auto m = std::move(result);
+        EXPECT_EQ(m.error, nullptr);
+        EXPECT_STREQ(m.parse_tree, expected[i]);
+
+        // move doesn't remove original struct
+        EXPECT_EQ(m.error, result.error);
+        EXPECT_EQ(m.parse_tree, result.parse_tree);
+
         pg_query_free_parse_result(result);
     }
 }
@@ -102,9 +120,8 @@ TEST(QueryTest, ParseUnpack)
         PgQueryProtobufParseResult result = pg_query_parse_protobuf(test_cases[i]);
         EXPECT_EQ(result.error, nullptr);
 
-        PgQueryProtobuf       pbuf = result.parse_tree;
-        PgQuery__ParseResult* parse_result =
-            pg_query__parse_result__unpack(NULL, pbuf.len, (const uint8_t*)pbuf.data);
+        PgQueryProtobuf       pbuf         = result.parse_tree;
+        PgQuery__ParseResult* parse_result = pg_query__parse_result__unpack(NULL, pbuf.len, (const uint8_t*)pbuf.data);
 
         pg_query__parse_result__free_unpacked(parse_result, NULL);
         pg_query_free_protobuf_parse_result(result);
@@ -168,7 +185,15 @@ TEST(QueryTest, ParseModifyDeparse)
         // 25: create table as ... (2)
         "CREATE TABLE films2 AS TABLE films;",
         // 26: prepare + create temp table
-        "PREPARE recentfilms(date) AS SELECT * FROM films WHERE date_prod > $1; CREATE TEMP TABLE films_recent ON COMMIT DROP AS EXECUTE recentfilms('2002-01-01');"
+        "PREPARE recentfilms(date) AS SELECT * FROM films WHERE date_prod > $1; CREATE TEMP TABLE films_recent ON COMMIT DROP AS EXECUTE recentfilms('2002-01-01');",
+        // 27: current_user #1
+        "insert into rental (name) values (current_user);",
+        // 28: current_user #2
+        "select * from rental where name = current_user;",
+        // 29: token-provided principal list
+        "select * from rental where name in ('tom', 'g3', 'g2', 'g1');",
+        // 30: create or replace trigger
+        "CREATE OR REPLACE FUNCTION increment(i integer) RETURNS integer AS $$ BEGIN RETURN i + 1; END; $$ LANGUAGE plpgsql;"
 
         // TODO (M1): SELECT * FROM (INSERT INTO ... RETURNING ...)
     };
@@ -182,15 +207,16 @@ TEST(QueryTest, ParseModifyDeparse)
 
         // prepare mock schema tracker
         std::shared_ptr<SchemaTracker> st = std::make_shared<SchemaTracker>(nullptr);
-        for (auto& rn : {"x", "xavier", "employee", "weather_reports", "mytable", "distributors",
-                         "films", "actors", "manufacturers", "xxx", "xxx_copy", "yyy"})
+        for (auto& rn : {"x", "xavier", "employee", "weather_reports", "mytable", "distributors", "films", "actors",
+                         "manufacturers", "xxx", "xxx_copy", "yyy"})
         {
             st->AddRelName(rn);
         }
 
         // parse query
-        auto  start = std::chrono::steady_clock::now();
-        Query q(test_cases[i], st);
+        auto start  = std::chrono::steady_clock::now();
+        auto [q, e] = Query::Parse(test_cases[i]);
+        ASSERT_FALSE(e);
 
         auto end = std::chrono::steady_clock::now();
         auto d   = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -219,9 +245,11 @@ TEST(QueryTest, ParseModifyDeparse)
             o.close();
         }
 
-        // modify query
+        // acl query
+        QueryAcler acler(st);
+
         start = std::chrono::steady_clock::now();
-        q.AddAclCheck();
+        acler.Acl(q);
 
         end = std::chrono::steady_clock::now();
         d   = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -270,8 +298,9 @@ TEST(QueryTest, ParseModifyDeparse)
         // raw query string
         printf(" before: %s\n", test_cases[i]);
 
-        // modified query string
+        // acled query string
         printf(" after:  %s\n", new_query);
+        free(new_query);
         printf("-----------------------------------------------------\n");
     }
 }
@@ -284,12 +313,12 @@ TEST(QueryTest, TranslateSpecial)
     std::vector<std::pair<std::string, std::string>> positive_cases = {
         // 00: creating permissions
         {
-            "CREATE ACCESS PERMISSION x_view ON x_view FOR SELECT",
+            "CREATE ACCESS PERMISSION x_view ON x FOR SELECT",
             "INSERT INTO __access_permissions__ (id, name, t_name, op, col_names) VALUES (1, 'x_view', 'x', 'SELECT', ARRAY['*'])"
         },
         // 01:
         {
-            "CREATE ACCESS PERMISSION x_view ON x_view FOR SELECT name, email, order_history",
+            "CREATE ACCESS PERMISSION x_view ON x FOR SELECT name, email, order_history",
             "INSERT INTO __access_permissions__ (id, name, t_name, op, col_names) VALUES (1, 'x_view', 'x', 'SELECT', ARRAY['name', 'email', 'order_history'])"
         },
         // 02:

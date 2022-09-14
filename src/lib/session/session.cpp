@@ -29,7 +29,8 @@ Session::Session(ClientConn* cl_conn, ServerConn* sv_conn, std::shared_ptr<PqxxC
     // clang-format off
     pre_request_plugins_ = {
         pf_.GetQueryPlugIn(),
-        pf_.AclQueryPlugIn(),
+        // pf_.AclQueryPlugIn(),    // TODO: enable when acl generation works
+        pf_.DropTablePlugIn(),
         pf_.EnsureNewTableHasIdPlugIn(),
         pf_.RestrictInternalTableAccessPlugIn()
     };
@@ -249,10 +250,22 @@ State* Session::ApplyPostResponsePlugins()
 {
     std::cout << "[" << id << "] 8:ApplyPostResponsePlugins" << std::endl;
 
-    for (auto& p : post_response_plugins_)
+    try
     {
-        // TODO: catch and handle exception
-        p.Apply();
+        for (auto& p : post_response_plugins_)
+        {
+            p.Apply();
+        }
+    }
+    catch (std::exception& e)
+    {
+        // unexpected internal error
+        context_.response_.SetError(Error({
+            {"S",  "ERROR"},
+            {"C",  "XX000"},
+            {"M", e.what()}
+        }));
+        PrintInfo(BACKEND, context_.response_.Data(), context_.response_.Size());
     }
     return &prepare_to_forward_response_;
 }

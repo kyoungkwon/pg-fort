@@ -50,7 +50,7 @@
 										},
 										{
 											"String": {
-												"str": "{{TABLE_NAME}}_id"
+												"str": "id"
 											}
 										}
 									]
@@ -71,7 +71,7 @@
 										},
 										{
 											"String": {
-												"str": "perm_name"
+												"str": "operation"
 											}
 										}
 									]
@@ -87,8 +87,8 @@
 							"rexpr": {
 								"A_Const": {
 									"val": {
-										"Integer": {
-											"ival": {{PERM_ID}}
+										"String": {
+											"str": "{{OPERATION}}"
 										}
 									}
 								}
@@ -103,7 +103,7 @@
 									"fields": [
 										{
 											"String": {
-												"str": "{{TABLE_REF}}_acl"
+												"str": "{{TABLE_REF}}__acl__"
 											}
 										},
 										{
@@ -122,13 +122,10 @@
 								}
 							],
 							"rexpr": {
-								"A_Const": {
-									"val": {
-										"String": {
-											"str": "{{PRINCIPAL}}"
-										}
-									}
-								}
+                                "SQLValueFunction": {
+                                    "op": "SVFOP_CURRENT_USER",
+                                    "typmod": -1
+                                }
 							}
 						}
 					}
@@ -139,10 +136,10 @@
 		"rarg": {
 			"RangeVar": {
 				{{#ALIAS}}"alias": {
-					"aliasname": "{{TABLE_ALIAS}}_acl"
+					"aliasname": "{{TABLE_ALIAS}}__acl__"
 				},{{/ALIAS}}
 				"inh": true,
-				"relname": "{{TABLE_NAME}}_acl",
+				"relname": "{{TABLE_NAME}}__acl__",
 				"relpersistence": "p"
 			}
 		}

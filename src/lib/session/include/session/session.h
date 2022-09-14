@@ -9,6 +9,7 @@
 #include <functional>
 #include <future>
 #include <iostream>
+#include <numeric>
 #include <string>
 #include <thread>
 #include <vector>
@@ -92,13 +93,14 @@ private:
     class Context
     {
     public:
-        struct epoll_event     ev_;
-        bool                   initiated_;
-        bool                   waiting_;
-        Request                request_;
-        Response               response_;
-        std::unique_ptr<Query> query_;
-        int                    errno_;
+        struct epoll_event ev_;
+        bool               initiated_;
+        bool               waiting_;
+        bool               is_query_;
+        Request            request_;
+        Response           response_;
+        Query              query_;
+        int                errno_;
 
         void Reset()
         {
@@ -129,6 +131,7 @@ private:
         // pre-request plugins
         PlugIn GetQueryPlugIn();
         PlugIn AclQueryPlugIn();
+        PlugIn DropTablePlugIn();
         PlugIn EnsureNewTableHasIdPlugIn();
         PlugIn RestrictInternalTableAccessPlugIn();
 
