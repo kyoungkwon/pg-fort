@@ -32,18 +32,25 @@ Query& Query::operator=(Query&& other)
 
 std::pair<Query, Error> Query::Parse(const char* raw_query)
 {
-    Query q;
-    Error e;
-
     auto result = pg_query_parse(raw_query);
-    if (result.error == nullptr)
+    if (result.error)
     {
-        q.j_ = json::parse(result.parse_tree);
+        Error err = {
+            {"S",                                 "ERROR"},
+            {"M",                   result.error->message},
+            {"R",                  result.error->funcname},
+            {"F",                  result.error->filename},
+            {"L",    std::to_string(result.error->lineno)},
+            {"P", std::to_string(result.error->cursorpos)}
+        };
+        pg_query_free_parse_result(result);
+        return {Query(), std::move(err)};
     }
 
+    Query q;
+    q.j_ = json::parse(result.parse_tree);
     pg_query_free_parse_result(result);
-
-    return {std::move(q), std::move(e)};
+    return {std::move(q), NoError};
 }
 
 json& Query::Json()
