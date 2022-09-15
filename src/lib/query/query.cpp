@@ -1,16 +1,19 @@
 #include "query/query.h"
 
 Query::Query()
+    : valid_(false)
 {
 }
 
 Query::Query(const Query& q)
-    : j_(q.j_)
+    : valid_(q.valid_),
+      j_(q.j_)
 {
 }
 
 Query::Query(Query&& q) noexcept
-    : j_(std::move(q.j_))
+    : valid_(std::move(q.valid_)),
+      j_(std::move(q.j_))
 {
 }
 
@@ -20,14 +23,21 @@ Query::~Query()
 
 Query& Query::operator=(const Query& other)
 {
-    j_ = other.j_;
+    valid_ = other.valid_;
+    j_     = other.j_;
     return *this;
 }
 
 Query& Query::operator=(Query&& other)
 {
-    j_ = std::move(other.j_);
+    valid_ = std::move(other.valid_);
+    j_     = std::move(other.j_);
     return *this;
+}
+
+Query::operator bool() const
+{
+    return valid_;
 }
 
 std::pair<Query, Error> Query::Parse(const char* raw_query)
@@ -43,12 +53,15 @@ std::pair<Query, Error> Query::Parse(const char* raw_query)
             {"L",    std::to_string(result.error->lineno)},
             {"P", std::to_string(result.error->cursorpos)}
         };
+
         pg_query_free_parse_result(result);
         return {Query(), std::move(err)};
     }
 
     Query q;
-    q.j_ = json::parse(result.parse_tree);
+    q.valid_ = true;
+    q.j_     = json::parse(result.parse_tree);
+
     pg_query_free_parse_result(result);
     return {std::move(q), NoError};
 }

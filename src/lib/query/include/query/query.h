@@ -20,6 +20,7 @@ using json = nlohmann::json;
 class Query
 {
 protected:
+    bool valid_;
     json j_;
 
 public:
@@ -28,8 +29,9 @@ public:
     Query(Query&& o) noexcept;
     ~Query();
 
-    Query& operator=(const Query& other);
-    Query& operator=(Query&& other);
+    Query&   operator=(const Query& other);
+    Query&   operator=(Query&& other);
+    explicit operator bool() const;
 
     static std::pair<Query, Error> Parse(const char* raw_query);
 

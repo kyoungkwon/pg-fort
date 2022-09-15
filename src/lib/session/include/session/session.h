@@ -96,7 +96,6 @@ private:
         struct epoll_event ev_;
         bool               initiated_;
         bool               waiting_;
-        bool               is_query_;
         Request            request_;
         Response           response_;
         Query              query_;
@@ -137,6 +136,12 @@ private:
 
         // post-response plugins
         PlugIn CreateAclTablePlugIn();
+        // PlugIn CreateTablePlugIn();
+        //
+        // or
+        //
+        // PlugIn CreatePerRelBindingsTablePlugIn();
+        // PlugIn CreatePerRelAclsViewPlugIn();
         PlugIn SelectIntoTablePlugIn();
         PlugIn DropAclTablePlugIn();
 

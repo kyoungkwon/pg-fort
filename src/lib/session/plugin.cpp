@@ -35,11 +35,8 @@ Session::PlugIn Session::PlugInFactory::GetQueryPlugIn()
             // is request a query?
             if (data[0] == 'Q')
             {
-                Error err;
-                std::tie(c->query_, err) = Query::Parse(data + 5);
-
                 // ignore error - let the server produce a proper error response
-                c->is_query_ = !err;
+                std::tie(c->query_, std::ignore) = Query::Parse(data + 5);
             }
             return NoError;
         });
@@ -52,7 +49,7 @@ Session::PlugIn Session::PlugInFactory::AclQueryPlugIn()
         {
             // is request a query?
             auto c = &s_->context_;
-            if (!c->is_query_)
+            if (!c->query_)
             {
                 return NoError;
             }
@@ -77,7 +74,7 @@ Session::PlugIn Session::PlugInFactory::DropTablePlugIn()
         {
             // is request a query?
             auto c = &s_->context_;
-            if (!c->is_query_)
+            if (!c->query_)
             {
                 return NoError;
             }
@@ -157,7 +154,7 @@ Session::PlugIn Session::PlugInFactory::EnsureNewTableHasIdPlugIn()
         {
             // is request a query?
             auto c = &s_->context_;
-            if (!c->is_query_)
+            if (!c->query_)
             {
                 return NoError;
             }
@@ -248,7 +245,7 @@ Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
         {
             // is request a query?
             auto c = &s_->context_;
-            if (!c->is_query_)
+            if (!c->query_)
             {
                 return NoError;
             }
@@ -298,6 +295,10 @@ Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
 
             std::cout << "Creating a new acl table:\n" << cmd << std::endl;
 
+            // TODO: generate triggers for...
+
+            // TODO: generate create command for per-relation acls view
+
             {
                 // get a pqxx conn from conn-pool
                 auto       pqxx = (s_->pcp_->Acquire());
@@ -342,7 +343,7 @@ Session::PlugIn Session::PlugInFactory::DropAclTablePlugIn()
         {
             // is request a query?
             auto c = &s_->context_;
-            if (!c->is_query_)
+            if (!c->query_)
             {
                 return NoError;
             }
