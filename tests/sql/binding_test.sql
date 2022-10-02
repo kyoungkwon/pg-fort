@@ -1,7 +1,7 @@
 
 ------------------------------------------------------
 
-DROP TABLE binding_defs, xxx, xxx_bindings, yyy;
+DROP TABLE IF EXISTS binding_defs, inheritances, xxx, xxx_bindings, yyy, yyy_bindings;
 
 CREATE TABLE binding_defs (
 	id			BIGSERIAL NOT NULL,
@@ -9,6 +9,16 @@ CREATE TABLE binding_defs (
 	condition	TEXT NOT NULL,
 
 	PRIMARY KEY (id)
+);
+
+CREATE TABLE inheritances (
+	id			BIGSERIAL NOT NULL,
+	source		TEXT NOT NULL,
+	destination	TEXT NOT NULL,
+	condition	TEXT NOT NULL,
+
+	PRIMARY KEY (id),
+	UNIQUE(source, destination, condition)
 );
 
 CREATE TABLE xxx (
@@ -30,10 +40,11 @@ CREATE TABLE xxx_bindings (
 );
 
 CREATE TABLE yyy (
-	id	BIGSERIAL NOT NULL,
-	s	TEXT NOT NULL,
-	i	INTEGER NOT NULL,
-	b	BOOLEAN NOT NULL,
+	id		BIGSERIAL NOT NULL,
+	xxx_i	INTEGER NOT NULL,
+	s		TEXT NOT NULL,
+	i		INTEGER NOT NULL,
+	b		BOOLEAN NOT NULL,
 
 	PRIMARY KEY (id)
 );
@@ -94,7 +105,7 @@ CREATE OR REPLACE FUNCTION set_bindings() RETURNS TRIGGER AS $$
 
 		-- set inherited bindings
 		-- TODO
-		
+
 		RETURN NULL;
 	END;
 $$ LANGUAGE plpgsql;
@@ -126,5 +137,8 @@ INSERT INTO binding_defs (relation, condition) VALUES ('xxx', 'b = true');
 INSERT INTO binding_defs (relation, condition) VALUES ('yyy', 'i > 5');
 
 INSERT INTO xxx (s, i, b) VALUES ('miracle', 100, true);
+
+-- TODO
+-- INSERT INTO yyy (xxx_i, s, i, b) VALUES ();
 
 ------------------------------------------------------

@@ -274,26 +274,24 @@ Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
                 if_not_exists = (*n)["if_not_exists"].get<bool>();
             }
 
-            // TODO: set id type accordingly to the actual source type
-            // TODO: add columns?
+            // generate create command for per-relation bindings table
             static const char tpl[] =
-                "CREATE TABLE {{TABLE_NAME}}__acl__ (\n"
+                "CREATE TABLE {{TABLE_NAME}}__access_bindings__ (\n"
+                "   binding_def BIGINT NOT NULL,\n"
                 "   id          BIGINT NOT NULL,\n"
-                "   permission  TEXT NOT NULL,\n"
-                "   operation   TEXT NOT NULL,\n"
-                "   principal   TEXT NOT NULL,\n"
-                "   FOREIGN KEY (id) REFERENCES {{TABLE_NAME}} (id) ON DELETE CASCADE,\n"
-                "   FOREIGN KEY (permission) REFERENCES __access_permissions__ (name) ON DELETE RESTRICT\n"
+                "   PRIMARY KEY (binding_def, id),\n"
+                "   FOREIGN KEY (binding_def) REFERENCES __access_binding_defs__ (id) ON DELETE CASCADE,\n"
+                "   FOREIGN KEY (id) REFERENCES {{TABLE_NAME}} (id) ON DELETE CASCADE\n"
                 ");";
 
-            ctemplate::StringToTemplateCache("create_acl_table", tpl, ctemplate::DO_NOT_STRIP);
-            ctemplate::TemplateDictionary dict("create_acl_table_dict");
+            ctemplate::StringToTemplateCache("create_per_rel_bindings_table", tpl, ctemplate::DO_NOT_STRIP);
+            ctemplate::TemplateDictionary dict("create_per_rel_bindings_table_dict");
             dict.SetValue("TABLE_NAME", table_name);
 
             std::string cmd;
-            ctemplate::ExpandTemplate("create_acl_table", ctemplate::DO_NOT_STRIP, &dict, &cmd);
+            ctemplate::ExpandTemplate("create_per_rel_bindings_table_dict", ctemplate::DO_NOT_STRIP, &dict, &cmd);
 
-            std::cout << "Creating a new acl table:\n" << cmd << std::endl;
+            std::cout << "Creating a new per-rel bindings table:\n" << cmd << std::endl;
 
             // TODO: generate triggers for...
 
