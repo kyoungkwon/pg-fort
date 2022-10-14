@@ -1,27 +1,48 @@
 
 ------------------------------------------------------
 
-DROP TABLE IF EXISTS binding_defs, inheritances, xxx, xxx_bindings, yyy, yyy_bindings;
+DROP TABLE IF EXISTS 
+	binding_refs,
+	inheritances,
+	logs,
+	aaa,
+	aaa_bindings,
+	bbb,
+	bbb_bindings,
+	ccc,
+	ccc_bindings,
+	ddd,
+	ddd_bindings;
 
-CREATE TABLE binding_defs (
+
+CREATE TABLE binding_refs (
 	id			BIGSERIAL NOT NULL,
-	relation	TEXT NOT NULL,
-	condition	TEXT NOT NULL,
+	origin		TEXT NOT NULL,
+	origin_id	BIGINT NOT NULL,
 
 	PRIMARY KEY (id)
 );
 
 CREATE TABLE inheritances (
 	id			BIGSERIAL NOT NULL,
-	source		TEXT NOT NULL,
-	destination	TEXT NOT NULL,
-	condition	TEXT NOT NULL,
+	src 		TEXT NOT NULL,
+	dst			TEXT NOT NULL,
+	src_query	TEXT NOT NULL,
 
 	PRIMARY KEY (id),
-	UNIQUE(source, destination, condition)
+	UNIQUE(src, dst)	-- for simplicity
 );
 
-CREATE TABLE xxx (
+CREATE TABLE logs (
+	id	BIGSERIAL NOT NULL,
+	msg	TEXT NOT NULL,
+
+	PRIMARY KEY (id)
+);
+
+------------------------------------------------------
+
+CREATE TABLE aaa (
 	id	BIGSERIAL NOT NULL,
 	s	TEXT NOT NULL,
 	i	INTEGER NOT NULL,
@@ -30,115 +51,219 @@ CREATE TABLE xxx (
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE xxx_bindings (
-	binding_def	BIGINT NOT NULL,
+CREATE TABLE aaa_bindings (
+	role		TEXT NOT NULL,
+	principal	TEXT NOT NULL,
 	id			BIGINT NOT NULL,
+	ref			BIGINT NOT NULL,
+	inheritance	BIGINT,
 
-	PRIMARY KEY (binding_def, id),
-	FOREIGN KEY (binding_def) REFERENCES binding_defs (id) ON DELETE CASCADE,
-	FOREIGN KEY (id) REFERENCES xxx (id) ON DELETE CASCADE
+	PRIMARY KEY (role, principal, id),
+	FOREIGN KEY (id) REFERENCES aaa (id) ON DELETE CASCADE,
+	FOREIGN KEY (ref) REFERENCES binding_refs (id) ON DELETE CASCADE,
+	FOREIGN KEY (inheritance) REFERENCES inheritances (id) ON DELETE CASCADE
 );
 
-CREATE TABLE yyy (
-	id		BIGSERIAL NOT NULL,
-	xxx_i	INTEGER NOT NULL,
-	s		TEXT NOT NULL,
-	i		INTEGER NOT NULL,
-	b		BOOLEAN NOT NULL,
+CREATE TABLE bbb (
+	id	BIGSERIAL NOT NULL,
+	s	TEXT NOT NULL,
+	i	INTEGER NOT NULL,
+	b	BOOLEAN NOT NULL,
 
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE yyy_bindings (
-	binding_def	BIGINT NOT NULL,
+CREATE TABLE bbb_bindings (
+	role		TEXT NOT NULL,
+	principal	TEXT NOT NULL,
 	id			BIGINT NOT NULL,
+	ref			BIGINT NOT NULL,
+	inheritance	BIGINT,
 
-	PRIMARY KEY (binding_def, id),
-	FOREIGN KEY (binding_def) REFERENCES binding_defs (id) ON DELETE CASCADE,
-	FOREIGN KEY (id) REFERENCES xxx (id) ON DELETE CASCADE
+	PRIMARY KEY (role, principal, id),
+	FOREIGN KEY (id) REFERENCES bbb (id) ON DELETE CASCADE,
+	FOREIGN KEY (ref) REFERENCES binding_refs (id) ON DELETE CASCADE,
+	FOREIGN KEY (inheritance) REFERENCES inheritances (id) ON DELETE CASCADE
 );
 
-CREATE OR REPLACE FUNCTION create_bindings() RETURNS TRIGGER AS $$
-	BEGIN
-		EXECUTE format(
-			$query$
-				INSERT INTO %I_bindings (binding_def, id)
-					SELECT $1.id, id
-					FROM %1$I
-					WHERE %s
-			$query$,
-			NEW.relation,
-			NEW.condition) USING NEW;
-		RETURN NULL;
-	END;
-$$ LANGUAGE plpgsql;
+CREATE TABLE ccc (
+	id		BIGSERIAL NOT NULL,
+	aaa_id	BIGINT NOT NULL,
+	bbb_id	BIGINT NOT NULL,
+	s		TEXT NOT NULL,
+	i		INTEGER NOT NULL,
+	b		BOOLEAN NOT NULL DEFAULT FALSE,
 
-CREATE OR REPLACE FUNCTION evaluate(data record, condition text) RETURNS BOOLEAN
-	STABLE
-	STRICT
-	PARALLEL SAFE
-	AS $$
-	DECLARE
-    	result BOOLEAN;
-	BEGIN
-    	EXECUTE format(
-			$query$
-				SELECT $1.%s
-			$query$,
-			condition) INTO result USING data;
-    	return result;
-	END;
-$$ LANGUAGE plpgsql;
+	PRIMARY KEY (s, i),
+	UNIQUE (id),
+	FOREIGN KEY (aaa_id) REFERENCES aaa (id) ON DELETE RESTRICT,
+	FOREIGN KEY (bbb_id) REFERENCES bbb (id) ON DELETE RESTRICT
+);
+
+CREATE TABLE ccc_bindings (
+	role		TEXT NOT NULL,
+	principal	TEXT NOT NULL,
+	id			BIGINT NOT NULL,
+	ref			BIGINT NOT NULL,
+	inheritance	BIGINT,
+
+	PRIMARY KEY (role, principal, id),
+	FOREIGN KEY (id) REFERENCES ccc (id) ON DELETE CASCADE,
+	FOREIGN KEY (ref) REFERENCES binding_refs (id) ON DELETE CASCADE,
+	FOREIGN KEY (inheritance) REFERENCES inheritances (id) ON DELETE CASCADE
+);
+
+CREATE TABLE ddd (
+	id		BIGSERIAL NOT NULL,
+	ccc_s	TEXT NOT NULL,
+	ccc_i	INTEGER NOT NULL,
+	s		TEXT NOT NULL,
+	i		INTEGER NOT NULL,
+	b		BOOLEAN NOT NULL DEFAULT FALSE,
+
+	PRIMARY KEY (id),
+	FOREIGN KEY (ccc_s, ccc_i) REFERENCES ccc (s, i) ON DELETE RESTRICT
+);
+
+CREATE TABLE ddd_bindings (
+	role		TEXT NOT NULL,
+	principal	TEXT NOT NULL,
+	id			BIGINT NOT NULL,
+	ref			BIGINT NOT NULL,
+	inheritance	BIGINT,
+
+	PRIMARY KEY (role, principal, id),
+	FOREIGN KEY (id) REFERENCES ddd (id) ON DELETE CASCADE,
+	FOREIGN KEY (ref) REFERENCES binding_refs (id) ON DELETE CASCADE,
+	FOREIGN KEY (inheritance) REFERENCES inheritances (id) ON DELETE CASCADE
+);
+
+------------------------------------------------------
+
+DROP FUNCTION IF EXISTS set_bindings;
 
 CREATE OR REPLACE FUNCTION set_bindings() RETURNS TRIGGER AS $$
+	DECLARE
+    	i RECORD;
 	BEGIN
-		-- set direct bindings
-		EXECUTE format(
-			$query$
-				INSERT INTO %I_bindings (binding_def, id)
-					SELECT DISTINCT id, $1.id
-					FROM binding_defs
-					WHERE relation = %1$L
-					AND evaluate($1, condition)
-			$query$,
-			TG_TABLE_NAME) USING NEW;
-
-		-- set inherited bindings
-		-- TODO
+		FOR i IN
+			SELECT id, src, dst, src_query
+			FROM inheritances
+			WHERE dst = TG_TABLE_NAME
+		LOOP
+			EXECUTE format(
+				$query$
+					INSERT INTO %I_bindings (role, principal, id, ref, inheritance)
+						SELECT role, principal, $1.id, ref, %L
+						FROM %I_bindings
+						WHERE id = (%s)
+				$query$,
+				i.dst, i.id, i.src, i.src_query) USING NEW;
+		END LOOP;
 
 		RETURN NULL;
 	END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE TRIGGER binding_def_insert
-    AFTER INSERT ON binding_defs
-    FOR EACH ROW
-	EXECUTE FUNCTION create_bindings();
+------------------------------------------------------
 
-CREATE OR REPLACE TRIGGER xxx_insert
-	AFTER INSERT ON xxx
+CREATE OR REPLACE TRIGGER aaa_insert
+	AFTER INSERT ON aaa
 	FOR EACH ROW
 	EXECUTE FUNCTION set_bindings();
 
+CREATE OR REPLACE TRIGGER bbb_insert
+	AFTER INSERT ON bbb
+	FOR EACH ROW
+	EXECUTE FUNCTION set_bindings();
 
-INSERT INTO xxx (s, i, b) VALUES ('first', 1, true);
-INSERT INTO xxx (s, i, b) VALUES ('second', 2, false);
-INSERT INTO xxx (s, i, b) VALUES ('third', 3, true);
-INSERT INTO xxx (s, i, b) VALUES ('fourth', 4, false);
-INSERT INTO xxx (s, i, b) VALUES ('fifth', 5, true);
-INSERT INTO xxx (s, i, b) VALUES ('sixth', 6, false);
-INSERT INTO xxx (s, i, b) VALUES ('seventh', 7, true);
-INSERT INTO xxx (s, i, b) VALUES ('eighth', 8, false);
-INSERT INTO xxx (s, i, b) VALUES ('ninth', 9, true);
-INSERT INTO xxx (s, i, b) VALUES ('tenth', 10, false);
+CREATE OR REPLACE TRIGGER ccc_insert
+	AFTER INSERT ON ccc
+	FOR EACH ROW
+	EXECUTE FUNCTION set_bindings();
 
-INSERT INTO binding_defs (relation, condition) VALUES ('xxx', 'i > 5');
-INSERT INTO binding_defs (relation, condition) VALUES ('xxx', 'b = true');
-INSERT INTO binding_defs (relation, condition) VALUES ('yyy', 'i > 5');
-
-INSERT INTO xxx (s, i, b) VALUES ('miracle', 100, true);
-
--- TODO
--- INSERT INTO yyy (xxx_i, s, i, b) VALUES ();
+CREATE OR REPLACE TRIGGER ddd_insert
+	AFTER INSERT ON ddd
+	FOR EACH ROW
+	EXECUTE FUNCTION set_bindings();
 
 ------------------------------------------------------
+
+-- CREATE ACCESS INHERITANCE FROM aaa (id) TO ccc (aaa_id);
+INSERT INTO inheritances (src, dst, src_query)
+	VALUES ('aaa', 'ccc', 'SELECT id FROM aaa WHERE id = $1.aaa_id');
+
+-- CREATE ACCESS INHERITANCE FROM bbb (id) TO ccc (bbb_id);
+INSERT INTO inheritances (src, dst, src_query)
+	VALUES ('bbb', 'ccc', 'SELECT id FROM bbb WHERE id = $1.bbb_id');
+
+-- CREATE ACCESS INHERITANCE FROM ccc (s, i) TO ddd (ccc_s, ccc_i);
+INSERT INTO inheritances (src, dst, src_query)
+	VALUES ('ccc', 'ddd', 'SELECT id FROM bbb WHERE s = $1.ccc_s AND i = $1.ccc_i');
+
+------------------------------------------------------
+
+INSERT INTO aaa (s, i, b) VALUES ('first', 1, true);
+INSERT INTO aaa (s, i, b) VALUES ('second', 2, true);
+INSERT INTO aaa (s, i, b) VALUES ('third', 3, true);
+
+INSERT INTO bbb (s, i, b) VALUES ('fourth', 4, true);
+INSERT INTO bbb (s, i, b) VALUES ('fifth', 5, true);
+INSERT INTO bbb (s, i, b) VALUES ('sixth', 6, true);
+
+------------------------------------------------------
+
+-- BIND ACCESS ROLE viewer TO sam@amzn ON aaa (SELECT id FROM aaa WHERE s = 'first')
+WITH r AS
+	(INSERT INTO binding_refs (origin, origin_id)
+		SELECT 'aaa', id
+		FROM aaa
+		WHERE s = 'first'
+		RETURNING *)
+INSERT INTO aaa_bindings (role, principal, id, ref)
+	SELECT 'viewer', 'sam@amzn', origin_id, id
+	FROM r;
+
+-- BIND ACCESS ROLE editor TO tom@amzn ON bbb (SELECT id FROM bbb WHERE s = 'fourth')
+WITH r AS
+	(INSERT INTO binding_refs (origin, origin_id)
+		SELECT 'bbb', id
+		FROM bbb
+		WHERE s = 'fourth'
+		RETURNING *)
+INSERT INTO bbb_bindings (role, principal, id, ref)
+	SELECT 'editor', 'tom@amzn', origin_id, id
+	FROM r;
+
+------------------------------------------------------
+
+INSERT INTO ccc (aaa_id, bbb_id, s, i)
+	SELECT a.id, b.id, 'seventh', 7
+	FROM aaa a, bbb b
+	WHERE a.s = 'first' AND b.s = 'fourth';
+
+INSERT INTO ccc (aaa_id, bbb_id, s, i)
+	SELECT a.id, b.id, 'eighth', 8
+	FROM aaa a, bbb b
+	WHERE a.s = 'first' AND b.s = 'fifth';
+
+INSERT INTO ccc (aaa_id, bbb_id, s, i)
+	SELECT a.id, b.id, 'ninth', 9
+	FROM aaa a, bbb b
+	WHERE a.s = 'second' AND b.s = 'fourth';
+
+------------------------------------------------------
+
+-- UNBIND ACCESS ROLE viewer TO sam@amzn ON aaa (SELECT id FROM aaa WHERE s = 'first')
+DELETE FROM binding_refs r
+	USING aaa_bindings b
+	WHERE b.id = (SELECT id FROM aaa WHERE s = 'first')
+	AND b.inheritance IS NULL
+	AND b.ref = r.id;
+
+------------------------------------------------------
+
+-- DELETE ACCESS INHERITANCE FROM bbb TO ccc;
+DELETE FROM inheritances
+	WHERE src = 'bbb'
+	AND dst = 'ccc';
