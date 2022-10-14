@@ -17,20 +17,21 @@ DROP TABLE IF EXISTS
 
 CREATE TABLE binding_refs (
 	id			BIGSERIAL NOT NULL,
-	origin		TEXT NOT NULL,
+	origin		REGCLASS NOT NULL,
 	origin_id	BIGINT NOT NULL,
 
-	PRIMARY KEY (id)
+	PRIMARY KEY (id),
+	UNIQUE (origin, origin_id)
 );
 
 CREATE TABLE inheritances (
 	id			BIGSERIAL NOT NULL,
-	src 		TEXT NOT NULL,
-	dst			TEXT NOT NULL,
+	src 		REGCLASS NOT NULL,
+	dst			REGCLASS NOT NULL,
 	src_query	TEXT NOT NULL,
 
 	PRIMARY KEY (id),
-	UNIQUE(src, dst)	-- for simplicity
+	UNIQUE (src, dst)	-- for simplicity
 );
 
 CREATE TABLE logs (
@@ -140,8 +141,6 @@ CREATE TABLE ddd_bindings (
 
 ------------------------------------------------------
 
-DROP FUNCTION IF EXISTS set_bindings;
-
 CREATE OR REPLACE FUNCTION set_bindings() RETURNS TRIGGER AS $$
 	DECLARE
     	i RECORD;
@@ -149,7 +148,7 @@ CREATE OR REPLACE FUNCTION set_bindings() RETURNS TRIGGER AS $$
 		FOR i IN
 			SELECT id, src, dst, src_query
 			FROM inheritances
-			WHERE dst = TG_TABLE_NAME
+			WHERE dst = TG_TABLE_NAME::REGCLASS
 		LOOP
 			EXECUTE format(
 				$query$
@@ -265,5 +264,5 @@ DELETE FROM binding_refs r
 
 -- DELETE ACCESS INHERITANCE FROM bbb TO ccc;
 DELETE FROM inheritances
-	WHERE src = 'bbb'
-	AND dst = 'ccc';
+	WHERE src = 'bbb'::REGCLASS
+	AND dst = 'ccc'::REGCLASS;
