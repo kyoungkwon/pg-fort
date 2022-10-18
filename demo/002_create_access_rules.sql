@@ -34,30 +34,38 @@ INSERT INTO __access_permissions__ (name, relation, operation) VALUES ('doc_all'
 
 -- CREATE ACCESS ROLE viewer WITH folder_view, doc_view;
 INSERT INTO __access_roles__ (name, permissions) VALUES ('viewer', ARRAY['folder_view', 'doc_view']);
-INSERT INTO __access_roles_denorm__ (name, permission) VALUES ('viewer', 'folder_view');
-INSERT INTO __access_roles_denorm__ (name, permission) VALUES ('viewer', 'doc_view');
+INSERT INTO __access_roles_denorm__ (name, permission)
+    SELECT name, unnest(permissions)
+    FROM __access_roles__
+    WHERE name = 'viewer';
 
 -- CREATE ACCESS ROLE editor WITH folder_view, folder_edit, doc_view, doc_edit;
 INSERT INTO __access_roles__ (name, permissions) VALUES ('editor', ARRAY['folder_view', 'folder_edit', 'doc_view', 'doc_edit']);
-INSERT INTO __access_roles_denorm__ (name, permission) VALUES ('editor', 'folder_view');
-INSERT INTO __access_roles_denorm__ (name, permission) VALUES ('editor', 'folder_edit');
-INSERT INTO __access_roles_denorm__ (name, permission) VALUES ('editor', 'doc_view');
-INSERT INTO __access_roles_denorm__ (name, permission) VALUES ('editor', 'doc_edit');
+INSERT INTO __access_roles_denorm__ (name, permission)
+    SELECT name, unnest(permissions)
+    FROM __access_roles__
+    WHERE name = 'editor';
 
 -- CREATE ACCESS ROLE admin WITH folder_all, doc_all;
 INSERT INTO __access_roles__ (name, permissions) VALUES ('admin', ARRAY['folder_all', 'doc_all']);
-INSERT INTO __access_roles_denorm__ (name, permission) VALUES ('admin', 'folder_all');
-INSERT INTO __access_roles_denorm__ (name, permission) VALUES ('admin', 'doc_all');
+INSERT INTO __access_roles_denorm__ (name, permission)
+    SELECT name, unnest(permissions)
+    FROM __access_roles__
+    WHERE name = 'admin';
 
 -- CREATE ACCESS ROLE doc_viewer WITH doc_view;
 INSERT INTO __access_roles__ (name, permissions) VALUES ('doc_viewer', ARRAY['doc_view']);
-INSERT INTO __access_roles_denorm__ (name, permission) VALUES ('doc_viewer', 'doc_view');
+INSERT INTO __access_roles_denorm__ (name, permission)
+    SELECT name, unnest(permissions)
+    FROM __access_roles__
+    WHERE name = 'doc_viewer';
 
 
 
--- CREATE ACCESS INHERITANCE FROM folders p TO folders c ON p.id = c.parent_id;
-INSERT INTO __access_inheritances__ (source, destination, condition) VALUES ('folders p', 'folders c', 'p.id = c.parent_id');
+-- CREATE ACCESS INHERITANCE FROM folders (id) TO folders (parent_id);
+INSERT INTO __access_inheritances__ (src, dst, src_query)
+    VALUES ('folders', 'folders', 'SELECT id FROM folders WHERE id = $1.parent_id');
 
--- CREATE ACCESS INHERTINACE FROM folders f TO documents d ON f.id = d.folder_id;
-INSERT INTO __access_inheritances__ (source, destination, condition) VALUES ('folders f', 'documents d', 'f.id = d.folder_id');
-
+-- CREATE ACCESS INHERTINACE FROM folders (id) TO documents (folder_id);
+INSERT INTO __access_inheritances__ (src, dst, src_query)
+    VALUES ('folders', 'documents', 'SELECT id FROM folders WHERE id = $1.folder_id');

@@ -1,10 +1,40 @@
 
 
--- CREATE ACCESS BINDING FOR sam ON folders WHERE name = 'folder-a' WITH viewer;
-INSERT INTO __access_binding_defs__ (role, relation, condition, principal) VALUES ('viewer', 'folders', "name = 'folder-a'", 'sam');
+-- BIND ACCESS ROLE viewer TO sam@amzn
+--      ON folders (SELECT id FROM folders WHERE name = 'folder-a');
+WITH r AS
+	(INSERT INTO __access_binding_refs__ (origin, origin_id)
+		SELECT 'folders', id
+		FROM folders
+		WHERE name = 'folder-a'
+		RETURNING *)
+INSERT INTO folders__access_bindings__ (role, principal, id, ref)
+	SELECT 'viewer', 'sam@amzn', origin_id, id
+	FROM r;
 
--- CREATE ACCESS BINDING FOR sam ON folders WHERE name = 'folder-d' WITH editor;
-INSERT INTO __access_binding_defs__ (role, relation, condition, principal) VALUES ('editor', 'folders', "name = 'folder-d", 'sam');
 
--- CREATE ACCESS BINDING FOR tom ON folders WHERE name = 'root' WITH doc_viewer;
-INSERT INTO __access_binding_defs__ (role, relation, condition, principal) VALUES ('doc_viewer', 'folders', "name = 'root", 'tom');
+-- BIND ACCESS ROLE editor TO sam@amzn
+--      ON folders (SELECT id FROM folders WHERE name = 'folder-d');
+WITH r AS
+	(INSERT INTO __access_binding_refs__ (origin, origin_id)
+		SELECT 'folders', id
+		FROM folders
+		WHERE name = 'folder-d'
+		RETURNING *)
+INSERT INTO folders__access_bindings__ (role, principal, id, ref)
+	SELECT 'editor', 'sam@amzn', origin_id, id
+	FROM r;
+
+
+-- BIND ACCESS ROLE doc_viewer TO tom@amzn
+--      ON folders (SELECT id FROM folders WHERE name = 'root');
+WITH r AS
+	(INSERT INTO __access_binding_refs__ (origin, origin_id)
+		SELECT 'folders', id
+		FROM folders
+		WHERE name = 'root'
+		RETURNING *)
+INSERT INTO folders__access_bindings__ (role, principal, id, ref)
+	SELECT 'doc_viewer', 'tom@amzn', origin_id, id
+	FROM r;
+

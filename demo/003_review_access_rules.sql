@@ -3,10 +3,10 @@
 SELECT * FROM __access_permissions__;
 
 -- LIST ACCESS PERMISSION ON folders
-SELECT * FROM __access_permissions__ WHERE relation = 'folders';
+SELECT * FROM __access_permissions__ WHERE relation = 'folders'::REGCLASS;
 
 -- LIST ACCESS PERMISSION ON documents
-SELECT * FROM __access_permissions__ WHERE relation = 'documents';
+SELECT * FROM __access_permissions__ WHERE relation = 'documents'::REGCLASS;
 
 
 
@@ -24,7 +24,15 @@ SELECT * FROM __access_roles__ WHERE permissions && ARRAY['doc_edit', 'doc_creat
 
 
 
--- TODO: inheritance?
+-- LIST INHERITANCE
+SELECT * FROM __access_inheritances__;
+
+-- LIST INHERITANCE FROM folders
+SELECT * FROM __access_inheritances__ WHERE src = 'folders'::REGCLASS;
+
+-- LIST INHERITANCE TO documents
+SELECT * FROM __access_inheritances__ WHERE dst = 'documents'::REGCLASS;
+
 
 
 -- TODO: formalize the followings:
