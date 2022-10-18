@@ -20,8 +20,7 @@ CREATE TABLE binding_refs (
 	origin		REGCLASS NOT NULL,
 	origin_id	BIGINT NOT NULL,
 
-	PRIMARY KEY (id),
-	UNIQUE (origin, origin_id)
+	PRIMARY KEY (id)
 );
 
 CREATE TABLE inheritances (
@@ -34,12 +33,9 @@ CREATE TABLE inheritances (
 	UNIQUE (src, dst)	-- for simplicity
 );
 
-CREATE TABLE logs (
-	id	BIGSERIAL NOT NULL,
-	msg	TEXT NOT NULL,
-
-	PRIMARY KEY (id)
-);
+-- (DEFAULT SELF-MARKER)
+INSERT INTO inheritances (id, src, dst, src_query)
+	VALUES (0, 'inheritances', 'inheritances', '');
 
 ------------------------------------------------------
 
@@ -53,13 +49,14 @@ CREATE TABLE aaa (
 );
 
 CREATE TABLE aaa_bindings (
+	id			BIGINT NOT NULL,
 	role		TEXT NOT NULL,
 	principal	TEXT NOT NULL,
-	id			BIGINT NOT NULL,
 	ref			BIGINT NOT NULL,
-	inheritance	BIGINT,
+	inheritance	BIGINT NOT NULL DEFAULT 0,
+	ts			TIMESTAMP DEFAULT NOW(),
 
-	PRIMARY KEY (role, principal, id),
+	PRIMARY KEY (id, inheritance, ref),
 	FOREIGN KEY (id) REFERENCES aaa (id) ON DELETE CASCADE,
 	FOREIGN KEY (ref) REFERENCES binding_refs (id) ON DELETE CASCADE,
 	FOREIGN KEY (inheritance) REFERENCES inheritances (id) ON DELETE CASCADE
@@ -75,13 +72,14 @@ CREATE TABLE bbb (
 );
 
 CREATE TABLE bbb_bindings (
+	id			BIGINT NOT NULL,
 	role		TEXT NOT NULL,
 	principal	TEXT NOT NULL,
-	id			BIGINT NOT NULL,
 	ref			BIGINT NOT NULL,
-	inheritance	BIGINT,
+	inheritance	BIGINT NOT NULL DEFAULT 0,
+	ts			TIMESTAMP DEFAULT NOW(),
 
-	PRIMARY KEY (role, principal, id),
+	PRIMARY KEY (id, inheritance, ref),
 	FOREIGN KEY (id) REFERENCES bbb (id) ON DELETE CASCADE,
 	FOREIGN KEY (ref) REFERENCES binding_refs (id) ON DELETE CASCADE,
 	FOREIGN KEY (inheritance) REFERENCES inheritances (id) ON DELETE CASCADE
@@ -102,13 +100,14 @@ CREATE TABLE ccc (
 );
 
 CREATE TABLE ccc_bindings (
+	id			BIGINT NOT NULL,
 	role		TEXT NOT NULL,
 	principal	TEXT NOT NULL,
-	id			BIGINT NOT NULL,
 	ref			BIGINT NOT NULL,
-	inheritance	BIGINT,
+	inheritance	BIGINT NOT NULL DEFAULT 0,
+	ts			TIMESTAMP DEFAULT NOW(),
 
-	PRIMARY KEY (role, principal, id),
+	PRIMARY KEY (id, inheritance, ref),
 	FOREIGN KEY (id) REFERENCES ccc (id) ON DELETE CASCADE,
 	FOREIGN KEY (ref) REFERENCES binding_refs (id) ON DELETE CASCADE,
 	FOREIGN KEY (inheritance) REFERENCES inheritances (id) ON DELETE CASCADE
@@ -127,13 +126,14 @@ CREATE TABLE ddd (
 );
 
 CREATE TABLE ddd_bindings (
+	id			BIGINT NOT NULL,
 	role		TEXT NOT NULL,
 	principal	TEXT NOT NULL,
-	id			BIGINT NOT NULL,
 	ref			BIGINT NOT NULL,
-	inheritance	BIGINT,
+	inheritance	BIGINT NOT NULL DEFAULT 0,
+	ts			TIMESTAMP DEFAULT NOW(),
 
-	PRIMARY KEY (role, principal, id),
+	PRIMARY KEY (id, inheritance, ref),
 	FOREIGN KEY (id) REFERENCES ddd (id) ON DELETE CASCADE,
 	FOREIGN KEY (ref) REFERENCES binding_refs (id) ON DELETE CASCADE,
 	FOREIGN KEY (inheritance) REFERENCES inheritances (id) ON DELETE CASCADE
@@ -152,12 +152,20 @@ CREATE OR REPLACE FUNCTION set_bindings() RETURNS TRIGGER AS $$
 		LOOP
 			EXECUTE format(
 				$query$
-					INSERT INTO %I_bindings (role, principal, id, ref, inheritance)
-						SELECT role, principal, $1.id, ref, %L
-						FROM %I_bindings
-						WHERE id = (%s)
+					WITH n AS
+						(INSERT INTO %I_bindings (id, role, principal, ref, inheritance, ts)
+							SELECT $1.id, role, principal, ref, %s, $2
+								FROM %I_bindings
+								WHERE id = (%s)
+							ON CONFLICT (id, inheritance, ref) DO UPDATE SET ts = $2
+							RETURNING *)
+					DELETE FROM %1$I_bindings b
+						USING n
+						WHERE b.id = $1.id
+						AND b.inheritance = n.inheritance
+						AND b.ref != n.ref;
 				$query$,
-				i.dst, i.id, i.src, i.src_query) USING NEW;
+				i.dst, i.id, i.src, i.src_query) USING NEW, NOW();
 		END LOOP;
 
 		RETURN NULL;
@@ -166,22 +174,22 @@ $$ LANGUAGE plpgsql;
 
 ------------------------------------------------------
 
-CREATE OR REPLACE TRIGGER aaa_insert
-	AFTER INSERT ON aaa
+CREATE OR REPLACE TRIGGER aaa_upsert
+	AFTER INSERT OR UPDATE ON aaa
 	FOR EACH ROW
 	EXECUTE FUNCTION set_bindings();
 
-CREATE OR REPLACE TRIGGER bbb_insert
-	AFTER INSERT ON bbb
+CREATE OR REPLACE TRIGGER bbb_upsert
+	AFTER INSERT OR UPDATE ON bbb
 	FOR EACH ROW
 	EXECUTE FUNCTION set_bindings();
 
-CREATE OR REPLACE TRIGGER ccc_insert
-	AFTER INSERT ON ccc
+CREATE OR REPLACE TRIGGER ccc_upsert
+	AFTER INSERT OR UPDATE ON ccc
 	FOR EACH ROW
 	EXECUTE FUNCTION set_bindings();
 
-CREATE OR REPLACE TRIGGER ddd_insert
+CREATE OR REPLACE TRIGGER ddd_upsert
 	AFTER INSERT ON ddd
 	FOR EACH ROW
 	EXECUTE FUNCTION set_bindings();
@@ -223,6 +231,40 @@ INSERT INTO aaa_bindings (role, principal, id, ref)
 	SELECT 'viewer', 'sam@amzn', origin_id, id
 	FROM r;
 
+-- BIND ACCESS ROLE viewer TO kim@amzn ON aaa (SELECT id FROM aaa WHERE s = 'first')
+WITH r AS
+	(INSERT INTO binding_refs (origin, origin_id)
+		SELECT 'aaa', id
+		FROM aaa
+		WHERE s = 'first'
+		RETURNING *)
+INSERT INTO aaa_bindings (role, principal, id, ref)
+	SELECT 'viewer', 'kim@amzn', origin_id, id
+	FROM r;
+
+-- BIND ACCESS ROLE viewer TO kim@amzn ON aaa (SELECT id FROM aaa WHERE s = 'second')
+WITH r AS
+	(INSERT INTO binding_refs (origin, origin_id)
+		SELECT 'aaa', id
+		FROM aaa
+		WHERE s = 'second'
+		RETURNING *)
+INSERT INTO aaa_bindings (role, principal, id, ref)
+	SELECT 'viewer', 'kim@amzn', origin_id, id
+	FROM r;
+
+-- BIND ACCESS ROLE staff TO sam@amzn ON aaa (SELECT id FROM aaa WHERE s = 'second')
+WITH r AS
+	(INSERT INTO binding_refs (origin, origin_id)
+		SELECT 'aaa', id
+		FROM aaa
+		WHERE s = 'second'
+		RETURNING *)
+INSERT INTO aaa_bindings (role, principal, id, ref)
+	SELECT 'staff', 'sam@amzn', origin_id, id
+	FROM r;
+
+
 -- BIND ACCESS ROLE editor TO tom@amzn ON bbb (SELECT id FROM bbb WHERE s = 'fourth')
 WITH r AS
 	(INSERT INTO binding_refs (origin, origin_id)
@@ -241,6 +283,10 @@ INSERT INTO ccc (aaa_id, bbb_id, s, i)
 	FROM aaa a, bbb b
 	WHERE a.s = 'first' AND b.s = 'fourth';
 
+UPDATE ccc
+	SET aaa_id = (SELECT id from aaa where s = 'second')
+	WHERE s = 'seventh';
+
 INSERT INTO ccc (aaa_id, bbb_id, s, i)
 	SELECT a.id, b.id, 'eighth', 8
 	FROM aaa a, bbb b
@@ -253,11 +299,22 @@ INSERT INTO ccc (aaa_id, bbb_id, s, i)
 
 ------------------------------------------------------
 
--- UNBIND ACCESS ROLE viewer TO sam@amzn ON aaa (SELECT id FROM aaa WHERE s = 'first')
+-- UNBIND ACCESS ROLE viewer FROM sam@amzn ON aaa (SELECT id FROM aaa WHERE s = 'first')
 DELETE FROM binding_refs r
 	USING aaa_bindings b
 	WHERE b.id = (SELECT id FROM aaa WHERE s = 'first')
-	AND b.inheritance IS NULL
+	AND b.role = 'viewer'
+	AND b.principal = 'sam@amzn'
+	AND b.inheritance = 0
+	AND b.ref = r.id;
+
+-- UNBIND ACCESS ROLE viewer FROM kim@amzn ON aaa (SELECT id FROM aaa WHERE s = 'second')
+DELETE FROM binding_refs r
+	USING aaa_bindings b
+	WHERE b.id = (SELECT id FROM aaa WHERE s = 'second')
+	AND b.role = 'viewer'
+	AND b.principal = 'kim@amzn'
+	AND b.inheritance = 0
 	AND b.ref = r.id;
 
 ------------------------------------------------------
@@ -266,3 +323,5 @@ DELETE FROM binding_refs r
 DELETE FROM inheritances
 	WHERE src = 'bbb'::REGCLASS
 	AND dst = 'ccc'::REGCLASS;
+
+------------------------------------------------------
