@@ -1,10 +1,16 @@
 #include "schema/schema-tracker.h"
 
-const static std::vector<std::string> excluded_ = {"__access_bindings__",     "__access_bindings___id_seq",
-                                                   "__access_inheritances__", "__access_inheritances___id_seq",
-                                                   "__access_permissions__",  "__access_permissions___id_seq",
-                                                   "__access_roles__",        "__access_roles___id_seq",
-                                                   "gorp_migrations"};
+// clang-format off
+const static std::unordered_set<std::string> excluded_ = {
+    "__access_binding_refs__",
+    "__access_inheritances__",
+    "__access_permissions__",
+    "__access_roles__",
+    "__access_roles_denorm__",
+    "__access_roles_expanded__",
+    "gorp_migrations"
+};
+// clang-format on
 
 SchemaTracker::SchemaTracker(std::shared_ptr<PqxxConnPool> pcp)
     : pcp_(pcp)

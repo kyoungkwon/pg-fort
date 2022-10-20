@@ -15,10 +15,8 @@ class SchemaTracker
 {
 private:
     std::unordered_set<std::string> relnames_;
-    std::unordered_set<std::string> excluded_;
-
-    std::shared_ptr<PqxxConnPool> pcp_;
-    mutable std::shared_mutex     mutex_;
+    std::shared_ptr<PqxxConnPool>   pcp_;
+    mutable std::shared_mutex       mutex_;
 
 public:
     SchemaTracker(std::shared_ptr<PqxxConnPool> pcp);
