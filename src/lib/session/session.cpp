@@ -29,16 +29,14 @@ Session::Session(ClientConn* cl_conn, ServerConn* sv_conn, std::shared_ptr<PqxxC
     // clang-format off
     pre_request_plugins_ = {
         pf_.GetQueryPlugIn(),
-        // pf_.AclQueryPlugIn(),    // TODO: enable when acl generation works
+        pf_.AclQueryPlugIn(),
         pf_.DropTablePlugIn(),
         pf_.EnsureNewTableHasIdPlugIn(),
         pf_.RestrictInternalTableAccessPlugIn()
     };
 
     post_response_plugins_ = {
-        pf_.CreateAclTablePlugIn(),
-        pf_.SelectIntoTablePlugIn(),
-        pf_.DropAclTablePlugIn()
+        pf_.UpdateSchemaPlugIn()
     };
     // clang-format on
 }

@@ -21,6 +21,7 @@
 #include "conn/response.h"
 #include "conn/server-conn.h"
 #include "query/jsonutil.h"
+#include "query/query-acler.h"
 #include "query/query.h"
 #include "schema/schema-tracker.h"
 #include "state-machine/state-machine.h"
@@ -135,18 +136,10 @@ private:
         PlugIn RestrictInternalTableAccessPlugIn();
 
         // post-response plugins
-        PlugIn CreateAclTablePlugIn();
-        // PlugIn CreateTablePlugIn();
-        //
-        // or
-        //
-        // PlugIn CreatePerRelBindingsTablePlugIn();
-        // PlugIn CreatePerRelAclsViewPlugIn();
-        PlugIn SelectIntoTablePlugIn();
-        PlugIn DropAclTablePlugIn();
+        PlugIn UpdateSchemaPlugIn();
 
         // TODO: maybe apply all plugins pre-request in txn and commit post-response
-        // TODO: capture client txn status
+        // TODO: capture and synchronize with client txns
 
     private:
         Session* s_;

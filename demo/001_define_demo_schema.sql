@@ -53,6 +53,10 @@ begin
                 SELECT b.id, b.role, b.principal, r.operation, r.columns
                 FROM %1$I__access_bindings__ b, __access_roles_expanded__ r
                 WHERE r.relation = %1$L::REGCLASS AND b.role = r.name;
+
+            GRANT ALL PRIVILEGES
+                ON %1$I, %1$I__acls__
+                TO PUBLIC;
         $cmds$,
         'folders');
 end;
@@ -88,6 +92,10 @@ begin
                 SELECT b.id, b.role, b.principal, r.operation, r.columns
                 FROM %1$I__access_bindings__ b, __access_roles_expanded__ r
                 WHERE r.relation = %1$L::REGCLASS AND b.role = r.name;
+
+            GRANT ALL PRIVILEGES
+                ON %1$I, %1$I__acls__
+                TO PUBLIC;
         $cmds$,
         'documents');
 end;

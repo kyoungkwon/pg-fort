@@ -55,7 +55,7 @@ Session::PlugIn Session::PlugInFactory::AclQueryPlugIn()
             }
 
             // add acl check to query
-            // c.query_->AddAclCheck();
+            QueryAcler(s_->st_).Acl(c->query_);
             auto qstr = c->query_.ToString();
 
             std::cout << "Acled query:\n\t" << qstr << std::endl;
@@ -88,18 +88,18 @@ Session::PlugIn Session::PlugInFactory::DropTablePlugIn()
 
             std::cout << "DropTablePlugIn: detected\n";
 
-            // get acl table names
+            // get bindings table names
             std::vector<std::string> table_names;
             for (auto& [_, obj] : (*n)["objects"].items())
             {
                 auto tn = obj["List"]["items"][0]["String"]["str"].get<std::string>();
                 if (s_->st_->Exist(tn))
                 {
-                    table_names.push_back(tn + "__acl__");
+                    table_names.push_back(tn + "__access_bindings__");
                 }
             }
 
-            // return if there's no acl table to drop
+            // return if there's bindings table to drop
             if (table_names.empty())
             {
                 return NoError;
@@ -238,7 +238,7 @@ Session::PlugIn Session::PlugInFactory::RestrictInternalTableAccessPlugIn()
     return Session::PlugIn([&]() { return NoError; });
 }
 
-Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
+Session::PlugIn Session::PlugInFactory::UpdateSchemaPlugIn()
 {
     return Session::PlugIn(
         [&]()
@@ -274,128 +274,9 @@ Session::PlugIn Session::PlugInFactory::CreateAclTablePlugIn()
                 if_not_exists = (*n)["if_not_exists"].get<bool>();
             }
 
-            // generate create command for per-relation bindings table
-            static const char tpl[] =
-                "CREATE TABLE {{TABLE_NAME}}__access_bindings__ (\n"
-                "   binding_def BIGINT NOT NULL,\n"
-                "   id          BIGINT NOT NULL,\n"
-                "   PRIMARY KEY (binding_def, id),\n"
-                "   FOREIGN KEY (binding_def) REFERENCES __access_binding_defs__ (id) ON DELETE CASCADE,\n"
-                "   FOREIGN KEY (id) REFERENCES {{TABLE_NAME}} (id) ON DELETE CASCADE\n"
-                ");";
-
-            ctemplate::StringToTemplateCache("create_per_rel_bindings_table", tpl, ctemplate::DO_NOT_STRIP);
-            ctemplate::TemplateDictionary dict("create_per_rel_bindings_table_dict");
-            dict.SetValue("TABLE_NAME", table_name);
-
-            std::string cmd;
-            ctemplate::ExpandTemplate("create_per_rel_bindings_table_dict", ctemplate::DO_NOT_STRIP, &dict, &cmd);
-
-            std::cout << "Creating a new per-rel bindings table:\n" << cmd << std::endl;
-
-            // TODO: generate triggers for...
-
-            // TODO: generate create command for per-relation acls view
-
-            {
-                // get a pqxx conn from conn-pool
-                auto       pqxx = (s_->pcp_->Acquire());
-                pqxx::work w(*pqxx);
-
-                // issue the command to create acl table
-                w.exec(cmd);  // TODO: what if it failed?
-                w.commit();   // TODO: what if client txn hasn't committed yet?
-            }
-
             // update schema tracker with the new table
             s_->st_->AddRelName(table_name);
 
-            return NoError;
-        });
-}
-
-Session::PlugIn Session::PlugInFactory::SelectIntoTablePlugIn()
-{
-    return Session::PlugIn(
-        [&]()
-        {
-            // TODO: check if request was "select-into" command
-
-            // logic:
-            // table_name = SelectStmt -> intoClause -> rel -> relname
-            // acl_table_name = table_name + "__acl__"
-
-            // TODO: analyse response to see if a new table was created
-
-            // TODO: issue a chain-command to create acl table
-
-            // TODO: update schema tracker with the new table
-            return NoError;
-        });
-}
-
-Session::PlugIn Session::PlugInFactory::DropAclTablePlugIn()
-{
-    return Session::PlugIn(
-        [&]()
-        {
-            // is request a query?
-            auto c = &s_->context_;
-            if (!c->query_)
-            {
-                return NoError;
-            }
-
-            // check response to see if it succeeded
-            auto mtype = c->response_.Data()[0];
-            if (mtype != 'N')  // TODO: change "NoticeResponse" to "CommandComplete"
-            {
-                return NoError;
-            }
-
-            // check if request was "drop-table" command
-            auto n = JsonUtil::FindNode(c->query_.Json(), "DropStmt");
-            if (n == nullptr || (*n)["removeType"] != "OBJECT_TABLE")
-            {
-                return NoError;
-            }
-
-            std::cout << "DropAclTablePlugIn: detected\n";
-
-            // get acl table names
-            std::vector<std::string> table_names;
-            for (auto& [_, obj] : (*n)["objects"].items())
-            {
-                auto tn = obj["List"]["items"][0]["String"]["str"].get<std::string>();
-                if (s_->st_->Exist(tn))
-                {
-                    table_names.push_back(tn + "__acl__");
-                }
-            }
-
-            // return if there's no acl table to drop
-            if (table_names.empty())
-            {
-                return NoError;
-            }
-
-            // build a new "drop-table" command
-            auto qstr =
-                "DROP TABLE " + std::accumulate(std::next(table_names.begin()), table_names.end(), table_names[0],
-                                                [](std::string a, std::string b) { return std::move(a) + ", " + b; });
-
-            std::cout << "\t" << qstr << "\n";
-
-            {
-                // get a pqxx conn from conn-pool
-                auto       pqxx = (s_->pcp_->Acquire());
-                pqxx::work w(*pqxx);
-
-                w.exec(qstr);
-                w.commit();  // TODO: what if client txn hasn't committed yet?
-            }
-
-            // TODO: change "NoticeResponse" to "CommandComplete"
             return NoError;
         });
 }
