@@ -1,5 +1,18 @@
 
 
+-- create user principals
+CREATE ROLE "sam@amzn";
+GRANT ALL PRIVILEGES
+	ON folders, documents, folders__acls__, documents__acls__
+	TO "sam@amzn";
+
+CREATE ROLE "tom@amzn";
+GRANT ALL PRIVILEGES
+	ON folders, documents, folders__acls__, documents__acls__
+	TO "tom@amzn";
+
+
+
 -- BIND ACCESS ROLE viewer TO sam@amzn
 --      ON folders (SELECT id FROM folders WHERE name = 'folder-a');
 WITH r AS
