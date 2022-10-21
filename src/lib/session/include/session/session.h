@@ -134,6 +134,7 @@ private:
         PlugIn DropTablePlugIn();
         PlugIn EnsureNewTableHasIdPlugIn();
         PlugIn RestrictInternalTableAccessPlugIn();
+        PlugIn TranslateProxyCommandPlugIn();
 
         // post-response plugins
         PlugIn UpdateSchemaPlugIn();

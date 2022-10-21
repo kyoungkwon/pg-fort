@@ -33,11 +33,22 @@ Session::PlugIn Session::PlugInFactory::GetQueryPlugIn()
             auto data = c->request_.Data();
 
             // is request a query?
-            if (data[0] == 'Q')
+            if (data[0] != 'Q')
             {
-                // ignore error - let the server produce a proper error response
-                std::tie(c->query_, std::ignore) = Query::Parse(data + 5);
+                return NoError;
             }
+
+            // is this a regular query?
+            Error err;
+            std::tie(c->query_, err) = Query::Parse(data + 5);
+            if (!err)
+            {
+                return NoError;
+            }
+
+            // is this a proxy command?
+            // TODO
+            // std::tie(c->proxy_command_, err) = ProxyCommand::Parse(data + 5);
             return NoError;
         });
 }
@@ -233,6 +244,12 @@ Session::PlugIn Session::PlugInFactory::EnsureNewTableHasIdPlugIn()
 }
 
 Session::PlugIn Session::PlugInFactory::RestrictInternalTableAccessPlugIn()
+{
+    // TODO
+    return Session::PlugIn([&]() { return NoError; });
+}
+
+Session::PlugIn Session::PlugInFactory::TranslateProxyCommandPlugIn()
 {
     // TODO
     return Session::PlugIn([&]() { return NoError; });

@@ -11,7 +11,6 @@
 
 #include "query/jsonutil.h"
 #include "query/query-acler.h"
-#include "query/special-query.h"
 #include "schema/schema-tracker.h"
 
 using json = nlohmann::json;

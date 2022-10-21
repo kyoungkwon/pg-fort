@@ -19,14 +19,14 @@ using json = nlohmann::json;
 
 class Query
 {
-protected:
+private:
     bool valid_;
     json j_;
 
 public:
     Query();
     Query(const Query& q);
-    Query(Query&& o) noexcept;
+    Query(Query&& q) noexcept;
     ~Query();
 
     Query&   operator=(const Query& other);

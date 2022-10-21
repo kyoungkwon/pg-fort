@@ -32,7 +32,8 @@ Session::Session(ClientConn* cl_conn, ServerConn* sv_conn, std::shared_ptr<PqxxC
         pf_.AclQueryPlugIn(),
         pf_.DropTablePlugIn(),
         pf_.EnsureNewTableHasIdPlugIn(),
-        pf_.RestrictInternalTableAccessPlugIn()
+        pf_.RestrictInternalTableAccessPlugIn(),
+        pf_.TranslateProxyCommandPlugIn()
     };
 
     post_response_plugins_ = {
