@@ -1,17 +1,16 @@
 #include "query/proxy-command.h"
 
 ProxyCommand::ProxyCommand()
-    : valid_(false)
 {
 }
 
 ProxyCommand::ProxyCommand(const ProxyCommand& c)
-    : valid_(c.valid_)
+    : q_(c.q_)
 {
 }
 
 ProxyCommand::ProxyCommand(ProxyCommand&& c) noexcept
-    : valid_(std::move(c.valid_))
+    : q_(std::move(c.q_))
 {
 }
 
@@ -21,30 +20,68 @@ ProxyCommand::~ProxyCommand()
 
 ProxyCommand& ProxyCommand::operator=(const ProxyCommand& other)
 {
-    valid_ = other.valid_;
+    q_ = other.q_;
     return *this;
 }
 
 ProxyCommand& ProxyCommand::operator=(ProxyCommand&& other)
 {
-    valid_ = std::move(other.valid_);
+    q_ = std::move(other.q_);
     return *this;
 }
 
 ProxyCommand::operator bool() const
 {
-    return valid_;
+    return bool(q_);
 }
 
 std::pair<ProxyCommand, Error> ProxyCommand::Parse(const char* raw_command)
 {
+    ProxyCommand c;
+    Error        err;
+
+    auto s = ParseEnableAccessControl(raw_command);
     // TODO
-    ProxyCommand p;
-    return {std::move(p), NoError};
+
+    std::tie(c.q_, err) = Query::Parse(s.c_str());
+    return {std::move(c), std::move(err)};
 }
 
 char* ProxyCommand::ToString()
 {
-    // TODO
-    return nullptr;
+    return q_.ToString();
+}
+
+std::string ProxyCommand::ParseEnableAccessControl(std::string command)
+{
+    std::regex  re("ENABLE\\s+ACCESS\\s+CONTROL\\s+(\\w+)");
+    std::string tpl =
+        "CREATE TABLE $1__access_bindings__ (\n"
+        "	id			BIGINT NOT NULL,\n"
+        "	role		TEXT NOT NULL,\n"
+        "	principal	TEXT NOT NULL,\n"
+        "	ref			BIGINT NOT NULL,\n"
+        "	inheritance	BIGINT NOT NULL DEFAULT 0,\n"
+        "	ts			TIMESTAMP DEFAULT NOW(),\n"
+        "\n"
+        "	PRIMARY KEY (id, inheritance, ref),\n"
+        "	FOREIGN KEY (id) REFERENCES $1 (id) ON DELETE CASCADE,\n"
+        "	FOREIGN KEY (role) REFERENCES __access_roles__ (name) ON DELETE RESTRICT,\n"
+        "	FOREIGN KEY (ref) REFERENCES __access_binding_refs__ (id) ON DELETE CASCADE,\n"
+        "	FOREIGN KEY (inheritance) REFERENCES __access_inheritances__ (id) ON DELETE CASCADE\n"
+        ");\n"
+        "\n"
+        "CREATE TRIGGER $1__upsert__\n"
+        "	AFTER INSERT OR UPDATE ON $1\n"
+        "	FOR EACH ROW\n"
+        "	EXECUTE FUNCTION __set_access_bindings__();\n"
+        "\n"
+        "CREATE VIEW $1__acls__ AS\n"
+        "	SELECT b.id, b.role, b.principal, r.operation, r.columns\n"
+        "	FROM $1__access_bindings__ b, __access_roles_expanded__ r\n"
+        "	WHERE r.relation = '$1'::REGCLASS AND b.role = r.name;\n"
+        "\n"
+        "GRANT ALL PRIVILEGES ON $1, $1__acls__ TO PUBLIC";
+
+    return std::regex_replace(command, re, tpl);
 }

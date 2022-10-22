@@ -47,8 +47,7 @@ Session::PlugIn Session::PlugInFactory::GetQueryPlugIn()
             }
 
             // is this a proxy command?
-            // TODO
-            // std::tie(c->proxy_command_, err) = ProxyCommand::Parse(data + 5);
+            std::tie(c->pcommand_, err) = ProxyCommand::Parse(data + 5);
             return NoError;
         });
 }
@@ -245,8 +244,25 @@ Session::PlugIn Session::PlugInFactory::EnsureNewTableHasIdPlugIn()
 
 Session::PlugIn Session::PlugInFactory::RestrictInternalTableAccessPlugIn()
 {
-    // TODO
-    return Session::PlugIn([&]() { return NoError; });
+    return Session::PlugIn(
+        [&]()
+        {
+            // is request a proxy command?
+            auto c = &s_->context_;
+            if (!c->pcommand_)
+            {
+                return NoError;
+            }
+
+            auto cstr = c->pcommand_.ToString();
+
+            std::cout << "Proxy command translated:\n\t" << cstr << std::endl;
+
+            // update request with translated command
+            c->request_.SetQuery(cstr);
+            free(cstr);
+            return NoError;
+        });
 }
 
 Session::PlugIn Session::PlugInFactory::TranslateProxyCommandPlugIn()

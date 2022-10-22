@@ -21,6 +21,7 @@
 #include "conn/response.h"
 #include "conn/server-conn.h"
 #include "query/jsonutil.h"
+#include "query/proxy-command.h"
 #include "query/query-acler.h"
 #include "query/query.h"
 #include "schema/schema-tracker.h"
@@ -100,6 +101,7 @@ private:
         Request            request_;
         Response           response_;
         Query              query_;
+        ProxyCommand       pcommand_;
         int                errno_;
 
         void Reset()

@@ -1,6 +1,7 @@
 #ifndef __POSTGRESQL_PROXY_PROXYCOMMAND_H__
 #define __POSTGRESQL_PROXY_PROXYCOMMAND_H__
 
+#include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -11,7 +12,9 @@
 class ProxyCommand
 {
 private:
-    bool valid_;
+    Query q_;
+
+    static std::string ParseEnableAccessControl(std::string command);
 
 public:
     ProxyCommand();

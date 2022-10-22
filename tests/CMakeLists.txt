@@ -35,3 +35,8 @@ gtest_discover_tests(query-test)
 add_executable(pqxx-test pqxx-test.cpp)
 target_link_libraries(pqxx-test GTest::gtest GTest::gtest_main libconn)
 gtest_discover_tests(pqxx-test)
+
+
+add_executable(proxy-command-test proxy-command-test.cpp)
+target_link_libraries(proxy-command-test GTest::gtest GTest::gtest_main libquery ${LIBPG_QUERY})
+gtest_discover_tests(proxy-command-test)
