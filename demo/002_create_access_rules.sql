@@ -14,34 +14,11 @@ CREATE ACCESS PERMISSION doc_delete ON documents FOR DELETE;
 CREATE ACCESS PERMISSION doc_all ON documents FOR ALL;
 
 
--- CREATE ACCESS ROLE viewer WITH folder_view, doc_view;
-INSERT INTO __access_roles__ (name, permissions) VALUES ('viewer', ARRAY['folder_view', 'doc_view']);
-INSERT INTO __access_roles_denorm__ (name, permission)
-    SELECT name, unnest(permissions)
-    FROM __access_roles__
-    WHERE name = 'viewer';
-
--- CREATE ACCESS ROLE editor WITH folder_view, folder_edit, doc_view, doc_edit;
-INSERT INTO __access_roles__ (name, permissions) VALUES ('editor', ARRAY['folder_view', 'folder_edit', 'doc_view', 'doc_edit']);
-INSERT INTO __access_roles_denorm__ (name, permission)
-    SELECT name, unnest(permissions)
-    FROM __access_roles__
-    WHERE name = 'editor';
-
--- CREATE ACCESS ROLE admin WITH folder_all, doc_all;
-INSERT INTO __access_roles__ (name, permissions) VALUES ('admin', ARRAY['folder_all', 'doc_all']);
-INSERT INTO __access_roles_denorm__ (name, permission)
-    SELECT name, unnest(permissions)
-    FROM __access_roles__
-    WHERE name = 'admin';
-
--- CREATE ACCESS ROLE doc_viewer WITH doc_view;
-INSERT INTO __access_roles__ (name, permissions) VALUES ('doc_viewer', ARRAY['doc_view']);
-INSERT INTO __access_roles_denorm__ (name, permission)
-    SELECT name, unnest(permissions)
-    FROM __access_roles__
-    WHERE name = 'doc_viewer';
-
+-- create roles
+CREATE ACCESS ROLE viewer WITH folder_view, doc_view;
+CREATE ACCESS ROLE editor WITH folder_view, folder_edit, doc_view, doc_edit;
+CREATE ACCESS ROLE admin WITH folder_all, doc_all;
+CREATE ACCESS ROLE doc_viewer WITH doc_view;
 
 
 -- CREATE ACCESS INHERITANCE FROM folders (id) TO folders (parent_id);

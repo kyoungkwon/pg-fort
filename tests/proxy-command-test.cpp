@@ -99,6 +99,35 @@ TEST(ProxyCommandTest, CreateAccessPermission)
     std::cout << "========================================" << std::endl;
 }
 
+TEST(ProxyCommandTest, CreateAccessRole)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::string input =
+        "-- create access roles\n"
+        "SELECT * FROM folders;\n"
+        "CREATE ACCESS ROLE viewer WITH folder_view, doc_view, pic_view, aud_view;\n"
+        "SELECT * FROM documents;\n"
+        "CREATE ACCESS ROLE editor WITH folder_edit, doc_edit, pic_edit, aud_edit;\n"
+        "SELECT * FROM pictures;\n"
+        "CREATE ACCESS ROLE admin WITH folder_all;\n"
+        "SELECT * FROM audios";
+
+    std::cout << "input = " << input << "\n" << std::endl;
+
+    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "========================================" << std::endl;
+}
+
 // clang-format off
 /*
 TEST(QueryTest, TranslateSpecial)

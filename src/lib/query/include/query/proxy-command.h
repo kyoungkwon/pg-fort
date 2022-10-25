@@ -17,6 +17,7 @@ private:
     static std::string RemoveComments(std::string command);
     static std::string ParseEnableAccessControl(std::string command);
     static std::string ParseCreateAccessPermission(std::string command);
+    static std::string ParseCreateAccessRole(std::string command);
 
 public:
     ProxyCommand();

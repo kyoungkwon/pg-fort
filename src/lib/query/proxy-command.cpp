@@ -43,6 +43,7 @@ std::pair<ProxyCommand, Error> ProxyCommand::Parse(const char* raw_command)
     auto s = RemoveComments(raw_command);
     s      = ParseEnableAccessControl(s);
     s      = ParseCreateAccessPermission(s);
+    s      = ParseCreateAccessRole(s);
 
     // TODO
 
@@ -104,4 +105,28 @@ std::string ProxyCommand::ParseCreateAccessPermission(std::string command)
         "	VALUES ('$1', '$2', UPPER('$3'))";
 
     return std::regex_replace(command, re, tpl);
+}
+
+std::string ProxyCommand::ParseCreateAccessRole(std::string command)
+{
+    std::regex  re("CREATE\\s+ACCESS\\s+ROLE\\s+(\\w+)\\s+WITH\\s+(\\w+(,\\s*\\w+)*)", std::regex_constants::icase);
+    std::smatch m;
+
+    std::ostringstream translated;
+    while (std::regex_search(command, m, re))
+    {
+        auto r = m[1].str();
+        auto p = std::regex_replace(m[2].str(), std::regex("(\\w+)"), "'$1'");
+
+        translated << m.prefix();
+        translated << "INSERT INTO __access_roles__ (name, permissions) VALUES ('" << r << "', ARRAY[" << p << "]);\n";
+        translated << "INSERT INTO __access_roles_denorm__ (name, permission)\n"
+                   << "	SELECT name, unnest(permissions)\n"
+                   << "	FROM __access_roles__\n"
+                   << "	WHERE name = '" << r << "'";
+
+        command = m.suffix();
+    }
+    translated << command;
+    return translated.str();
 }
