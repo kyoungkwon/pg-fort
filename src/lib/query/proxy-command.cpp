@@ -40,7 +40,10 @@ std::pair<ProxyCommand, Error> ProxyCommand::Parse(const char* raw_command)
     ProxyCommand c;
     Error        err;
 
-    auto s = ParseEnableAccessControl(raw_command);
+    auto s = RemoveComments(raw_command);
+    s      = ParseEnableAccessControl(s);
+    s      = ParseCreateAccessPermission(s);
+
     // TODO
 
     std::tie(c.q_, err) = Query::Parse(s.c_str());
@@ -52,9 +55,15 @@ char* ProxyCommand::ToString()
     return q_.ToString();
 }
 
+std::string ProxyCommand::RemoveComments(std::string command)
+{
+    std::regex re("[\\t\\r\\n]|(--[^\\r\\n]*)|(/\\*[\\w\\W]*?(?=\\*/)\\*/)");
+    return std::regex_replace(command, re, "");
+}
+
 std::string ProxyCommand::ParseEnableAccessControl(std::string command)
 {
-    std::regex  re("ENABLE\\s+ACCESS\\s+CONTROL\\s+(\\w+)");
+    std::regex  re("ENABLE\\s+ACCESS\\s+CONTROL\\s+(\\w+)", std::regex_constants::icase);
     std::string tpl =
         "CREATE TABLE $1__access_bindings__ (\n"
         "	id			BIGINT NOT NULL,\n"
@@ -82,6 +91,17 @@ std::string ProxyCommand::ParseEnableAccessControl(std::string command)
         "	WHERE r.relation = '$1'::REGCLASS AND b.role = r.name;\n"
         "\n"
         "GRANT ALL PRIVILEGES ON $1, $1__acls__ TO PUBLIC";
+
+    return std::regex_replace(command, re, tpl);
+}
+
+std::string ProxyCommand::ParseCreateAccessPermission(std::string command)
+{
+    std::regex  re("CREATE\\s+ACCESS\\s+PERMISSION\\s+(\\w+)\\s+ON\\s+(\\w+)\\s+FOR\\s+(\\w+)",
+                   std::regex_constants::icase);
+    std::string tpl =
+        "INSERT INTO __access_permissions__ (name, relation, operation)\n"
+        "	VALUES ('$1', '$2', UPPER('$3'))";
 
     return std::regex_replace(command, re, tpl);
 }

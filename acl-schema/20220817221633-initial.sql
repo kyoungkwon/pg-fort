@@ -8,7 +8,8 @@ CREATE TABLE __access_permissions__ (
 	columns		TEXT[],
 
 	PRIMARY KEY (name),
-	UNIQUE (relation, operation, columns)
+	UNIQUE (relation, operation, columns),
+	CHECK (operation IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'ALL'))
 );
 
 CREATE TABLE __access_roles__ (

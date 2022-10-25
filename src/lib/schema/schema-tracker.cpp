@@ -60,7 +60,7 @@ void SchemaTracker::Refresh()
     for (auto row : r)
     {
         auto relname = std::string(row["relname"].c_str());
-        if (!relname.ends_with("__acl__"))
+        if (!relname.ends_with("__acl__") && !relname.ends_with("__access_bindings__"))
         {
             relnames_.emplace(relname);
         }

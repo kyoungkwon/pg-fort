@@ -43,4 +43,5 @@ TRUNCATE __access_binding_refs__,
      __access_inheritances__,
      __access_roles__,
      __access_roles_denorm__,
-     __access_permissions__;
+     __access_permissions__
+     CASCADE;

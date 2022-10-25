@@ -14,7 +14,9 @@ class ProxyCommand
 private:
     Query q_;
 
+    static std::string RemoveComments(std::string command);
     static std::string ParseEnableAccessControl(std::string command);
+    static std::string ParseCreateAccessPermission(std::string command);
 
 public:
     ProxyCommand();

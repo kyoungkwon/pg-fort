@@ -48,6 +48,14 @@ Session::PlugIn Session::PlugInFactory::GetQueryPlugIn()
 
             // is this a proxy command?
             std::tie(c->pcommand_, err) = ProxyCommand::Parse(data + 5);
+            if (!err)
+            {
+                return NoError;
+            }
+
+            // TODO: if regular queries and proxy commands are mixed in one payload,
+            //       the regular query parser will fail and the queries will bypass
+            //       acling process.
             return NoError;
         });
 }
@@ -244,6 +252,12 @@ Session::PlugIn Session::PlugInFactory::EnsureNewTableHasIdPlugIn()
 
 Session::PlugIn Session::PlugInFactory::RestrictInternalTableAccessPlugIn()
 {
+    // TODO
+    return Session::PlugIn([&]() { return NoError; });
+}
+
+Session::PlugIn Session::PlugInFactory::TranslateProxyCommandPlugIn()
+{
     return Session::PlugIn(
         [&]()
         {
@@ -256,19 +270,11 @@ Session::PlugIn Session::PlugInFactory::RestrictInternalTableAccessPlugIn()
 
             auto cstr = c->pcommand_.ToString();
 
-            std::cout << "Proxy command translated:\n\t" << cstr << std::endl;
-
             // update request with translated command
             c->request_.SetQuery(cstr);
             free(cstr);
             return NoError;
         });
-}
-
-Session::PlugIn Session::PlugInFactory::TranslateProxyCommandPlugIn()
-{
-    // TODO
-    return Session::PlugIn([&]() { return NoError; });
 }
 
 Session::PlugIn Session::PlugInFactory::UpdateSchemaPlugIn()

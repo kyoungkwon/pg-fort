@@ -50,9 +50,41 @@ TEST(ProxyCommandTest, EnableAccessControl)
 {
     std::cout << "========================================" << std::endl;
 
-    std::string input = "ENABLE ACCESS CONTROL folders; SELECT * FROM folders;";
+    std::string input =
+        "-- enable access control comment will break parse\n"
+        "ENABLE ACCESS CONTROL documents;\n"
+        "ENABLE ACCESS CONTROL folders;\n"
+        "enable access control holy_moly;\n"
+        "SELECT * FROM folders;";
 
-    std::cout << "input = " << input << std::endl;
+    std::cout << "input = " << input << "\n" << std::endl;
+
+    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "========================================" << std::endl;
+}
+
+TEST(ProxyCommandTest, CreateAccessPermission)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::string input =
+        "-- create new permissions on folder table\n"
+        "CREATE ACCESS PERMISSION folder_view ON folders FOR SELECT;\n"
+        "CREATE ACCESS PERMISSION folder_edit ON folders FOR UPDATE;\n"
+        "CREATE ACCESS PERMISSION folder_create ON folders FOR INSERT;\n"
+        "CREATE ACCESS PERMISSION folder_delete ON folders FOR DELETE;\n"
+        "create access permission folder_all ON folders FOR all;";
+
+    std::cout << "input = " << input << "\n" << std::endl;
 
     auto [c, e] = ProxyCommand::Parse(input.c_str());
     if (e)
