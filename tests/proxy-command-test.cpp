@@ -11,8 +11,8 @@ TEST(ProxyCommandTest, Regex)
 {
     std::cout << "========================================" << std::endl;
 
-    std::string input = "ENABLE ACCESS CONTROL folders; SELECT * FROM folders;";
-    std::regex  re("ENABLE\\s+ACCESS\\s+CONTROL\\s+(\\w+)");
+    std::string input = "ENABLE ACCESS CONTROL folders, documents, symlinks; SELECT * FROM folders;";
+    std::regex  re("ENABLE\\s+ACCESS\\s+CONTROL\\s+((\\w+)(,\\s*(\\w+))*)");
     std::string tpl =
         "CREATE TABLE $1__access_bindings__ (\n"
         "	id			BIGINT NOT NULL,\n"
@@ -44,6 +44,20 @@ TEST(ProxyCommandTest, Regex)
     std::cout << std::regex_replace(input, re, tpl) << std::endl;
 
     std::cout << "========================================" << std::endl;
+
+    std::smatch m;
+    if (std::regex_search(input, m, re))
+    {
+        std::cout << "(" << m.size() << ") " << m[0] << std::endl;
+        for (auto i = 1; i < m.size() + 5; i++)
+        {
+            std::cout << i << ": " << m[i] << " (" << m[i].matched << ")" << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << "search failed" << std::endl;
+    }
 }
 
 TEST(ProxyCommandTest, EnableAccessControl)
@@ -139,6 +153,33 @@ TEST(ProxyCommandTest, CreateAccessInheritance)
         "SELECT * FROM documents;\n"
         "create access inheritance from folders(id, name) to documents(folder_id, folder_name);\n"
         "SELECT * FROM pictures;\n";
+
+    std::cout << "input = " << input << "\n" << std::endl;
+
+    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "========================================" << std::endl;
+}
+
+TEST(ProxyCommandTest, ListAccessPermission)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::string input =
+        "-- list access permissions\n"
+        "table folders;\n"
+        "LIST ACCESS PERMISSION;\n"
+        "table documents;\n"
+        "LIST ACCESS PERMISSION ON folders;\n"
+        "table pictures;\n";
 
     std::cout << "input = " << input << "\n" << std::endl;
 

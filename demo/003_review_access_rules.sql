@@ -1,13 +1,8 @@
 
--- LIST ACCESS PERMISSION
-SELECT * FROM __access_permissions__;
-
--- LIST ACCESS PERMISSION ON folders
-SELECT * FROM __access_permissions__ WHERE relation = 'folders'::REGCLASS;
-
--- LIST ACCESS PERMISSION ON documents
-SELECT * FROM __access_permissions__ WHERE relation = 'documents'::REGCLASS;
-
+-- permissions
+LIST ACCESS PERMISSION;
+LIST ACCESS PERMISSION ON folders;
+LIST ACCESS PERMISSION ON documents;
 
 
 -- LIST ACCESS ROLE

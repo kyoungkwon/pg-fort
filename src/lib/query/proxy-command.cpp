@@ -69,7 +69,13 @@ std::pair<ProxyCommand, Error> ProxyCommand::Parse(const char* raw_command)
         return {std::move(c), std::move(err)};
     }
 
-    // TODO
+    std::tie(s, err) = ParseListAccessPermission(s);
+    if (err)
+    {
+        return {std::move(c), std::move(err)};
+    }
+
+    // TODO: add command parsers here
 
     std::tie(c.q_, err) = Query::Parse(s.c_str());
     return {std::move(c), std::move(err)};
@@ -206,6 +212,27 @@ std::pair<std::string, Error> ProxyCommand::ParseCreateAccessInheritance(std::st
             return {std::string(), std::move(err)};
         }
 
+        command = m.suffix();
+    }
+
+    translated << command;
+    return {translated.str(), NoError};
+}
+
+std::pair<std::string, Error> ProxyCommand::ParseListAccessPermission(std::string command)
+{
+    std::regex  re("LIST\\s+ACCESS\\s+PERMISSION(\\s+ON\\s+(\\w+))?", std::regex_constants::icase);
+    std::smatch m;
+
+    std::ostringstream translated;
+    while (std::regex_search(command, m, re))
+    {
+        translated << m.prefix();
+        translated << "SELECT * FROM __access_permissions__";
+        if (m[2].matched)
+        {
+            translated << " WHERE relation = '" << m[2] << "'::REGCLASS";
+        }
         command = m.suffix();
     }
 
