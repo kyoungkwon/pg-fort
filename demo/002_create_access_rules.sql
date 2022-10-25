@@ -21,10 +21,6 @@ CREATE ACCESS ROLE admin WITH folder_all, doc_all;
 CREATE ACCESS ROLE doc_viewer WITH doc_view;
 
 
--- CREATE ACCESS INHERITANCE FROM folders (id) TO folders (parent_id);
-INSERT INTO __access_inheritances__ (src, dst, src_query)
-    VALUES ('folders', 'folders', 'SELECT id FROM folders WHERE id = $1.parent_id');
-
--- CREATE ACCESS INHERTINACE FROM folders (id) TO documents (folder_id);
-INSERT INTO __access_inheritances__ (src, dst, src_query)
-    VALUES ('folders', 'documents', 'SELECT id FROM folders WHERE id = $1.folder_id');
+-- create inheritances
+CREATE ACCESS INHERITANCE FROM folders (id) TO folders (parent_id);
+CREATE ACCESS INHERITANCE FROM folders (id) TO documents (folder_id);

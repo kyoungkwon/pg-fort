@@ -14,10 +14,11 @@ class ProxyCommand
 private:
     Query q_;
 
-    static std::string RemoveComments(std::string command);
-    static std::string ParseEnableAccessControl(std::string command);
-    static std::string ParseCreateAccessPermission(std::string command);
-    static std::string ParseCreateAccessRole(std::string command);
+    static std::pair<std::string, Error> RemoveComments(std::string command);
+    static std::pair<std::string, Error> ParseEnableAccessControl(std::string command);
+    static std::pair<std::string, Error> ParseCreateAccessPermission(std::string command);
+    static std::pair<std::string, Error> ParseCreateAccessRole(std::string command);
+    static std::pair<std::string, Error> ParseCreateAccessInheritance(std::string command);
 
 public:
     ProxyCommand();

@@ -128,6 +128,33 @@ TEST(ProxyCommandTest, CreateAccessRole)
     std::cout << "========================================" << std::endl;
 }
 
+TEST(ProxyCommandTest, CreateAccessInheritance)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::string input =
+        "-- create access inheritances\n"
+        "SELECT * FROM folders;\n"
+        "CREATE ACCESS INHERITANCE FROM folders (id) TO folders (parent_id);\n"
+        "SELECT * FROM documents;\n"
+        "create access inheritance from folders(id, name) to documents(folder_id, folder_name);\n"
+        "SELECT * FROM pictures;\n";
+
+    std::cout << "input = " << input << "\n" << std::endl;
+
+    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "========================================" << std::endl;
+}
+
 // clang-format off
 /*
 TEST(QueryTest, TranslateSpecial)
