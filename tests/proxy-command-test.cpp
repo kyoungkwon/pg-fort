@@ -60,6 +60,46 @@ TEST(ProxyCommandTest, Regex)
     }
 }
 
+TEST(ProxyCommandTest, Regex2)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::regex re(
+        "LIST\\s+ACCESS\\s+ROLE"
+        "(\\s+WITH\\s+"
+        "("
+        "(ALL)\\s*\\((\\w+(,\\s*\\w+)*)\\)"
+        "|(ANY)\\s*\\((\\w+(,\\s*\\w+)*)\\)"
+        "|(\\w+)"
+        ")"
+        ")?",
+        std::regex_constants::icase);
+
+    std::string input =
+        "-- nasty combinations...\n"
+        "LIST ACCESS ROLE;\n"
+        "LIST ACCESS ROLE WITH doc_all;\n"
+        "LIST ACCESS ROLE WITH ALL(folder_view, doc_view, xxx);\n"
+        "LIST ACCESS ROLE WITH ALL (folder_view, doc_view, yyy);\n"
+        "LIST ACCESS ROLE WITH ANY(doc_edit, doc_create, doc_all);\n"
+        "LIST ACCESS ROLE WITH ANY  (doc_edit, doc_create, doc_all);\n"
+        "LIST ACCESS ROLE WITH ALL(folder_view, doc_view);\n"
+        "LIST ACCESS ROLE WITH ALL (folder_view, doc_view);\n";
+
+    std::smatch m;
+    while (std::regex_search(input, m, re))
+    {
+        std::cout << "(" << m.size() << ") " << m[0] << std::endl;
+        for (auto i = 1; i < m.size() + 2; i++)
+        {
+            std::cout << i << ": " << m[i] << " (" << m[i].matched << ")" << std::endl;
+        }
+
+        std::cout << "------------------------------\n";
+        input = m.suffix();
+    }
+}
+
 TEST(ProxyCommandTest, EnableAccessControl)
 {
     std::cout << "========================================" << std::endl;
@@ -180,6 +220,36 @@ TEST(ProxyCommandTest, ListAccessPermission)
         "table documents;\n"
         "LIST ACCESS PERMISSION ON folders;\n"
         "table pictures;\n";
+
+    std::cout << "input = " << input << "\n" << std::endl;
+
+    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "========================================" << std::endl;
+}
+
+TEST(ProxyCommandTest, ListAccessRole)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::string input =
+        "-- nasty combinations...\n"
+        "LIST ACCESS ROLE;\n"
+        "LIST ACCESS ROLE WITH doc_all;\n"
+        "LIST ACCESS ROLE WITH ALL(folder_view, doc_view, xxx);\n"
+        "LIST ACCESS ROLE WITH ALL (folder_view, doc_view, yyy);\n"
+        "LIST ACCESS ROLE WITH ANY(doc_edit, doc_create, doc_all);\n"
+        "LIST ACCESS ROLE WITH ANY  (doc_edit, doc_create, doc_all);\n"
+        "LIST ACCESS ROLE WITH ALL(folder_view, doc_view);\n"
+        "LIST ACCESS ROLE WITH ALL (folder_view, doc_view);\n";
 
     std::cout << "input = " << input << "\n" << std::endl;
 

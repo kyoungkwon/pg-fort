@@ -75,6 +75,12 @@ std::pair<ProxyCommand, Error> ProxyCommand::Parse(const char* raw_command)
         return {std::move(c), std::move(err)};
     }
 
+    std::tie(s, err) = ParseListAccessRole(s);
+    if (err)
+    {
+        return {std::move(c), std::move(err)};
+    }
+
     // TODO: add command parsers here
 
     std::tie(c.q_, err) = Query::Parse(s.c_str());
@@ -132,7 +138,7 @@ std::pair<std::string, Error> ProxyCommand::ParseCreateAccessPermission(std::str
                    std::regex_constants::icase);
     std::string tpl =
         "INSERT INTO __access_permissions__ (name, relation, operation)\n"
-        "	VALUES ('$1', '$2', UPPER('$3'))";
+        "	VALUES (LOWER('$1'), '$2', UPPER('$3'))";
 
     return {std::regex_replace(command, re, tpl), NoError};
 }
@@ -146,7 +152,11 @@ std::pair<std::string, Error> ProxyCommand::ParseCreateAccessRole(std::string co
     while (std::regex_search(command, m, re))
     {
         auto r = m[1].str();
-        auto p = std::regex_replace(m[2].str(), std::regex("(\\w+)"), "'$1'");
+        std::transform(r.begin(), r.end(), r.begin(), ::tolower);
+
+        auto p = m[2].str();
+        std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+        p = std::regex_replace(p, std::regex("(\\w+)"), "'$1'");
 
         translated << m.prefix();
         translated << "INSERT INTO __access_roles__ (name, permissions) VALUES ('" << r << "', ARRAY[" << p << "]);\n"
@@ -221,9 +231,9 @@ std::pair<std::string, Error> ProxyCommand::ParseCreateAccessInheritance(std::st
 
 std::pair<std::string, Error> ProxyCommand::ParseListAccessPermission(std::string command)
 {
-    std::regex  re("LIST\\s+ACCESS\\s+PERMISSION(\\s+ON\\s+(\\w+))?", std::regex_constants::icase);
-    std::smatch m;
+    std::regex re("LIST\\s+ACCESS\\s+PERMISSION(\\s+ON\\s+(\\w+))?", std::regex_constants::icase);
 
+    std::smatch        m;
     std::ostringstream translated;
     while (std::regex_search(command, m, re))
     {
@@ -233,6 +243,57 @@ std::pair<std::string, Error> ProxyCommand::ParseListAccessPermission(std::strin
         {
             translated << " WHERE relation = '" << m[2] << "'::REGCLASS";
         }
+        command = m.suffix();
+    }
+
+    translated << command;
+    return {translated.str(), NoError};
+}
+
+std::pair<std::string, Error> ProxyCommand::ParseListAccessRole(std::string command)
+{
+    std::regex re(
+        "LIST\\s+ACCESS\\s+ROLE"
+        "(\\s+WITH\\s+"
+        "("
+        "(ALL)\\s*\\((\\w+(,\\s*\\w+)*)\\)"
+        "|(ANY)\\s*\\((\\w+(,\\s*\\w+)*)\\)"
+        "|(\\w+)"
+        ")"
+        ")?",
+        std::regex_constants::icase);
+
+    std::smatch        m;
+    std::ostringstream translated;
+    while (std::regex_search(command, m, re))
+    {
+        translated << m.prefix();
+        translated << "SELECT * FROM __access_roles__";
+
+        if (m[3].matched)  // WITH ALL( ... )
+        {
+            auto p = m[4].str();
+            std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+            p = std::regex_replace(p, std::regex("(\\w+)"), "'$1'");
+
+            translated << " WHERE permissions @> ARRAY[" << p << "]";
+        }
+        else if (m[6].matched)  // WITH ANY( ... )
+        {
+            auto p = m[7].str();
+            std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+            p = std::regex_replace(p, std::regex("(\\w+)"), "'$1'");
+
+            translated << " WHERE permissions && ARRAY[" << p << "]";
+        }
+        else if (m[2].matched)  // WITH ...
+        {
+            auto p = m[2].str();
+            std::transform(p.begin(), p.end(), p.begin(), ::tolower);
+
+            translated << " WHERE permissions @> ARRAY['" << p << "']";
+        }
+
         command = m.suffix();
     }
 

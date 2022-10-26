@@ -1,6 +1,7 @@
 #ifndef __POSTGRESQL_PROXY_PROXYCOMMAND_H__
 #define __POSTGRESQL_PROXY_PROXYCOMMAND_H__
 
+#include <algorithm>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -20,6 +21,7 @@ private:
     static std::pair<std::string, Error> ParseCreateAccessRole(std::string command);
     static std::pair<std::string, Error> ParseCreateAccessInheritance(std::string command);
     static std::pair<std::string, Error> ParseListAccessPermission(std::string command);
+    static std::pair<std::string, Error> ParseListAccessRole(std::string command);
 
 public:
     ProxyCommand();
