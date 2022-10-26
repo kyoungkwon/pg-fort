@@ -81,6 +81,12 @@ std::pair<ProxyCommand, Error> ProxyCommand::Parse(const char* raw_command)
         return {std::move(c), std::move(err)};
     }
 
+    std::tie(s, err) = ParseListAccessInheritance(s);
+    if (err)
+    {
+        return {std::move(c), std::move(err)};
+    }
+
     // TODO: add command parsers here
 
     std::tie(c.q_, err) = Query::Parse(s.c_str());
@@ -292,6 +298,56 @@ std::pair<std::string, Error> ProxyCommand::ParseListAccessRole(std::string comm
             std::transform(p.begin(), p.end(), p.begin(), ::tolower);
 
             translated << " WHERE permissions @> ARRAY['" << p << "']";
+        }
+
+        command = m.suffix();
+    }
+
+    translated << command;
+    return {translated.str(), NoError};
+}
+
+std::pair<std::string, Error> ProxyCommand::ParseListAccessInheritance(std::string command)
+{
+    std::regex re(
+        "LIST\\s+ACCESS\\s+INHERITANCE"
+        "(\\s+"
+        "(FROM|TO)\\s+(\\w+)"
+        ")?",
+        std::regex_constants::icase);
+
+    std::smatch        m;
+    std::ostringstream translated;
+    while (std::regex_search(command, m, re))
+    {
+        translated << m.prefix();
+        translated << "SELECT * FROM __access_inheritances__";
+
+        if (m[2].matched)
+        {
+            auto d = m[2].str();
+            std::transform(d.begin(), d.end(), d.begin(), ::toupper);
+
+            auto t = m[3].str();
+            if (d == "FROM")
+            {
+                translated << " WHERE src = '" << t << "'::REGCLASS";
+            }
+            else if (d == "TO")
+            {
+                translated << " WHERE dst = '" << t << "'::REGCLASS";
+            }
+            else
+            {
+                Error err = {
+                    {"S",                                 "ERROR"},
+                    {"M", "syntax error at or near \"" + d + "\""},
+                    {"R",                                __func__},
+                    {"F",                                __FILE__},
+                    {"L",                std::to_string(__LINE__)}
+                };
+                return {std::string(), std::move(err)};
+            }
         }
 
         command = m.suffix();

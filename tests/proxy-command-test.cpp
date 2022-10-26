@@ -100,6 +100,36 @@ TEST(ProxyCommandTest, Regex2)
     }
 }
 
+TEST(ProxyCommandTest, Regex3)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::regex re(
+        "LIST\\s+ACCESS\\s+INHERITANCE"
+        "(\\s+"
+        "(FROM|TO)\\s+(\\w+)"
+        ")?",
+        std::regex_constants::icase);
+
+    std::string input =
+        "LIST ACCESS INHERITANCE;\n"
+        "LIST ACCESS INHERITANCE FROM folders;\n"
+        "LIST ACCESS INHERITANCE TO documents;";
+
+    std::smatch m;
+    while (std::regex_search(input, m, re))
+    {
+        std::cout << "(" << m.size() << ") " << m[0] << std::endl;
+        for (auto i = 1; i < m.size() + 2; i++)
+        {
+            std::cout << i << ": " << m[i] << " (" << m[i].matched << ")" << std::endl;
+        }
+
+        std::cout << "------------------------------\n";
+        input = m.suffix();
+    }
+}
+
 TEST(ProxyCommandTest, EnableAccessControl)
 {
     std::cout << "========================================" << std::endl;
@@ -250,6 +280,30 @@ TEST(ProxyCommandTest, ListAccessRole)
         "LIST ACCESS ROLE WITH ANY  (doc_edit, doc_create, doc_all);\n"
         "LIST ACCESS ROLE WITH ALL(folder_view, doc_view);\n"
         "LIST ACCESS ROLE WITH ALL (folder_view, doc_view);\n";
+
+    std::cout << "input = " << input << "\n" << std::endl;
+
+    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "========================================" << std::endl;
+}
+
+TEST(ProxyCommandTest, ListAccessInheritance)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::string input =
+        "LIST ACCESS INHERITANCE;\n"
+        "LIST ACCESS INHERITANCE FROM folders;\n"
+        "LIST ACCESS INHERITANCE TO documents;";
 
     std::cout << "input = " << input << "\n" << std::endl;
 

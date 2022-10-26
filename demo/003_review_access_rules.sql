@@ -10,16 +10,10 @@ LIST ACCESS ROLE WITH doc_all;
 LIST ACCESS ROLE WITH ALL(folder_view, doc_view);
 LIST ACCESS ROLE WITH ANY(doc_edit, doc_create, doc_all);
 
-
--- LIST INHERITANCE
-SELECT * FROM __access_inheritances__;
-
--- LIST INHERITANCE FROM folders
-SELECT * FROM __access_inheritances__ WHERE src = 'folders'::REGCLASS;
-
--- LIST INHERITANCE TO documents
-SELECT * FROM __access_inheritances__ WHERE dst = 'documents'::REGCLASS;
-
+-- inheritances
+LIST ACCESS INHERITANCE;
+LIST ACCESS INHERITANCE FROM folders;
+LIST ACCESS INHERITANCE TO documents;
 
 
 -- TODO: formalize the followings:
