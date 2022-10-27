@@ -93,6 +93,12 @@ std::pair<ProxyCommand, Error> ProxyCommand::Parse(const char* raw_command)
         return {std::move(c), std::move(err)};
     }
 
+    std::tie(s, err) = ParseUnbindAccessRole(s);
+    if (err)
+    {
+        return {std::move(c), std::move(err)};
+    }
+
     // TODO: add command parsers here
 
     std::tie(c.q_, err) = Query::Parse(s.c_str());
@@ -366,7 +372,8 @@ std::pair<std::string, Error> ProxyCommand::ParseListAccessInheritance(std::stri
 std::pair<std::string, Error> ProxyCommand::ParseBindAccessRole(std::string command)
 {
     // e.g.,
-    //  BIND ACCESS ROLE doc_viewer TO tom@amzn
+    //  BIND ACCESS ROLE doc_viewer
+    //       TO tom@amzn
     //       ON folders (SELECT id FROM folders WHERE name = 'root');
     std::regex re(
         "BIND\\s+ACCESS\\s+ROLE\\s+(\\w+)\\s+"
@@ -388,13 +395,50 @@ std::pair<std::string, Error> ProxyCommand::ParseBindAccessRole(std::string comm
     // 	SELECT 'doc_viewer', 'tom@amzn', origin_id, id
     // 	FROM r;
     std::string tpl =
-        "WITH r AS"
-        "	(INSERT INTO __access_binding_refs__ (origin, origin_id)"
-        "		VALUES ('$3', ($4))"
-        "		RETURNING *)"
-        "INSERT INTO $3__access_bindings__ (role, principal, id, ref)"
-        "	SELECT '$1', '$2', origin_id, id"
-        "	FROM r";
+        "WITH r AS\n"
+        "	(INSERT INTO __access_binding_refs__ (origin, origin_id)\n"
+        "		VALUES ('$3', ($4))\n"
+        "		RETURNING *)\n"
+        "INSERT INTO $3__access_bindings__ (role, principal, id, ref)\n"
+        "	SELECT '$1', '$2', origin_id, id\n"
+        "	FROM r;";
+
+    return {std::regex_replace(command, re, tpl), NoError};
+}
+
+std::pair<std::string, Error> ProxyCommand::ParseUnbindAccessRole(std::string command)
+{
+    // e.g.,
+    //  UNBIND ACCESS ROLE doc_viewer
+    //       FROM tom@amzn
+    //       ON folders (SELECT id FROM folders WHERE name = 'root');
+    std::regex re(
+        "UNBIND\\s+ACCESS\\s+ROLE\\s+(\\w+)\\s+"
+        "FROM\\s+([\\w@]+)\\s+"
+        "ON\\s+(\\w+)\\s*\\(([^;]+)\\)",
+        std::regex_constants::icase);
+
+    // $1 = doc_viewer
+    // $2 = tom@amzn
+    // $3 = folders
+    // $4 = SELECT id FROM folders WHERE name = 'root'
+
+    // e.g.,
+    // DELETE FROM __access_binding_refs__ r
+    //  USING folders__access_bindings__ b
+    //  WHERE b.id = (SELECT id FROM folders WHERE name = 'root')
+    //  AND b.role = 'doc_viewer'
+    //  AND b.principal = 'tom@amzn'
+    //  AND b.inheritance = 0
+    //  AND b.ref = r.id;
+    std::string tpl =
+        "DELETE FROM __access_binding_refs__ r\n"
+        "	USING $3__access_bindings__ b\n"
+        "	WHERE b.id = ($4)\n"
+        "	AND b.role = '$1'\n"
+        "	AND b.principal = '$2'\n"
+        "	AND b.inheritance = 0\n"
+        "	AND b.ref = r.id;";
 
     return {std::regex_replace(command, re, tpl), NoError};
 }

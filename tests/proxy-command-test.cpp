@@ -391,7 +391,64 @@ TEST(ProxyCommandTest, BindAccessRole)
 
     input_fail =
         "BIND ACCESS ROLE doc_viewer TO tom@amzn ON folders"
-        "(INSERT INTO folders (name) VALUES ('src'); SELECT id FROM folders WHERE name = 'src');\n";
+        " (INSERT INTO folders (name) VALUES ('src'); SELECT id FROM folders WHERE name = 'src');\n";
+
+    std::cout << "input_fail = " << input_fail << "\n" << std::endl;
+
+    std::tie(c, e) = ProxyCommand::Parse(input_fail.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "========================================" << std::endl;
+}
+
+TEST(ProxyCommandTest, UnbindAccessRole)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::string input_pass =
+        "UNBIND ACCESS ROLE doc_viewer FROM tom@amzn ON folders (11);\n"
+        "UNBIND ACCESS ROLE doc_viewer FROM tom@amzn ON folders (SELECT id FROM folders WHERE name = 'root');\n";
+
+    std::cout << "input_pass = " << input_pass << "\n" << std::endl;
+
+    auto [c, e] = ProxyCommand::Parse(input_pass.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "----------------------------------------" << std::endl;
+
+    std::string input_fail = "UNBIND ACCESS ROLE doc_viewer FROM tom@amzn ON folders (11, 55);\n";
+
+    std::cout << "input_fail = " << input_fail << "\n" << std::endl;
+
+    std::tie(c, e) = ProxyCommand::Parse(input_fail.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "----------------------------------------" << std::endl;
+
+    input_fail =
+        "UNBIND ACCESS ROLE doc_viewer FROM tom@amzn ON folders"
+        " (INSERT INTO folders (name) VALUES ('src'); SELECT id FROM folders WHERE name = 'src');\n";
 
     std::cout << "input_fail = " << input_fail << "\n" << std::endl;
 
