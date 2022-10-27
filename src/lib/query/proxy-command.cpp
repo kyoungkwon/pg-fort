@@ -75,6 +75,12 @@ std::pair<ProxyCommand, Error> ProxyCommand::Parse(const char* raw_command)
         return {std::move(c), std::move(err)};
     }
 
+    std::tie(s, err) = ParseListAccessRoleBinding(s);
+    if (err)
+    {
+        return {std::move(c), std::move(err)};
+    }
+
     std::tie(s, err) = ParseListAccessRole(s);
     if (err)
     {
@@ -439,6 +445,30 @@ std::pair<std::string, Error> ProxyCommand::ParseUnbindAccessRole(std::string co
         "	AND b.principal = '$2'\n"
         "	AND b.inheritance = 0\n"
         "	AND b.ref = r.id;";
+
+    return {std::regex_replace(command, re, tpl), NoError};
+}
+
+std::pair<std::string, Error> ProxyCommand::ParseListAccessRoleBinding(std::string command)
+{
+    // e.g.,
+    // LIST ACCESS ROLE BINDING ON folders (SELECT id FROM folders WHERE name = 'root');
+    std::regex re(
+        "LIST\\s+ACCESS\\s+ROLE\\s+BINDING\\s+"
+        "ON\\s+(\\w+)\\s*\\(([^;]+)\\)",
+        std::regex_constants::icase);
+
+    // $1 = folders
+    // $2 = SELECT id FROM folders WHERE name = 'root'
+
+    // e.g.,
+    // SELECT *
+    //  FROM folders__access_bindings__
+    //  WHERE id = (SELECT id FROM folders WHERE name = 'root');
+    std::string tpl =
+        "SELECT *\n"
+        "	FROM $1__access_bindings__\n"
+        "	WHERE id = ($2);";
 
     return {std::regex_replace(command, re, tpl), NoError};
 }

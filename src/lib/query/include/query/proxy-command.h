@@ -25,6 +25,11 @@ private:
     static std::pair<std::string, Error> ParseListAccessInheritance(std::string command);
     static std::pair<std::string, Error> ParseBindAccessRole(std::string command);
     static std::pair<std::string, Error> ParseUnbindAccessRole(std::string command);
+    static std::pair<std::string, Error> ParseListAccessRoleBinding(std::string command);
+
+    // TODO:
+    static std::pair<std::string, Error> ParseDeleteAccessRole(std::string command);
+    static std::pair<std::string, Error> ParseDisableAccessControl(std::string command);
 
 public:
     ProxyCommand();

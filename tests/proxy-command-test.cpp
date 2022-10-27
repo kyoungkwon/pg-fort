@@ -465,6 +465,27 @@ TEST(ProxyCommandTest, UnbindAccessRole)
     std::cout << "========================================" << std::endl;
 }
 
+TEST(ProxyCommandTest, ListAccessRoleBinding)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::string input_pass = "LIST ACCESS ROLE BINDING ON folders (SELECT id FROM folders WHERE name = 'root');";
+
+    std::cout << "input_pass = " << input_pass << "\n" << std::endl;
+
+    auto [c, e] = ProxyCommand::Parse(input_pass.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "========================================" << std::endl;
+}
+
 // clang-format off
 /*
 TEST(QueryTest, TranslateSpecial)
