@@ -51,6 +51,11 @@ CREATE TABLE __access_inheritances__ (
 -- Speical reference for self-originating bindings
 INSERT INTO __access_inheritances__ (id, src, dst, src_query)
 	VALUES (0, '__access_inheritances__', '__access_inheritances__', '');
+	
+CREATE RULE __protect_self_inheritance_ref__ AS
+	ON DELETE
+	TO __access_inheritances__ WHERE id = 0
+	DO INSTEAD NOTHING;
 
 
 -- TODO: maybe MATERIALIZED VIEW is a better choice
