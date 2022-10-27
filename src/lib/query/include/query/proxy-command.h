@@ -23,6 +23,7 @@ private:
     static std::pair<std::string, Error> ParseListAccessPermission(std::string command);
     static std::pair<std::string, Error> ParseListAccessRole(std::string command);
     static std::pair<std::string, Error> ParseListAccessInheritance(std::string command);
+    static std::pair<std::string, Error> ParseBindAccessRole(std::string command);
 
 public:
     ProxyCommand();

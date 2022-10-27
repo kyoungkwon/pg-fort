@@ -87,6 +87,12 @@ std::pair<ProxyCommand, Error> ProxyCommand::Parse(const char* raw_command)
         return {std::move(c), std::move(err)};
     }
 
+    std::tie(s, err) = ParseBindAccessRole(s);
+    if (err)
+    {
+        return {std::move(c), std::move(err)};
+    }
+
     // TODO: add command parsers here
 
     std::tie(c.q_, err) = Query::Parse(s.c_str());
@@ -355,4 +361,40 @@ std::pair<std::string, Error> ProxyCommand::ParseListAccessInheritance(std::stri
 
     translated << command;
     return {translated.str(), NoError};
+}
+
+std::pair<std::string, Error> ProxyCommand::ParseBindAccessRole(std::string command)
+{
+    // e.g.,
+    //  BIND ACCESS ROLE doc_viewer TO tom@amzn
+    //       ON folders (SELECT id FROM folders WHERE name = 'root');
+    std::regex re(
+        "BIND\\s+ACCESS\\s+ROLE\\s+(\\w+)\\s+"
+        "TO\\s+([\\w@]+)\\s+"
+        "ON\\s+(\\w+)\\s*\\(([^;]+)\\)",
+        std::regex_constants::icase);
+
+    // $1 = doc_viewer
+    // $2 = tom@amzn
+    // $3 = folders
+    // $4 = SELECT id FROM folders WHERE name = 'root'
+
+    // e.g.,
+    // WITH r AS
+    // 	(INSERT INTO __access_binding_refs__ (origin, origin_id)
+    // 		VALUES ('folders', (SELECT folders.id FROM folders WHERE name = 'root'))
+    // 		RETURNING *)
+    // INSERT INTO folders__access_bindings__ (role, principal, id, ref)
+    // 	SELECT 'doc_viewer', 'tom@amzn', origin_id, id
+    // 	FROM r;
+    std::string tpl =
+        "WITH r AS"
+        "	(INSERT INTO __access_binding_refs__ (origin, origin_id)"
+        "		VALUES ('$3', ($4))"
+        "		RETURNING *)"
+        "INSERT INTO $3__access_bindings__ (role, principal, id, ref)"
+        "	SELECT '$1', '$2', origin_id, id"
+        "	FROM r";
+
+    return {std::regex_replace(command, re, tpl), NoError};
 }

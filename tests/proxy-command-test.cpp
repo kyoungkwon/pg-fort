@@ -130,6 +130,37 @@ TEST(ProxyCommandTest, Regex3)
     }
 }
 
+TEST(ProxyCommandTest, Regex4)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::regex re(
+        "BIND\\s+ACCESS\\s+ROLE\\s+(\\w+)\\s+"
+        "TO\\s+([\\w@]+)\\s+"
+        "ON\\s+(\\w+)\\s*\\(([^;]+)\\)",
+        std::regex_constants::icase);
+
+    std::string input =
+        "BIND ACCESS ROLE doc_viewer TO tom@amzn ON folders (11);\n"
+        "BIND ACCESS ROLE doc_viewer TO tom@amzn ON folders (SELECT id FROM folders WHERE name = 'root');\n"
+        "BIND ACCESS ROLE doc_viewer TO tom@amzn ON folders (11, 55);\n"
+        "BIND ACCESS ROLE doc_viewer TO tom@amzn ON folders (INSERT INTO folders (name) VALUES ('src'); SELECT id FROM "
+        "folders WHERE name = 'src');\n";
+
+    std::smatch m;
+    while (std::regex_search(input, m, re))
+    {
+        std::cout << "(" << m.size() << ") " << m[0] << std::endl;
+        for (auto i = 1; i < m.size() + 2; i++)
+        {
+            std::cout << i << ": " << m[i] << " (" << m[i].matched << ")" << std::endl;
+        }
+
+        std::cout << "------------------------------\n";
+        input = m.suffix();
+    }
+}
+
 TEST(ProxyCommandTest, EnableAccessControl)
 {
     std::cout << "========================================" << std::endl;
@@ -308,6 +339,63 @@ TEST(ProxyCommandTest, ListAccessInheritance)
     std::cout << "input = " << input << "\n" << std::endl;
 
     auto [c, e] = ProxyCommand::Parse(input.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "========================================" << std::endl;
+}
+
+TEST(ProxyCommandTest, BindAccessRole)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::string input_pass =
+        "BIND ACCESS ROLE doc_viewer TO tom@amzn ON folders (11);\n"
+        "BIND ACCESS ROLE doc_viewer TO tom@amzn ON folders (SELECT id FROM folders WHERE name = 'root');\n";
+
+    std::cout << "input_pass = " << input_pass << "\n" << std::endl;
+
+    auto [c, e] = ProxyCommand::Parse(input_pass.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "----------------------------------------" << std::endl;
+
+    std::string input_fail = "BIND ACCESS ROLE doc_viewer TO tom@amzn ON folders (11, 55);\n";
+
+    std::cout << "input_fail = " << input_fail << "\n" << std::endl;
+
+    std::tie(c, e) = ProxyCommand::Parse(input_fail.c_str());
+    if (e)
+    {
+        std::cout << "PARSE COMMAND FAILED" << std::endl;
+    }
+    else
+    {
+        std::cout << c.ToString() << std::endl;
+    }
+
+    std::cout << "----------------------------------------" << std::endl;
+
+    input_fail =
+        "BIND ACCESS ROLE doc_viewer TO tom@amzn ON folders"
+        "(INSERT INTO folders (name) VALUES ('src'); SELECT id FROM folders WHERE name = 'src');\n";
+
+    std::cout << "input_fail = " << input_fail << "\n" << std::endl;
+
+    std::tie(c, e) = ProxyCommand::Parse(input_fail.c_str());
     if (e)
     {
         std::cout << "PARSE COMMAND FAILED" << std::endl;

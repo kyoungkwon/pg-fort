@@ -1,5 +1,5 @@
 
--- admin
+-- switch to admin
 SET ROLE myusername;
 
 
@@ -40,8 +40,9 @@ DROP TABLE IF EXISTS folders;
 
 -- delete all acl-data
 TRUNCATE __access_binding_refs__,
-     __access_inheritances__,
      __access_roles__,
      __access_roles_denorm__,
      __access_permissions__
      CASCADE;
+
+DELETE FROM __access_inheritances__;
