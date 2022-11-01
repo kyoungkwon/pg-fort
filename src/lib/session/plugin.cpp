@@ -23,7 +23,35 @@ Session::PlugInFactory::~PlugInFactory()
 {
 }
 
-Session::PlugIn Session::PlugInFactory::GetQueryPlugIn()
+Session::PlugIn Session::PlugInFactory::TranslateProxyCommandPlugIn()
+{
+    return Session::PlugIn(
+        [&]()
+        {
+            // get request data
+            auto c    = &s_->context_;
+            auto data = c->request_.Data();
+
+            // is request a query?
+            if (data[0] != 'Q')
+            {
+                return NoError;
+            }
+
+            // translate proxy commands
+            auto [translated, err] = ProxyCommand::Translate(data + 5);
+            if (err)
+            {
+                return err;
+            }
+
+            // update request with translated command
+            c->request_.SetQuery(translated.c_str());
+            return NoError;
+        });
+}
+
+Session::PlugIn Session::PlugInFactory::ParseQueryPlugIn()
 {
     return Session::PlugIn(
         [&]()
@@ -46,16 +74,14 @@ Session::PlugIn Session::PlugInFactory::GetQueryPlugIn()
                 return NoError;
             }
 
-            // is this a proxy command?
-            std::tie(c->pcommand_, err) = ProxyCommand::Parse(data + 5);
-            if (!err)
-            {
-                return NoError;
-            }
+            // TODO:
+            // // is this a plpgsql?
+            // std::tie(c->plpgsql_, err) = Plpgsql::Parse(data + 5);
+            // if (!err)
+            // {
+            //     return NoError;
+            // }
 
-            // TODO: if regular queries and proxy commands are mixed in one payload,
-            //       the regular query parser will fail and the queries will bypass
-            //       acling process.
             return NoError;
         });
 }
@@ -65,6 +91,12 @@ Session::PlugIn Session::PlugInFactory::AclQueryPlugIn()
     return Session::PlugIn(
         [&]()
         {
+            // skip if superuser
+            if (s_->parameters_["rolsuper"] == "t")
+            {
+                return NoError;
+            }
+
             // is request a query?
             auto c = &s_->context_;
             if (!c->query_)
@@ -184,6 +216,15 @@ Session::PlugIn Session::PlugInFactory::EnsureNewTableHasIdPlugIn()
                 return NoError;
             }
 
+            // get table name
+            auto table_name = (*n)["relation"]["relname"].get<std::string>();
+
+            // skip the check if it's a binding table
+            if (table_name.ends_with("__access_bindings__"))
+            {
+                return NoError;
+            }
+
             // "id" column must exist
             auto have_id = false;
 
@@ -256,23 +297,49 @@ Session::PlugIn Session::PlugInFactory::RestrictInternalTableAccessPlugIn()
     return Session::PlugIn([&]() { return NoError; });
 }
 
-Session::PlugIn Session::PlugInFactory::TranslateProxyCommandPlugIn()
+Session::PlugIn Session::PlugInFactory::UpdateParametersPlugIn()
 {
     return Session::PlugIn(
         [&]()
         {
-            // is request a proxy command?
+            // is request a query?
             auto c = &s_->context_;
-            if (!c->pcommand_)
+            if (!c->query_)
             {
                 return NoError;
             }
 
-            auto cstr = c->pcommand_.ToString();
+            // check if request was "set-role" command
+            auto n = JsonUtil::FindNode(c->query_.Json(), "VariableSetStmt");
+            if (n == nullptr || (*n)["name"] != "role")
+            {
+                return NoError;
+            }
 
-            // update request with translated command
-            c->request_.SetQuery(cstr);
-            free(cstr);
+            // check response to see if it succeeded
+            auto mtype = c->response_.Data()[0];
+            if (mtype != 'C')
+            {
+                return NoError;
+            }
+
+            // update user parameter
+            s_->parameters_["user"] = (*n)["args"][0]["A_Const"]["val"]["String"]["str"];
+
+            // update rolsuper parameter
+            pqxx::row r;
+            {
+                auto       pqxx = (s_->pcp_->Acquire());
+                pqxx::work w(*pqxx);
+                r = w.exec1("SELECT rolsuper FROM pg_roles WHERE rolname = '" + s_->parameters_["user"] + "'");
+                w.commit();
+            }
+            s_->parameters_["rolsuper"] = r["rolsuper"].c_str();
+
+            std::cout << "rolsuper_rolsuper_rolsuper_rolsuper_rolsuper_rolsuper_rolsuper\n";
+            std::cout << s_->parameters_["rolsuper"] << "\n";
+            std::cout << "rolsuper_rolsuper_rolsuper_rolsuper_rolsuper_rolsuper_rolsuper\n";
+
             return NoError;
         });
 }

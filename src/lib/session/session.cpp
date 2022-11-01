@@ -28,15 +28,16 @@ Session::Session(ClientConn* cl_conn, ServerConn* sv_conn, std::shared_ptr<PqxxC
 
     // clang-format off
     pre_request_plugins_ = {
-        pf_.GetQueryPlugIn(),
+        pf_.TranslateProxyCommandPlugIn(),
+        pf_.ParseQueryPlugIn(),
         pf_.AclQueryPlugIn(),
         pf_.DropTablePlugIn(),
         pf_.EnsureNewTableHasIdPlugIn(),
-        pf_.RestrictInternalTableAccessPlugIn(),
-        pf_.TranslateProxyCommandPlugIn()
+        pf_.RestrictInternalTableAccessPlugIn()
     };
 
     post_response_plugins_ = {
+        pf_.UpdateParametersPlugIn(),
         pf_.UpdateSchemaPlugIn()
     };
     // clang-format on
@@ -102,6 +103,17 @@ State* Session::Initiate()
         }
     }
 
+    // is user a superuser?
+    pqxx::row r;
+    {
+        auto       pqxx = (pcp_->Acquire());
+        pqxx::work w(*pqxx);
+        r = w.exec1("SELECT rolsuper FROM pg_roles WHERE rolname = '" + parameters_["user"] + "'");
+        w.commit();
+    }
+    parameters_["rolsuper"] = r["rolsuper"].c_str();
+
+    std::cout << "INITIALIZEINITIALIZEINITIALIZEINITIALIZEINITIALIZEINITIALIZEINITIALIZE\n";
     std::cout << "\tparameters:" << std::endl;
     for (const auto& [k, v] : parameters_)
     {

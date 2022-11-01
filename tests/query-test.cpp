@@ -192,7 +192,19 @@ TEST(QueryTest, ParseModifyDeparse)
         // 29: token-provided principal list
         "select * from rental where name in ('tom', 'g3', 'g2', 'g1');",
         // 30: create or replace trigger
-        "CREATE OR REPLACE FUNCTION increment(i integer) RETURNS integer AS $$ BEGIN RETURN i + 1; END; $$ LANGUAGE plpgsql;"
+        "CREATE OR REPLACE FUNCTION increment(i integer) RETURNS integer AS $$ BEGIN RETURN i + 1; END; $$ LANGUAGE plpgsql;",
+        // 31: set role
+        "SET ROLE 'jim@amzn'",
+        // 32: acled insert pt.1 (default role binding to the record creator as the owner)
+        "with ref as ("
+        "   with rec as ("
+        "       insert into rental (name) values (current_user) returning id"
+        "       )"
+        "   insert into __access_binding_refs__ (_origin, _origin_id)"
+        "       select 'rental', id from rec returning *"
+        "   )"
+        "insert into rental__access_bindings__ (_role, _principal, _id, _ref)"
+        "   select 'rental_owner', current_user, _origin_id, _id from ref"
 
         // TODO (M1): SELECT * FROM (INSERT INTO ... RETURNING ...)
     };

@@ -8,7 +8,7 @@
 class Request : public Buffer
 {
 public:
-    void SetQuery(char* q)
+    void SetQuery(const char* q)
     {
         auto qlen = strlen(q);
         auto mlen = qlen + 5;

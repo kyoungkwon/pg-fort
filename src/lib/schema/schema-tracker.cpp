@@ -70,11 +70,18 @@ void SchemaTracker::Refresh()
 void SchemaTracker::AddRelName(std::string relname)
 {
     std::unique_lock w_lock(mutex_);
-    relnames_.emplace(relname);
+    if (!relname.ends_with("__acl__") && !relname.ends_with("__access_bindings__"))
+    {
+        relnames_.emplace(relname);
+    }
 }
 
 bool SchemaTracker::Exist(std::string relname)
 {
     std::shared_lock r_lock(mutex_);
-    return !excluded_.contains(relname) && relnames_.contains(relname);
+    if (excluded_.contains(relname) || relname.ends_with("__acl__") || relname.ends_with("__access_bindings__"))
+    {
+        return false;
+    }
+    return relnames_.contains(relname);
 }

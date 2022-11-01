@@ -1,60 +1,61 @@
 -- +migrate Up
 
 CREATE TABLE __access_permissions__ (
-	id			BIGSERIAL NOT NULL UNIQUE,
-	name		TEXT NOT NULL,
-	relation	REGCLASS NOT NULL,
-	operation	TEXT NOT NULL,
-	columns		TEXT[],
+	_id			BIGSERIAL NOT NULL UNIQUE,
+	_name		TEXT NOT NULL,
+	_relation	REGCLASS NOT NULL,
+	_operation	TEXT NOT NULL,
+	_columns		TEXT[],
 
-	PRIMARY KEY (name),
-	UNIQUE (relation, operation, columns),
-	CHECK (operation IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'ALL'))
+	PRIMARY KEY (_name),
+	UNIQUE (_relation, _operation, _columns),
+	CHECK (_operation IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'ALL'))
 );
 
 CREATE TABLE __access_roles__ (
-	id			BIGSERIAL NOT NULL UNIQUE,
-	name		TEXT NOT NULL,
-	permissions	TEXT[] NOT NULL,
+	_id				BIGSERIAL NOT NULL UNIQUE,
+	_name			TEXT NOT NULL,
+	_permissions	TEXT[] NOT NULL,
 
-	PRIMARY KEY (name)
+	PRIMARY KEY (_name)
 );
 
 CREATE TABLE __access_roles_denorm__ (
-	name		TEXT NOT NULL,
-	permission	TEXT NOT NULL,
+	_name		TEXT NOT NULL,
+	_permission	TEXT NOT NULL,
 
-	PRIMARY KEY (name, permission),
-	FOREIGN KEY (name) REFERENCES __access_roles__ (name) ON DELETE CASCADE,
-	FOREIGN KEY (permission) REFERENCES __access_permissions__ (name) ON DELETE RESTRICT 
+	PRIMARY KEY (_name, _permission),
+	FOREIGN KEY (_name) REFERENCES __access_roles__ (_name) ON DELETE CASCADE,
+	FOREIGN KEY (_permission) REFERENCES __access_permissions__ (_name) ON DELETE RESTRICT 
 );
 
 CREATE TABLE __access_binding_refs__ (
-	id			BIGSERIAL NOT NULL,
-	origin		REGCLASS NOT NULL,
-	origin_id	BIGINT NOT NULL,
+	_id			BIGSERIAL NOT NULL,
+	_origin		REGCLASS NOT NULL,
+	_origin_id	BIGINT NOT NULL,
 
-	PRIMARY KEY (id)
+	PRIMARY KEY (_id)
 );
 
 CREATE TABLE __access_inheritances__ (
-	id			BIGSERIAL NOT NULL,
-	src			REGCLASS NOT NULL,
-	dst			REGCLASS NOT NULL,
-	src_query	TEXT NOT NULL,
+	_id			BIGSERIAL NOT NULL,
+	_src		REGCLASS NOT NULL,
+	_dst		REGCLASS NOT NULL,
+	_src_query	TEXT NOT NULL,
 
-	PRIMARY KEY (id),
-	UNIQUE (src, dst)
+	PRIMARY KEY (_id),
+	UNIQUE (_src, _dst)
 );
 
 
 -- Speical reference for self-originating bindings
-INSERT INTO __access_inheritances__ (id, src, dst, src_query)
+INSERT INTO __access_inheritances__ (_id, _src, _dst, _src_query)
 	VALUES (0, '__access_inheritances__', '__access_inheritances__', '');
 	
 CREATE RULE __protect_self_inheritance_ref__ AS
 	ON DELETE
-	TO __access_inheritances__ WHERE id = 0
+	TO __access_inheritances__
+	WHERE _id = 0
 	DO INSTEAD NOTHING;
 
 
@@ -64,10 +65,10 @@ CREATE RULE __protect_self_inheritance_ref__ AS
 --         2) any role changes (INSERT/UPDATE/DELETE)
 --       this will also provide indexes for even more effective joins
 CREATE VIEW __access_roles_expanded__ AS
-	SELECT r.name, p.relation, p.operation, p.columns
+	SELECT r._name, p._relation, p._operation, p._columns
 	FROM __access_roles_denorm__ r
 	JOIN __access_permissions__ p
-	ON r.permission = p.name;
+	ON r._permission = p._name;
 
 
 -- +migrate StatementBegin
@@ -76,26 +77,26 @@ CREATE FUNCTION __set_access_bindings__() RETURNS TRIGGER AS $$
     	i RECORD;
 	BEGIN
 		FOR i IN
-			SELECT id, src, dst, src_query
+			SELECT _id, _src, _dst, _src_query
 			FROM __access_inheritances__
-			WHERE dst = TG_TABLE_NAME::REGCLASS
+			WHERE _dst = TG_TABLE_NAME::REGCLASS
 		LOOP
 			EXECUTE format(
 				$query$
 					WITH n AS
-						(INSERT INTO %I__access_bindings__ (id, role, principal, ref, inheritance, ts)
-							SELECT $1.id, role, principal, ref, %s, $2
+						(INSERT INTO %I__access_bindings__ (_id, _role, _principal, _ref, _inheritance, _ts)
+							SELECT $1.id, _role, _principal, _ref, %s, $2
 								FROM %I__access_bindings__
-								WHERE id = (%s)
-							ON CONFLICT (id, inheritance, ref) DO UPDATE SET ts = $2
+								WHERE _id = (%s)
+							ON CONFLICT (_id, _inheritance, _ref) DO UPDATE SET _ts = $2
 							RETURNING *)
 					DELETE FROM %1$I__access_bindings__ b
 						USING n
-						WHERE b.id = $1.id
-						AND b.inheritance = n.inheritance
-						AND b.ref != n.ref;
+						WHERE b._id = $1.id
+						AND b._inheritance = n._inheritance
+						AND b._ref != n._ref;
 				$query$,
-				i.dst, i.id, i.src, i.src_query) USING NEW, NOW();
+				i._dst, i._id, i._src, i._src_query) USING NEW, NOW();
 		END LOOP;
 
 		RETURN NULL;

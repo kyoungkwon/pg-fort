@@ -13,37 +13,24 @@
 class ProxyCommand
 {
 private:
-    Query q_;
-
-    static std::pair<std::string, Error> RemoveComments(std::string command);
-    static std::pair<std::string, Error> ParseEnableAccessControl(std::string command);
-    static std::pair<std::string, Error> ParseCreateAccessPermission(std::string command);
-    static std::pair<std::string, Error> ParseCreateAccessRole(std::string command);
-    static std::pair<std::string, Error> ParseCreateAccessInheritance(std::string command);
-    static std::pair<std::string, Error> ParseListAccessPermission(std::string command);
-    static std::pair<std::string, Error> ParseListAccessRole(std::string command);
-    static std::pair<std::string, Error> ParseListAccessInheritance(std::string command);
-    static std::pair<std::string, Error> ParseBindAccessRole(std::string command);
-    static std::pair<std::string, Error> ParseUnbindAccessRole(std::string command);
-    static std::pair<std::string, Error> ParseListAccessRoleBinding(std::string command);
+    static std::pair<std::string, Error> RemoveComments(std::string query);
+    static std::pair<std::string, Error> TranslateEnableAccessControl(std::string query);
+    static std::pair<std::string, Error> TranslateCreateAccessPermission(std::string query);
+    static std::pair<std::string, Error> TranslateCreateAccessRole(std::string query);
+    static std::pair<std::string, Error> TranslateCreateAccessInheritance(std::string query);
+    static std::pair<std::string, Error> TranslateListAccessPermission(std::string query);
+    static std::pair<std::string, Error> TranslateListAccessRole(std::string query);
+    static std::pair<std::string, Error> TranslateListAccessInheritance(std::string query);
+    static std::pair<std::string, Error> TranslateBindAccessRole(std::string query);
+    static std::pair<std::string, Error> TranslateUnbindAccessRole(std::string query);
+    static std::pair<std::string, Error> TranslateListAccessRoleBinding(std::string query);
 
     // TODO:
-    static std::pair<std::string, Error> ParseDeleteAccessRole(std::string command);
-    static std::pair<std::string, Error> ParseDisableAccessControl(std::string command);
+    static std::pair<std::string, Error> TranslateDeleteAccessRole(std::string query);
+    static std::pair<std::string, Error> TranslateDisableAccessControl(std::string query);
 
 public:
-    ProxyCommand();
-    ProxyCommand(const ProxyCommand& c);
-    ProxyCommand(ProxyCommand&& c) noexcept;
-    ~ProxyCommand();
-
-    ProxyCommand& operator=(const ProxyCommand& other);
-    ProxyCommand& operator=(ProxyCommand&& other);
-    explicit      operator bool() const;
-
-    static std::pair<ProxyCommand, Error> Parse(const char* raw_command);
-
-    char* ToString();
+    static std::pair<std::string, Error> Translate(const char* query);
 };
 
 #endif

@@ -131,14 +131,15 @@ private:
         ~PlugInFactory();
 
         // pre-request plugins
-        PlugIn GetQueryPlugIn();
+        PlugIn TranslateProxyCommandPlugIn();
+        PlugIn ParseQueryPlugIn();
         PlugIn AclQueryPlugIn();
         PlugIn DropTablePlugIn();
         PlugIn EnsureNewTableHasIdPlugIn();
         PlugIn RestrictInternalTableAccessPlugIn();
-        PlugIn TranslateProxyCommandPlugIn();
 
         // post-response plugins
+        PlugIn UpdateParametersPlugIn();
         PlugIn UpdateSchemaPlugIn();
 
         // TODO: maybe apply all plugins pre-request in txn and commit post-response

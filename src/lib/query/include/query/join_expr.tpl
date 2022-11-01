@@ -50,7 +50,7 @@
 										},
 										{
 											"String": {
-												"str": "id"
+												"str": "_id"
 											}
 										}
 									]
@@ -71,7 +71,7 @@
 										},
 										{
 											"String": {
-												"str": "principal"
+												"str": "_principal"
 											}
 										}
 									]
@@ -105,7 +105,7 @@
 										},
 										{
 											"String": {
-												"str": "operation"
+												"str": "_operation"
 											}
 										}
 									]

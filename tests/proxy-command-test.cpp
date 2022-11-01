@@ -161,12 +161,41 @@ TEST(ProxyCommandTest, Regex4)
     }
 }
 
+TEST(ProxyCommandTest, Regex5)
+{
+    std::cout << "========================================" << std::endl;
+
+    std::regex re(
+        "UNBIND\\s+ACCESS\\s+ROLE\\s+((\\w+)|(\\$\\d+))\\s+"
+        "FROM\\s+(([\\w@]+)|(\\$\\d+))\\s+"
+        "ON\\s+((\\w+)|(\\$\\d+))\\s*\\(([^;]+)\\)",
+        std::regex_constants::icase);
+
+    std::string input =
+        "UNBIND ACCESS ROLE doc_viewer FROM tom@amzn ON folders (11);\n"
+        "UNBIND ACCESS ROLE doc_viewer FROM tom@amzn ON folders (SELECT id FROM folders WHERE name = 'root');\n"
+        "EXECUTE 'UNBIND ACCESS ROLE $1 FROM $2 ON $3 ($4)' USING b.role, b.principal, b.origin, b.id;\n";
+
+    std::smatch m;
+    while (std::regex_search(input, m, re))
+    {
+        std::cout << "(" << m.size() << ") " << m[0] << std::endl;
+        for (auto i = 1; i < m.size() + 2; i++)
+        {
+            std::cout << i << ": " << m[i] << " (" << m[i].matched << ")" << std::endl;
+        }
+
+        std::cout << "------------------------------\n";
+        input = m.suffix();
+    }
+}
+
 TEST(ProxyCommandTest, EnableAccessControl)
 {
     std::cout << "========================================" << std::endl;
 
     std::string input =
-        "-- enable access control comment will break parse\n"
+        "-- enable access control comment will break translation\n"
         "ENABLE ACCESS CONTROL documents;\n"
         "ENABLE ACCESS CONTROL folders;\n"
         "enable access control holy_moly;\n"
@@ -174,14 +203,14 @@ TEST(ProxyCommandTest, EnableAccessControl)
 
     std::cout << "input = " << input << "\n" << std::endl;
 
-    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    auto [s, e] = ProxyCommand::Translate(input.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "========================================" << std::endl;
@@ -201,14 +230,14 @@ TEST(ProxyCommandTest, CreateAccessPermission)
 
     std::cout << "input = " << input << "\n" << std::endl;
 
-    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    auto [s, e] = ProxyCommand::Translate(input.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION COMMAND FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "========================================" << std::endl;
@@ -230,14 +259,14 @@ TEST(ProxyCommandTest, CreateAccessRole)
 
     std::cout << "input = " << input << "\n" << std::endl;
 
-    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    auto [s, e] = ProxyCommand::Translate(input.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "========================================" << std::endl;
@@ -257,14 +286,14 @@ TEST(ProxyCommandTest, CreateAccessInheritance)
 
     std::cout << "input = " << input << "\n" << std::endl;
 
-    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    auto [s, e] = ProxyCommand::Translate(input.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "========================================" << std::endl;
@@ -284,14 +313,14 @@ TEST(ProxyCommandTest, ListAccessPermission)
 
     std::cout << "input = " << input << "\n" << std::endl;
 
-    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    auto [s, e] = ProxyCommand::Translate(input.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "========================================" << std::endl;
@@ -314,14 +343,14 @@ TEST(ProxyCommandTest, ListAccessRole)
 
     std::cout << "input = " << input << "\n" << std::endl;
 
-    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    auto [s, e] = ProxyCommand::Translate(input.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "========================================" << std::endl;
@@ -338,14 +367,14 @@ TEST(ProxyCommandTest, ListAccessInheritance)
 
     std::cout << "input = " << input << "\n" << std::endl;
 
-    auto [c, e] = ProxyCommand::Parse(input.c_str());
+    auto [s, e] = ProxyCommand::Translate(input.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "========================================" << std::endl;
@@ -361,14 +390,14 @@ TEST(ProxyCommandTest, BindAccessRole)
 
     std::cout << "input_pass = " << input_pass << "\n" << std::endl;
 
-    auto [c, e] = ProxyCommand::Parse(input_pass.c_str());
+    auto [s, e] = ProxyCommand::Translate(input_pass.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "----------------------------------------" << std::endl;
@@ -377,14 +406,14 @@ TEST(ProxyCommandTest, BindAccessRole)
 
     std::cout << "input_fail = " << input_fail << "\n" << std::endl;
 
-    std::tie(c, e) = ProxyCommand::Parse(input_fail.c_str());
+    std::tie(s, e) = ProxyCommand::Translate(input_fail.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "----------------------------------------" << std::endl;
@@ -395,14 +424,14 @@ TEST(ProxyCommandTest, BindAccessRole)
 
     std::cout << "input_fail = " << input_fail << "\n" << std::endl;
 
-    std::tie(c, e) = ProxyCommand::Parse(input_fail.c_str());
+    std::tie(s, e) = ProxyCommand::Translate(input_fail.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "========================================" << std::endl;
@@ -414,18 +443,19 @@ TEST(ProxyCommandTest, UnbindAccessRole)
 
     std::string input_pass =
         "UNBIND ACCESS ROLE doc_viewer FROM tom@amzn ON folders (11);\n"
-        "UNBIND ACCESS ROLE doc_viewer FROM tom@amzn ON folders (SELECT id FROM folders WHERE name = 'root');\n";
+        "UNBIND ACCESS ROLE doc_viewer FROM tom@amzn ON folders (SELECT id FROM folders WHERE name = 'root');\n"
+        "EXECUTE 'UNBIND ACCESS ROLE $1 FROM $2 ON $3 ($4)' USING b.role, b.principal, b.origin, b.id;\n";
 
     std::cout << "input_pass = " << input_pass << "\n" << std::endl;
 
-    auto [c, e] = ProxyCommand::Parse(input_pass.c_str());
+    auto [s, e] = ProxyCommand::Translate(input_pass.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "----------------------------------------" << std::endl;
@@ -434,14 +464,14 @@ TEST(ProxyCommandTest, UnbindAccessRole)
 
     std::cout << "input_fail = " << input_fail << "\n" << std::endl;
 
-    std::tie(c, e) = ProxyCommand::Parse(input_fail.c_str());
+    std::tie(s, e) = ProxyCommand::Translate(input_fail.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "----------------------------------------" << std::endl;
@@ -452,14 +482,14 @@ TEST(ProxyCommandTest, UnbindAccessRole)
 
     std::cout << "input_fail = " << input_fail << "\n" << std::endl;
 
-    std::tie(c, e) = ProxyCommand::Parse(input_fail.c_str());
+    std::tie(s, e) = ProxyCommand::Translate(input_fail.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "========================================" << std::endl;
@@ -473,14 +503,14 @@ TEST(ProxyCommandTest, ListAccessRoleBinding)
 
     std::cout << "input_pass = " << input_pass << "\n" << std::endl;
 
-    auto [c, e] = ProxyCommand::Parse(input_pass.c_str());
+    auto [s, e] = ProxyCommand::Translate(input_pass.c_str());
     if (e)
     {
-        std::cout << "PARSE COMMAND FAILED" << std::endl;
+        std::cout << "TRANSLATION FAILED" << std::endl;
     }
     else
     {
-        std::cout << c.ToString() << std::endl;
+        std::cout << s << std::endl;
     }
 
     std::cout << "========================================" << std::endl;
