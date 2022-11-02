@@ -20,6 +20,23 @@ services:
     working_dir: /usr/local/postgresql-proxy
     command: 8890 postgresql 5432
 
+  fanout-service:
+    image: fanout-service
+    build:
+      context: fanout-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      postgresql-migrate:
+        condition: service_completed_successfully
+    working_dir: /usr/local/fanout-service
+    command: postgresql 5432
+
   postgresql-migrate:
     build:
       context: schema
