@@ -1,6 +1,6 @@
-/build
-/.vscode/configurationCache.log
-/.vscode/dryrun.log
-/.vscode/settings.json
-/.vscode/targets.log
+**/build
+**/.vscode/configurationCache.log
+**/.vscode/dryrun.log
+**/.vscode/settings.json
+**/.vscode/targets.log
 /style.json

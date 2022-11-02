@@ -247,7 +247,7 @@ TEST(QueryTest, ParseModifyDeparse)
         {
             // output file
             char f[100] = {0};
-            sprintf(f, "/workspace/tests/out/parsed_%02d.json", i);
+            sprintf(f, "/workspace/postgresql-proxy/tests/out/parsed_%02d.json", i);
             std::ofstream o(f);
             printf(" output: %s\n", f);
 

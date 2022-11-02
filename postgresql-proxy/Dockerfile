@@ -18,7 +18,6 @@ RUN apt -y install libprotobuf-dev
 RUN apt -y install nlohmann-json3-dev
 RUN apt -y install pkg-config
 RUN apt -y install protobuf-compiler
-RUN apt -y install sql-migrate
 RUN apt -y install valgrind
 
 

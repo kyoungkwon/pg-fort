@@ -95,8 +95,8 @@ void QueryAcler::AclSelectStmtFromClause(json& j)
             dict.SetValue("TABLE_REF", ref);
 
             std::string output;
-            ctemplate::ExpandTemplate("/workspace/src/lib/query/include/query/join_expr.tpl", ctemplate::DO_NOT_STRIP,
-                                      &dict, &output);
+            ctemplate::ExpandTemplate("/workspace/postgresql-proxy/src/lib/query/include/query/join_expr.tpl",
+                                      ctemplate::DO_NOT_STRIP, &dict, &output);
 
             j = json::parse(output);
             return;

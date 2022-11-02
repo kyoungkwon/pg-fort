@@ -2,58 +2,15 @@ version: '3.4'
 
 services:
   postgresql-proxy:
-    image: postgresql-proxy
+    image: postgresql-proxy:devcontainer
     build:
-      context: .
-      dockerfile: Dockerfile
-      target: build-deps
-    ports:
-      - 8890:8890
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    depends_on:
-      postgresql:
-        condition: service_healthy
-      postgresql-migrate:
-        condition: service_completed_successfully
-
-  postgresql-migrate:
-    build:
-      context: .
+      context: postgresql-proxy
       dockerfile: Dockerfile
       target: build-deps
     volumes:
-      - ./acl-schema:/acl-schema
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    command: sql-migrate up --config=acl-schema/dbconfig.yml -env=development
-    depends_on:
-      postgresql:
-        condition: service_healthy
-
-  postgresql:
-    image: postgres
-    volumes:
-      - test-postgres-db:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
-        ]
-      interval: 10s
-      timeout: 10s
-      retries: 50
+      - .:/workspace:cached
+      - bashhistory:/commandhistory
+    command: /bin/sh -c "while sleep 1000; do :; done"
 
 volumes:
-  test-postgres-db:
+    bashhistory:

@@ -68,6 +68,9 @@ DROP TABLE IF EXISTS folders;
 
 -----------------------------------------------------------
 
+-- switch to admin
+SET ROLE myusername;
+
 -- DISABLE ACCESS CONTROL documents
 do $$
 begin
