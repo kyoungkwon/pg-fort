@@ -19,3 +19,6 @@ BIND ACCESS ROLE viewer TO tom@amzn ON folders (SELECT id FROM folders WHERE nam
 SET ROLE "tom@amzn";
 SELECT * FROM folders;
 SELECT * FROM documents;
+
+SELECT DISTINCT id, name, parent_id FROM folders;
+SELECT DISTINCT id, name, folder_id FROM documents;
