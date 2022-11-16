@@ -11,6 +11,7 @@ RUN apt -y install git
 RUN apt -y install libgmock-dev
 RUN apt -y install libgtest-dev
 RUN apt -y install libpqxx-dev
+RUN apt -y install nlohmann-json3-dev
 RUN apt -y install pkg-config
 RUN apt -y install valgrind
 

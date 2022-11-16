@@ -34,9 +34,13 @@ add_subdirectory(src/bin/fanout-service)
 
 
 # libraries
+add_subdirectory(src/lib/common)
+add_subdirectory(src/lib/conn)
+add_subdirectory(src/lib/persistent-deque)
 
 
 # tests
+add_subdirectory(tests)
 
 
 # cpack
