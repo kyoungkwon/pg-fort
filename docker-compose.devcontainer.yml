@@ -1,21 +1,9 @@
 version: '3.4'
 
 services:
-  postgresql-proxy:
-    image: postgresql-proxy:devcontainer
+  pg-fort:
+    image: pg-fort:devcontainer
     build:
-      context: postgresql-proxy
-      dockerfile: Dockerfile
-      target: build-deps
-    volumes:
-      - .:/workspace:cached
-      - bashhistory:/commandhistory
-    command: /bin/sh -c "while sleep 1000; do :; done"
-
-  fanout-service:
-    image: fanout-service:devcontainer
-    build:
-      context: fanout-service
       dockerfile: Dockerfile
       target: build-deps
     volumes:

@@ -1,0 +1,107 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "CreateStmt": {
+                    "if_not_exists": true,
+                    "oncommit": "ONCOMMIT_NOOP",
+                    "relation": {
+                        "inh": true,
+                        "location": 27,
+                        "relname": "xxx",
+                        "relpersistence": "p"
+                    },
+                    "tableElts": [
+                        {
+                            "ColumnDef": {
+                                "colname": "id",
+                                "constraints": [
+                                    {
+                                        "Constraint": {
+                                            "contype": "CONSTR_PRIMARY",
+                                            "location": 45
+                                        }
+                                    }
+                                ],
+                                "is_local": true,
+                                "location": 32,
+                                "typeName": {
+                                    "location": 35,
+                                    "names": [
+                                        {
+                                            "String": {
+                                                "str": "bigserial"
+                                            }
+                                        }
+                                    ],
+                                    "typemod": -1
+                                }
+                            }
+                        },
+                        {
+                            "ColumnDef": {
+                                "colname": "name",
+                                "constraints": [
+                                    {
+                                        "Constraint": {
+                                            "contype": "CONSTR_NOTNULL",
+                                            "location": 68
+                                        }
+                                    }
+                                ],
+                                "is_local": true,
+                                "location": 58,
+                                "typeName": {
+                                    "location": 63,
+                                    "names": [
+                                        {
+                                            "String": {
+                                                "str": "text"
+                                            }
+                                        }
+                                    ],
+                                    "typemod": -1
+                                }
+                            }
+                        },
+                        {
+                            "ColumnDef": {
+                                "colname": "tags",
+                                "constraints": [
+                                    {
+                                        "Constraint": {
+                                            "contype": "CONSTR_NOTNULL",
+                                            "location": 90
+                                        }
+                                    }
+                                ],
+                                "is_local": true,
+                                "location": 78,
+                                "typeName": {
+                                    "arrayBounds": [
+                                        {
+                                            "Integer": {
+                                                "ival": -1
+                                            }
+                                        }
+                                    ],
+                                    "location": 83,
+                                    "names": [
+                                        {
+                                            "String": {
+                                                "str": "text"
+                                            }
+                                        }
+                                    ],
+                                    "typemod": -1
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "stmt_len": 99
+        }
+    ],
+    "version": 130003
+}

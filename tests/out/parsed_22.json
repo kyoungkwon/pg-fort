@@ -1,0 +1,48 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "DropStmt": {
+                    "behavior": "DROP_CASCADE",
+                    "objects": [
+                        {
+                            "List": {
+                                "items": [
+                                    {
+                                        "String": {
+                                            "str": "xxx"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "List": {
+                                "items": [
+                                    {
+                                        "String": {
+                                            "str": "yyy"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "List": {
+                                "items": [
+                                    {
+                                        "String": {
+                                            "str": "zzz"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "removeType": "OBJECT_TABLE"
+                }
+            }
+        }
+    ],
+    "version": 130003
+}

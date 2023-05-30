@@ -1,0 +1,25 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "VariableSetStmt": {
+                    "args": [
+                        {
+                            "A_Const": {
+                                "location": 9,
+                                "val": {
+                                    "String": {
+                                        "str": "jim@amzn"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "kind": "VAR_SET_VALUE",
+                    "name": "role"
+                }
+            }
+        }
+    ],
+    "version": 130003
+}

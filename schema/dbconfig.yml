@@ -1,4 +1,4 @@
 development:
     dialect: postgres
-    datasource: host=postgresql user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable
+    datasource: host=postgres user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable
     dir: schema

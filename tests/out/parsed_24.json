@@ -1,0 +1,90 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "CreateTableAsStmt": {
+                    "into": {
+                        "onCommit": "ONCOMMIT_NOOP",
+                        "rel": {
+                            "inh": true,
+                            "location": 13,
+                            "relname": "films_recent",
+                            "relpersistence": "p"
+                        }
+                    },
+                    "query": {
+                        "SelectStmt": {
+                            "fromClause": [
+                                {
+                                    "RangeVar": {
+                                        "inh": true,
+                                        "location": 43,
+                                        "relname": "films",
+                                        "relpersistence": "p"
+                                    }
+                                }
+                            ],
+                            "limitOption": "LIMIT_OPTION_DEFAULT",
+                            "op": "SETOP_NONE",
+                            "targetList": [
+                                {
+                                    "ResTarget": {
+                                        "location": 36,
+                                        "val": {
+                                            "ColumnRef": {
+                                                "fields": [
+                                                    {
+                                                        "A_Star": {}
+                                                    }
+                                                ],
+                                                "location": 36
+                                            }
+                                        }
+                                    }
+                                }
+                            ],
+                            "whereClause": {
+                                "A_Expr": {
+                                    "kind": "AEXPR_OP",
+                                    "lexpr": {
+                                        "ColumnRef": {
+                                            "fields": [
+                                                {
+                                                    "String": {
+                                                        "str": "date_prod"
+                                                    }
+                                                }
+                                            ],
+                                            "location": 55
+                                        }
+                                    },
+                                    "location": 65,
+                                    "name": [
+                                        {
+                                            "String": {
+                                                "str": ">="
+                                            }
+                                        }
+                                    ],
+                                    "rexpr": {
+                                        "A_Const": {
+                                            "location": 68,
+                                            "val": {
+                                                "String": {
+                                                    "str": "2002-01-01"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "relkind": "OBJECT_TABLE"
+                }
+            },
+            "stmt_len": 80
+        }
+    ],
+    "version": 130003
+}

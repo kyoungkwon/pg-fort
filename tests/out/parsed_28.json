@@ -1,0 +1,73 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "SelectStmt": {
+                    "fromClause": [
+                        {
+                            "RangeVar": {
+                                "inh": true,
+                                "location": 14,
+                                "relname": "rental",
+                                "relpersistence": "p"
+                            }
+                        }
+                    ],
+                    "limitOption": "LIMIT_OPTION_DEFAULT",
+                    "op": "SETOP_NONE",
+                    "targetList": [
+                        {
+                            "ResTarget": {
+                                "location": 7,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "A_Star": {}
+                                            }
+                                        ],
+                                        "location": 7
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "whereClause": {
+                        "A_Expr": {
+                            "kind": "AEXPR_OP",
+                            "lexpr": {
+                                "ColumnRef": {
+                                    "fields": [
+                                        {
+                                            "String": {
+                                                "str": "name"
+                                            }
+                                        }
+                                    ],
+                                    "location": 27
+                                }
+                            },
+                            "location": 32,
+                            "name": [
+                                {
+                                    "String": {
+                                        "str": "="
+                                    }
+                                }
+                            ],
+                            "rexpr": {
+                                "SQLValueFunction": {
+                                    "location": 34,
+                                    "op": "SVFOP_CURRENT_USER",
+                                    "typmod": -1
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "stmt_len": 46
+        }
+    ],
+    "version": 130003
+}

@@ -1,0 +1,362 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "SelectStmt": {
+                    "fromClause": [
+                        {
+                            "RangeVar": {
+                                "inh": true,
+                                "location": 339,
+                                "relname": "employee_recursive",
+                                "relpersistence": "p"
+                            }
+                        }
+                    ],
+                    "limitOption": "LIMIT_OPTION_DEFAULT",
+                    "op": "SETOP_NONE",
+                    "targetList": [
+                        {
+                            "ResTarget": {
+                                "location": 310,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "distance"
+                                                }
+                                            }
+                                        ],
+                                        "location": 310
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "ResTarget": {
+                                "location": 320,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "employee_name"
+                                                }
+                                            }
+                                        ],
+                                        "location": 320
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "withClause": {
+                        "ctes": [
+                            {
+                                "CommonTableExpr": {
+                                    "aliascolnames": [
+                                        {
+                                            "String": {
+                                                "str": "distance"
+                                            }
+                                        },
+                                        {
+                                            "String": {
+                                                "str": "employee_name"
+                                            }
+                                        },
+                                        {
+                                            "String": {
+                                                "str": "manager_name"
+                                            }
+                                        }
+                                    ],
+                                    "ctematerialized": "CTEMaterializeDefault",
+                                    "ctename": "employee_recursive",
+                                    "ctequery": {
+                                        "SelectStmt": {
+                                            "all": true,
+                                            "larg": {
+                                                "fromClause": [
+                                                    {
+                                                        "RangeVar": {
+                                                            "inh": true,
+                                                            "location": 120,
+                                                            "relname": "employee",
+                                                            "relpersistence": "p"
+                                                        }
+                                                    }
+                                                ],
+                                                "limitOption": "LIMIT_OPTION_DEFAULT",
+                                                "op": "SETOP_NONE",
+                                                "targetList": [
+                                                    {
+                                                        "ResTarget": {
+                                                            "location": 84,
+                                                            "val": {
+                                                                "A_Const": {
+                                                                    "location": 84,
+                                                                    "val": {
+                                                                        "Integer": {
+                                                                            "ival": 1
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "ResTarget": {
+                                                            "location": 87,
+                                                            "val": {
+                                                                "ColumnRef": {
+                                                                    "fields": [
+                                                                        {
+                                                                            "String": {
+                                                                                "str": "employee_name"
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "location": 87
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "ResTarget": {
+                                                            "location": 102,
+                                                            "val": {
+                                                                "ColumnRef": {
+                                                                    "fields": [
+                                                                        {
+                                                                            "String": {
+                                                                                "str": "manager_name"
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "location": 102
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                ],
+                                                "whereClause": {
+                                                    "A_Expr": {
+                                                        "kind": "AEXPR_OP",
+                                                        "lexpr": {
+                                                            "ColumnRef": {
+                                                                "fields": [
+                                                                    {
+                                                                        "String": {
+                                                                            "str": "manager_name"
+                                                                        }
+                                                                    }
+                                                                ],
+                                                                "location": 135
+                                                            }
+                                                        },
+                                                        "location": 148,
+                                                        "name": [
+                                                            {
+                                                                "String": {
+                                                                    "str": "="
+                                                                }
+                                                            }
+                                                        ],
+                                                        "rexpr": {
+                                                            "A_Const": {
+                                                                "location": 150,
+                                                                "val": {
+                                                                    "String": {
+                                                                        "str": "Mary"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "limitOption": "LIMIT_OPTION_DEFAULT",
+                                            "op": "SETOP_UNION",
+                                            "rarg": {
+                                                "fromClause": [
+                                                    {
+                                                        "RangeVar": {
+                                                            "alias": {
+                                                                "aliasname": "er"
+                                                            },
+                                                            "inh": true,
+                                                            "location": 228,
+                                                            "relname": "employee_recursive",
+                                                            "relpersistence": "p"
+                                                        }
+                                                    },
+                                                    {
+                                                        "RangeVar": {
+                                                            "alias": {
+                                                                "aliasname": "e"
+                                                            },
+                                                            "inh": true,
+                                                            "location": 251,
+                                                            "relname": "employee",
+                                                            "relpersistence": "p"
+                                                        }
+                                                    }
+                                                ],
+                                                "limitOption": "LIMIT_OPTION_DEFAULT",
+                                                "op": "SETOP_NONE",
+                                                "targetList": [
+                                                    {
+                                                        "ResTarget": {
+                                                            "location": 174,
+                                                            "val": {
+                                                                "A_Expr": {
+                                                                    "kind": "AEXPR_OP",
+                                                                    "lexpr": {
+                                                                        "ColumnRef": {
+                                                                            "fields": [
+                                                                                {
+                                                                                    "String": {
+                                                                                        "str": "er"
+                                                                                    }
+                                                                                },
+                                                                                {
+                                                                                    "String": {
+                                                                                        "str": "distance"
+                                                                                    }
+                                                                                }
+                                                                            ],
+                                                                            "location": 174
+                                                                        }
+                                                                    },
+                                                                    "location": 186,
+                                                                    "name": [
+                                                                        {
+                                                                            "String": {
+                                                                                "str": "+"
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "rexpr": {
+                                                                        "A_Const": {
+                                                                            "location": 188,
+                                                                            "val": {
+                                                                                "Integer": {
+                                                                                    "ival": 1
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "ResTarget": {
+                                                            "location": 191,
+                                                            "val": {
+                                                                "ColumnRef": {
+                                                                    "fields": [
+                                                                        {
+                                                                            "String": {
+                                                                                "str": "e"
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "String": {
+                                                                                "str": "employee_name"
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "location": 191
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    {
+                                                        "ResTarget": {
+                                                            "location": 208,
+                                                            "val": {
+                                                                "ColumnRef": {
+                                                                    "fields": [
+                                                                        {
+                                                                            "String": {
+                                                                                "str": "e"
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "String": {
+                                                                                "str": "manager_name"
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "location": 208
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                ],
+                                                "whereClause": {
+                                                    "A_Expr": {
+                                                        "kind": "AEXPR_OP",
+                                                        "lexpr": {
+                                                            "ColumnRef": {
+                                                                "fields": [
+                                                                    {
+                                                                        "String": {
+                                                                            "str": "er"
+                                                                        }
+                                                                    },
+                                                                    {
+                                                                        "String": {
+                                                                            "str": "employee_name"
+                                                                        }
+                                                                    }
+                                                                ],
+                                                                "location": 268
+                                                            }
+                                                        },
+                                                        "location": 285,
+                                                        "name": [
+                                                            {
+                                                                "String": {
+                                                                    "str": "="
+                                                                }
+                                                            }
+                                                        ],
+                                                        "rexpr": {
+                                                            "ColumnRef": {
+                                                                "fields": [
+                                                                    {
+                                                                        "String": {
+                                                                            "str": "e"
+                                                                        }
+                                                                    },
+                                                                    {
+                                                                        "String": {
+                                                                            "str": "manager_name"
+                                                                        }
+                                                                    }
+                                                                ],
+                                                                "location": 287
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "location": 15
+                                }
+                            }
+                        ],
+                        "recursive": true
+                    }
+                }
+            },
+            "stmt_len": 357
+        }
+    ],
+    "version": 130003
+}

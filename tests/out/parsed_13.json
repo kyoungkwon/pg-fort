@@ -1,0 +1,117 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "SelectStmt": {
+                    "fromClause": [
+                        {
+                            "RangeVar": {
+                                "alias": {
+                                    "aliasname": "m"
+                                },
+                                "inh": true,
+                                "location": 35,
+                                "relname": "manufacturers",
+                                "relpersistence": "p"
+                            }
+                        },
+                        {
+                            "RangeFunction": {
+                                "alias": {
+                                    "aliasname": "pname"
+                                },
+                                "functions": [
+                                    {
+                                        "List": {
+                                            "items": [
+                                                {
+                                                    "FuncCall": {
+                                                        "args": [
+                                                            {
+                                                                "ColumnRef": {
+                                                                    "fields": [
+                                                                        {
+                                                                            "String": {
+                                                                                "str": "m"
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "String": {
+                                                                                "str": "id"
+                                                                            }
+                                                                        }
+                                                                    ],
+                                                                    "location": 78
+                                                                }
+                                                            }
+                                                        ],
+                                                        "funcname": [
+                                                            {
+                                                                "String": {
+                                                                    "str": "get_product_names"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "location": 60
+                                                    }
+                                                },
+                                                {}
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "lateral": true
+                            }
+                        }
+                    ],
+                    "limitOption": "LIMIT_OPTION_DEFAULT",
+                    "op": "SETOP_NONE",
+                    "targetList": [
+                        {
+                            "ResTarget": {
+                                "location": 7,
+                                "name": "mname",
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "m"
+                                                }
+                                            },
+                                            {
+                                                "String": {
+                                                    "str": "name"
+                                                }
+                                            }
+                                        ],
+                                        "location": 7
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "ResTarget": {
+                                "location": 24,
+                                "val": {
+                                    "ColumnRef": {
+                                        "fields": [
+                                            {
+                                                "String": {
+                                                    "str": "pname"
+                                                }
+                                            }
+                                        ],
+                                        "location": 24
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "stmt_len": 89
+        }
+    ],
+    "version": 130003
+}

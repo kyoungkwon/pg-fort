@@ -1,10 +1,9 @@
 version: '3.4'
 
 services:
-  postgresql-proxy:
-    image: postgresql-proxy
+  pg-fort:
+    image: pg-fort
     build:
-      context: postgresql-proxy
       dockerfile: Dockerfile
     ports:
       - 8890:8890
@@ -13,31 +12,14 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     depends_on:
-      postgresql:
+      postgres:
         condition: service_healthy
-      postgresql-migrate:
+      postgres-migrate:
         condition: service_completed_successfully
-    working_dir: /usr/local/postgresql-proxy
-    command: 8890 postgresql 5432
+    working_dir: /usr/local/pg-fort
+    command: 8890 postgres 5432
 
-  fanout-service:
-    image: fanout-service
-    build:
-      context: fanout-service
-      dockerfile: Dockerfile
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    depends_on:
-      postgresql:
-        condition: service_healthy
-      postgresql-migrate:
-        condition: service_completed_successfully
-    working_dir: /usr/local/fanout-service
-    command: postgresql 5432
-
-  postgresql-migrate:
+  postgres-migrate:
     build:
       context: schema
       dockerfile: Dockerfile
@@ -50,13 +32,13 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     command: sql-migrate up --config=schema/dbconfig.yml -env=development
     depends_on:
-      postgresql:
+      postgres:
         condition: service_healthy
 
-  postgresql:
+  postgres:
     image: postgres
     volumes:
-      - test-postgres-db:/var/lib/postgresql/data
+      - test-postgres-db:/var/lib/postgres/data
     ports:
       - 5432:5432
     environment:

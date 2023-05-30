@@ -1,0 +1,117 @@
+{
+    "stmts": [
+        {
+            "stmt": {
+                "ViewStmt": {
+                    "query": {
+                        "SelectStmt": {
+                            "fromClause": [
+                                {
+                                    "JoinExpr": {
+                                        "jointype": "JOIN_INNER",
+                                        "larg": {
+                                            "RangeVar": {
+                                                "alias": {
+                                                    "aliasname": "x"
+                                                },
+                                                "inh": true,
+                                                "location": 33,
+                                                "relname": "xxx",
+                                                "relpersistence": "p"
+                                            }
+                                        },
+                                        "quals": {
+                                            "A_Expr": {
+                                                "kind": "AEXPR_OP",
+                                                "lexpr": {
+                                                    "ColumnRef": {
+                                                        "fields": [
+                                                            {
+                                                                "String": {
+                                                                    "str": "x"
+                                                                }
+                                                            },
+                                                            {
+                                                                "String": {
+                                                                    "str": "signature"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "location": 53
+                                                    }
+                                                },
+                                                "location": 65,
+                                                "name": [
+                                                    {
+                                                        "String": {
+                                                            "str": "="
+                                                        }
+                                                    }
+                                                ],
+                                                "rexpr": {
+                                                    "ColumnRef": {
+                                                        "fields": [
+                                                            {
+                                                                "String": {
+                                                                    "str": "y"
+                                                                }
+                                                            },
+                                                            {
+                                                                "String": {
+                                                                    "str": "signature"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "location": 67
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "rarg": {
+                                            "RangeVar": {
+                                                "alias": {
+                                                    "aliasname": "y"
+                                                },
+                                                "inh": true,
+                                                "location": 44,
+                                                "relname": "yyy",
+                                                "relpersistence": "p"
+                                            }
+                                        }
+                                    }
+                                }
+                            ],
+                            "limitOption": "LIMIT_OPTION_DEFAULT",
+                            "op": "SETOP_NONE",
+                            "targetList": [
+                                {
+                                    "ResTarget": {
+                                        "location": 26,
+                                        "val": {
+                                            "ColumnRef": {
+                                                "fields": [
+                                                    {
+                                                        "A_Star": {}
+                                                    }
+                                                ],
+                                                "location": 26
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "view": {
+                        "inh": true,
+                        "location": 12,
+                        "relname": "zzz",
+                        "relpersistence": "p"
+                    },
+                    "withCheckOption": "NO_CHECK_OPTION"
+                }
+            }
+        }
+    ],
+    "version": 130003
+}
